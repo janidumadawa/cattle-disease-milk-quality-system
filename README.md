@@ -1,30 +1,68 @@
-# MedFarm: Cattle Disease Detection and Milk Quality Analysis System
+# MedFarm Mobile
 
-Research group **J26-IT-413**.
+Shared Flutter and Dart application foundation for research group **J26-IT-413**.
 
-MedFarm is a collaborative four-component research project intended to support cattle health inquiry and raw milk quality pre-screening.
+This application provides the common mobile interface for the MedFarm Cattle Disease Detection and Milk Quality Analysis System.
 
-## Shared foundation
+## Technologies
 
-The project uses:
+- Flutter
+- Dart
+- Material Design 3
 
-- **Mobile application:** Flutter and Dart
-- **Backend/API:** Python and FastAPI
-- **Integration:** versioned REST APIs with documented request and response contracts
+## Supported Platforms
 
-Component-specific models, libraries, databases, and feature implementations will be added on their own feature branches after the group agrees on shared integration requirements. This repository README intentionally stays at the project level.
+- Android
+- Web (Chrome)
 
-## Repository workflow
+## Getting Started
 
-- `main`: stable base and releases. Do not commit directly during normal feature development.
-- `dev`: shared integration branch.
-- Each member creates a feature branch from `dev` when they begin their assigned implementation.
-- Integrate changes into `dev` through reviewed pull requests. Promote tested milestones to `main`.
+Make sure Flutter SDK is installed and configured.
 
-## Security
+Navigate to the `mobile` directory and run:
 
-Never commit secrets, database credentials, private participant information, raw consented recordings, or restricted research datasets. Use ignored local environment files and approved data storage.
+```bash
+flutter pub get
+```
 
-## Status
+## Run the Application
 
-The shared repository is being established incrementally. Component code and database choices are not defined by this README and should not be assumed until agreed by the group.
+To launch the application in Chrome:
+
+```bash
+flutter run -d chrome
+```
+
+## Code Quality and Testing
+
+Analyze the project for potential issues:
+
+```bash
+flutter analyze
+```
+
+Run the automated tests:
+
+```bash
+flutter test
+```
+
+## Shared Foundation
+
+This package contains the common MedFarm mobile application shell and shared configuration.
+
+The following features will be developed separately by the research team:
+
+- IoT-based milk quality pre-screening
+- AI-based treatment recommendations and RAG chatbot
+- Image-based cattle disease detection
+- Voice-based cattle disease inquiry
+
+Feature implementations should be developed on dedicated feature branches and integrated through reviewed changes.
+
+## Team Guidelines
+
+- Coordinate changes to shared navigation and application configuration.
+- Keep feature-specific screens and services in separate files.
+- Document API request and response contracts before backend integration.
+- Avoid committing secrets, credentials, or restricted research datasets.
