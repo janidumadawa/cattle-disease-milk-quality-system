@@ -78,5 +78,5 @@ def load_image(raw: bytes) -> Image.Image:
 
 def _preprocess(img: Image.Image) -> np.ndarray:
     # The model's own Rescaling layer maps 0-255 to [-1, 1], so pass raw pixels.
-    resized = img.resize(IMG_SIZE, Image.BILINEAR)
+    resized = img.resize(IMG_SIZE, Image.Resampling.BILINEAR)
     return np.asarray(resized, dtype="float32")[None, ...]
