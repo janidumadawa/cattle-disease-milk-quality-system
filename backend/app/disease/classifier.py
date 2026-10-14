@@ -19,6 +19,7 @@ import keras
 import numpy as np
 from PIL import Image, ImageOps
 
+from app.disease.cattle_check import CattleChecker
 from app.disease.gradcam import overlay_png
 
 MODEL_DIR = Path(__file__).resolve().parents[2] / "models" / "disease"
@@ -41,8 +42,10 @@ class Prediction:
 
 @dataclass
 class Result:
-    predictions: list[Prediction]
-    gradcam_png: str  # base64 PNG of the heatmap over the photo
+    is_cattle: bool  # False: the photo does not show cattle, so no disease check was done
+    cattle_score: float
+    predictions: list[Prediction]  # empty when is_cattle is False
+    gradcam_png: str | None  # base64 PNG of the heatmap over the photo
 
 
 class DiseaseClassifier:
@@ -92,13 +95,21 @@ class DiseaseClassifier:
         if not np.allclose(predict_with_cam(warmup)[0], np.asarray(model(warmup, training=False))[0], atol=1e-4):
             raise RuntimeError("Grad-CAM layer replay does not match the model's predictions.")
 
+        self._cattle_checker = CattleChecker()
+
     def predict(self, img: Image.Image) -> Result:
+        is_cattle, cattle_score = self._cattle_checker.is_cattle(img)
+        if not is_cattle:
+            return Result(is_cattle=False, cattle_score=cattle_score, predictions=[], gradcam_png=None)
+
         with self._lock:
             probs, cam = self._predict_with_cam(_preprocess(img))
             probs, cam = np.asarray(probs), np.asarray(cam)
 
         order = np.argsort(probs)[::-1][:TOP_K]
         return Result(
+            is_cattle=True,
+            cattle_score=cattle_score,
             predictions=[
                 Prediction(
                     class_id=self.classes[i]["id"],
