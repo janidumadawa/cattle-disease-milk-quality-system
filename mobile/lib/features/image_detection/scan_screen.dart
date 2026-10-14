@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'disease_api.dart';
 import 'disease_result.dart';
 import 'disease_result_view.dart';
+import 'photo_guide.dart';
 
 /// Image-based cattle disease detection.
 class ScanScreen extends StatefulWidget {
@@ -18,6 +19,7 @@ class _ScanScreenState extends State<ScanScreen> {
   final _picker = ImagePicker();
   final _api = DiseaseApi();
 
+  PhotoSubject _subject = PhotoSubject.wholeAnimal;
   XFile? _image;
   Uint8List? _imageBytes;
   DiseaseResult? _result;
@@ -58,6 +60,18 @@ class _ScanScreenState extends State<ScanScreen> {
       _result = null;
       _error = null;
     });
+    // Predict straight away; no extra button press needed.
+    await _identify();
+  }
+
+  /// Back to the photo guide.
+  void _reset() {
+    setState(() {
+      _image = null;
+      _imageBytes = null;
+      _result = null;
+      _error = null;
+    });
   }
 
   Future<void> _identify() async {
@@ -88,6 +102,25 @@ class _ScanScreenState extends State<ScanScreen> {
     }
   }
 
+  List<Widget> _pickButtons() {
+    final again = _imageBytes != null;
+    return [
+      FilledButton.icon(
+        onPressed: _loading ? null : () => _pickImage(ImageSource.camera),
+        icon: const Icon(Icons.photo_camera_outlined),
+        label: Text(again ? 'Take another photo' : 'Open camera'),
+        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+      ),
+      const SizedBox(height: 10),
+      OutlinedButton.icon(
+        onPressed: _loading ? null : () => _pickImage(ImageSource.gallery),
+        icon: const Icon(Icons.photo_library_outlined),
+        label: const Text('Choose from gallery'),
+        style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -99,52 +132,56 @@ class _ScanScreenState extends State<ScanScreen> {
           constraints: const BoxConstraints(maxWidth: 600),
           child: ListView(
             padding: const EdgeInsets.all(16),
-            children: [
-              _ImagePreview(bytes: _imageBytes),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _loading
-                          ? null
-                          : () => _pickImage(ImageSource.camera),
-                      icon: const Icon(Icons.photo_camera_outlined),
-                      label: const Text('Camera'),
+            children: _imageBytes == null
+                ? [
+                    PhotoGuide(
+                      subject: _subject,
+                      onSubjectChanged: (s) => setState(() => _subject = s),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _loading
-                          ? null
-                          : () => _pickImage(ImageSource.gallery),
-                      icon: const Icon(Icons.photo_library_outlined),
-                      label: const Text('Gallery'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              FilledButton.icon(
-                onPressed: _image == null || _loading ? null : _identify,
-                icon: _loading
-                    ? const SizedBox.square(
-                        dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.search),
-                label: Text(_loading ? 'Identifying...' : 'Identify disease'),
-              ),
-              if (_error != null) ...[
-                const SizedBox(height: 12),
-                Text(_error!, style: TextStyle(color: theme.colorScheme.error)),
-              ],
-              if (_result != null) ...[
-                const SizedBox(height: 16),
-                DiseaseResultView(result: _result!),
-              ],
-            ],
+                    const SizedBox(height: 20),
+                    if (_error != null) ...[
+                      Text(
+                        _error!,
+                        style: TextStyle(color: theme.colorScheme.error),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    ..._pickButtons(),
+                  ]
+                : [
+                    _ImagePreview(bytes: _imageBytes),
+                    const SizedBox(height: 12),
+                    if (_loading) ...[
+                      const LinearProgressIndicator(),
+                      const SizedBox(height: 8),
+                      const Text(
+                        'Analysing photo...',
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                    if (_error != null) ...[
+                      Text(
+                        _error!,
+                        style: TextStyle(color: theme.colorScheme.error),
+                      ),
+                      const SizedBox(height: 8),
+                      OutlinedButton.icon(
+                        onPressed: _identify,
+                        icon: const Icon(Icons.refresh),
+                        label: const Text('Try again'),
+                      ),
+                    ],
+                    if (_result != null)
+                      DiseaseResultView(result: _result!, photo: _imageBytes),
+                    if (!_loading) ...[
+                      const SizedBox(height: 16),
+                      ..._pickButtons(),
+                      TextButton(
+                        onPressed: _reset,
+                        child: const Text('Back to photo tips'),
+                      ),
+                    ],
+                  ],
           ),
         ),
       ),
@@ -159,34 +196,12 @@ class _ImagePreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return ClipRRect(
       borderRadius: BorderRadius.circular(12),
       child: Container(
         height: 260,
-        color: theme.colorScheme.surfaceContainerHighest,
-        child: bytes != null
-            ? Image.memory(bytes!, fit: BoxFit.cover)
-            : Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.add_a_photo_outlined,
-                      size: 48,
-                      color: theme.colorScheme.primary,
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Take or choose a clear photo of the animal or the '
-                      'affected area (skin, udder, hoof or mouth).',
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        child: bytes == null ? null : Image.memory(bytes!, fit: BoxFit.cover),
       ),
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 
 import 'disease_result.dart';
@@ -9,9 +11,12 @@ String _percent(double value) => '${(value * 100).toStringAsFixed(1)}%';
 
 /// Shows the response of the disease identification API.
 class DiseaseResultView extends StatelessWidget {
-  const DiseaseResultView({super.key, required this.result});
+  const DiseaseResultView({super.key, required this.result, this.photo});
 
   final DiseaseResult result;
+
+  /// The uploaded photo, shown next to the highlighted area.
+  final Uint8List? photo;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +47,13 @@ class DiseaseResultView extends StatelessWidget {
                 Text(top.disease, style: theme.textTheme.headlineSmall),
                 if (top.severity != null) ...[
                   const SizedBox(height: 8),
-                  _SeverityChip(severity: top.severity!),
+                  Row(
+                    children: [
+                      const Text('Stage'),
+                      const SizedBox(width: 8),
+                      _StageChip(stage: top.severity!),
+                    ],
+                  ),
                 ],
                 const SizedBox(height: 12),
                 Text(top.info),
@@ -87,7 +98,7 @@ class DiseaseResultView extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                   child: Text(
-                    'Where the model looked',
+                    'Affected area',
                     style: theme.textTheme.titleMedium,
                   ),
                 ),
@@ -98,7 +109,27 @@ class DiseaseResultView extends StatelessWidget {
                     'exact outline of a lesion.',
                   ),
                 ),
-                Image.memory(result.gradcamPng!, fit: BoxFit.contain),
+                if (photo == null)
+                  Image.memory(result.gradcamPng!, fit: BoxFit.contain)
+                else
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _LabelledImage(bytes: photo!, label: 'Photo'),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _LabelledImage(
+                            bytes: result.gradcamPng!,
+                            label: 'Highlighted area',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
           ),
@@ -123,7 +154,7 @@ class DiseaseResultView extends StatelessWidget {
                       title: Text(p.disease),
                       subtitle: p.severity == null
                           ? null
-                          : Text('${p.severity} severity'),
+                          : Text('Stage: ${p.severity}'),
                       trailing: Text(_percent(p.confidence)),
                     ),
                 ],
@@ -143,24 +174,46 @@ class DiseaseResultView extends StatelessWidget {
   }
 }
 
-class _SeverityChip extends StatelessWidget {
-  const _SeverityChip({required this.severity});
+/// Disease stage from the model: "High" or "Low".
+class _StageChip extends StatelessWidget {
+  const _StageChip({required this.stage});
 
-  final String severity;
+  final String stage;
 
   @override
   Widget build(BuildContext context) {
     final colors = Theme.of(context).colorScheme;
-    final high = severity.toLowerCase() == 'high';
+    final high = stage.toLowerCase() == 'high';
 
     return Chip(
-      label: Text('$severity severity'),
+      label: Text(stage),
       backgroundColor: high ? colors.errorContainer : colors.tertiaryContainer,
       labelStyle: TextStyle(
         color: high ? colors.onErrorContainer : colors.onTertiaryContainer,
       ),
       side: BorderSide.none,
       visualDensity: VisualDensity.compact,
+    );
+  }
+}
+
+class _LabelledImage extends StatelessWidget {
+  const _LabelledImage({required this.bytes, required this.label});
+
+  final Uint8List bytes;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(8),
+          child: Image.memory(bytes, fit: BoxFit.contain),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
+      ],
     );
   }
 }

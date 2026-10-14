@@ -54,7 +54,7 @@ void main() {
     expect(result.gradcamPng, isNull);
   });
 
-  testWidgets('shows top disease, severity and other possibilities', (
+  testWidgets('shows top disease, stage and other possibilities', (
     tester,
   ) async {
     final result = DiseaseResult.fromJson({
@@ -70,7 +70,8 @@ void main() {
     await tester.pumpWidget(_wrap(DiseaseResultView(result: result)));
 
     expect(find.text('Lumpy Skin Disease'), findsOneWidget);
-    expect(find.text('High severity'), findsOneWidget);
+    expect(find.text('Stage'), findsOneWidget);
+    expect(find.text('High'), findsOneWidget);
     expect(find.text('81.0%'), findsOneWidget);
     expect(find.text('Healthy / Normal'), findsOneWidget);
     expect(find.textContaining('not very sure'), findsNothing);
