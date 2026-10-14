@@ -256,7 +256,7 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
                           width: 52,
                           height: 52,
                           decoration: BoxDecoration(
-                            color: _green.withValues(alpha: 0.19),
+                            color: _green.withOpacity(0.19),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: const Icon(
@@ -665,7 +665,7 @@ class _SectionHeading extends StatelessWidget {
           title,
           style: const TextStyle(
             fontSize: 17,
-            fontWeight: FontWeight.w750,
+            fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 5),
@@ -790,8 +790,8 @@ class _Pill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        border: Border.all(color: color.withValues(alpha: 0.55)),
+        color: color.withOpacity(0.12),
+        border: Border.all(color: color.withOpacity(0.55)),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
