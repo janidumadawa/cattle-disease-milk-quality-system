@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 
+import 'disease_guide.dart';
 import 'disease_result.dart';
 
 /// Below this confidence the user is asked to try a better photo.
@@ -27,6 +28,7 @@ class DiseaseResultView extends StatelessWidget {
     final theme = Theme.of(context);
     final top = result.predictions.first;
     final others = result.predictions.skip(1).toList();
+    final guide = guideFor(top.classId); // null for Healthy
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -159,6 +161,45 @@ class DiseaseResultView extends StatelessWidget {
                     ),
                 ],
               ),
+            ),
+          ),
+        ],
+        if (guide != null) ...[
+          const SizedBox(height: 12),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('What you can see', style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Common signs of ${top.disease}. Check your animal for them.',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final sign in guide.signs) Chip(label: Text(sign)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          FilledButton.icon(
+            // TODO: open the treatment page once it is built.
+            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Treatment guide coming soon.')),
+            ),
+            icon: const Icon(Icons.medical_services_outlined),
+            label: const Text('See treatment'),
+            style: FilledButton.styleFrom(
+              minimumSize: const Size.fromHeight(52),
             ),
           ),
         ],
