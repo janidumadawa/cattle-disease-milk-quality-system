@@ -4,12 +4,14 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.db import init_db
 from app.disease.router import load_classifier
 from app.disease.router import router as disease_router
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    init_db()
     load_classifier()
     yield
 
