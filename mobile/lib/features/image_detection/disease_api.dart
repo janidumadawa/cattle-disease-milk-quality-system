@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
 import '../../config/api_config.dart';
 import 'disease_result.dart';
+import 'scan_history.dart';
 
 /// An error with a message that can be shown to the user.
 class DiseaseApiException implements Exception {
@@ -17,7 +19,7 @@ class DiseaseApiException implements Exception {
   String toString() => message;
 }
 
-/// Calls the backend's cattle disease identification endpoint.
+/// Calls the backend's cattle disease identification endpoints.
 class DiseaseApi {
   DiseaseApi({http.Client? client}) : _client = client ?? http.Client();
 
@@ -26,9 +28,13 @@ class DiseaseApi {
   // The first request after the backend starts can be slow.
   static const _timeout = Duration(seconds: 60);
 
+  static const _base = '/api/v1/disease';
+
+  /// Full URL of a path returned by the API, such as a stored photo.
+  static Uri url(String path) => Uri.parse('${ApiConfig.baseUrl}$path');
+
   Future<DiseaseResult> predict(XFile image) async {
-    final uri = Uri.parse('${ApiConfig.baseUrl}/api/v1/disease/predict');
-    final request = http.MultipartRequest('POST', uri)
+    final request = http.MultipartRequest('POST', url('$_base/predict'))
       ..files.add(
         http.MultipartFile.fromBytes(
           'image',
@@ -36,7 +42,35 @@ class DiseaseApi {
           filename: image.name,
         ),
       );
+    return DiseaseResult.fromJson(_json(await _send(request)));
+  }
 
+  /// Saved scans, newest first.
+  Future<ScanHistoryPage> history({int limit = 20, int offset = 0}) async {
+    final request = http.Request(
+      'GET',
+      url('$_base/history?limit=$limit&offset=$offset'),
+    );
+    return ScanHistoryPage.fromJson(_json(await _send(request)));
+  }
+
+  Future<ScanDetail> scan(int id) async {
+    final request = http.Request('GET', url('$_base/history/$id'));
+    return ScanDetail.fromJson(_json(await _send(request)));
+  }
+
+  Future<void> deleteScan(int id) async {
+    await _send(http.Request('DELETE', url('$_base/history/$id')));
+  }
+
+  /// Downloads a stored image, given its path from the API.
+  Future<Uint8List> image(String path) async {
+    return (await _send(http.Request('GET', url(path)))).bodyBytes;
+  }
+
+  /// Sends the request and returns the response, or throws a
+  /// [DiseaseApiException] with a message for the user.
+  Future<http.Response> _send(http.BaseRequest request) async {
     final http.Response response;
     try {
       final streamed = await _client.send(request).timeout(_timeout);
@@ -52,26 +86,32 @@ class DiseaseApi {
       );
     }
 
-    final Object? body;
+    if (response.statusCode >= 200 && response.statusCode < 300) {
+      return response;
+    }
+    // FastAPI errors look like {"detail": "message"}.
+    Object? detail;
     try {
-      body = jsonDecode(response.body);
+      final body = jsonDecode(response.body);
+      detail = body is Map<String, dynamic> ? body['detail'] : null;
+    } on FormatException {
+      detail = null;
+    }
+    throw DiseaseApiException(
+      detail is String
+          ? detail
+          : 'The server returned an error (${response.statusCode}).',
+    );
+  }
+
+  Map<String, dynamic> _json(http.Response response) {
+    try {
+      return jsonDecode(response.body) as Map<String, dynamic>;
     } on FormatException {
       throw DiseaseApiException(
         'Unexpected response from the server (${response.statusCode}).',
       );
     }
-
-    if (response.statusCode != 200) {
-      // FastAPI errors look like {"detail": "message"}.
-      final detail = body is Map<String, dynamic> ? body['detail'] : null;
-      throw DiseaseApiException(
-        detail is String
-            ? detail
-            : 'The server returned an error (${response.statusCode}).',
-      );
-    }
-
-    return DiseaseResult.fromJson(body as Map<String, dynamic>);
   }
 
   void close() => _client.close();
