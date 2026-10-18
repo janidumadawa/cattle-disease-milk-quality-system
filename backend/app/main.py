@@ -82,18 +82,126 @@ class MilkSampleRequest(BaseModel):
     readings: MilkSampleReadings
 
 
+class DeviceProgressUpdate(BaseModel):
+    status: Literal["measuring", "error"]
+    elapsed_seconds: int = Field(ge=0, le=15)
+    remaining_seconds: int = Field(ge=0, le=15)
+    temperature_c: float | None = Field(
+        default=None,
+        ge=-55,
+        le=125,
+    )
+    message: str = ""
+
+# ---------- Latest physical device sample ----------
+
+_latest_device_sample: dict | None = None
+
+_device_start_requested = False
+
+_device_progress: dict = {
+    "status": "idle",
+    "duration_seconds": 15,
+    "elapsed_seconds": 0,
+    "remaining_seconds": 15,
+    "temperature_c": None,
+    "temperature_source": "DS18B20",
+    "message": "Ready to start a sample.",
+    "updated_at": datetime.now(timezone.utc).isoformat(),
+}
+
+# ---------- ESP32 measurement coordination ----------
+
+@app.post("/api/v1/device/start")
+def request_device_start():
+    global _device_start_requested, _device_progress
+
+    if _device_progress["status"] in {"requested", "measuring"}:
+        return {
+            "status": "busy",
+            "message": "A measurement is already pending or running.",
+            "progress": _device_progress,
+        }
+
+    _device_start_requested = True
+
+    _device_progress = {
+        "status": "requested",
+        "duration_seconds": 15,
+        "elapsed_seconds": 0,
+        "remaining_seconds": 15,
+        "temperature_c": None,
+        "temperature_source": "DS18B20",
+        "message": "Waiting for the ESP32 to start measuring.",
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    return {
+        "status": "requested",
+        "message": "Measurement request queued for the ESP32.",
+        "progress": _device_progress,
+    }
+
+
+@app.get("/api/v1/device/command")
+def get_device_command():
+    global _device_start_requested
+
+    start_requested = _device_start_requested
+
+    # A start command is delivered only once.
+    if start_requested:
+        _device_start_requested = False
+
+    return {
+        "start_requested": start_requested,
+        "duration_seconds": 15,
+    }
+
+
+@app.post("/api/v1/device/progress")
+def update_device_progress(update: DeviceProgressUpdate):
+    global _device_progress
+
+    _device_progress = {
+        "status": update.status,
+        "duration_seconds": 15,
+        "elapsed_seconds": update.elapsed_seconds,
+        "remaining_seconds": update.remaining_seconds,
+        "temperature_c": update.temperature_c,
+        "temperature_source": (
+            "DS18B20" if update.temperature_c is not None else None
+        ),
+        "message": update.message,
+        "updated_at": datetime.now(timezone.utc).isoformat(),
+    }
+
+    return {
+        "status": "ok",
+        "progress": _device_progress,
+    }
+
+
+@app.get("/api/v1/device/progress")
+def get_device_progress():
+    return _device_progress
+
 # ---------- Milk-quality endpoint ----------
 
 @app.post("/api/v1/milk-samples")
 def receive_milk_sample(sample: MilkSampleRequest):
-    return {
+    global _latest_device_sample, _device_progress
+
+    received_at = datetime.now(timezone.utc).isoformat()
+
+    response_data = {
         "status": "received",
         "message": "Sample received and validated.",
         "sample_id": sample.sample_id,
         "measurement_duration_seconds":
             sample.measurement_duration_seconds,
         "data_mode": sample.data_mode,
-        "received_at": datetime.now(timezone.utc).isoformat(),
+        "received_at": received_at,
         "readings": sample.readings.model_dump(),
         "classification": {
             "result": sample.demo_scenario,
@@ -104,4 +212,38 @@ def receive_milk_sample(sample: MilkSampleRequest):
                 "demonstration. It is not an ML prediction."
             ),
         },
+    }
+
+    if sample.readings.temperature_c.source == "DS18B20":
+        _latest_device_sample = response_data
+
+        _device_progress = {
+            "status": "completed",
+            "duration_seconds":
+                sample.measurement_duration_seconds,
+            "elapsed_seconds":
+                sample.measurement_duration_seconds,
+            "remaining_seconds": 0,
+            "temperature_c":
+                sample.readings.temperature_c.value,
+            "temperature_source": "DS18B20",
+            "message": "Sample measurement completed.",
+            "updated_at": received_at,
+        }
+
+    return response_data
+
+# ---------- Latest device sample endpoint ----------
+
+@app.get("/api/v1/milk-samples/latest")
+def get_latest_device_sample():
+    if _latest_device_sample is None:
+        return {
+            "status": "empty",
+            "message": "No ESP32 temperature sample received yet.",
+        }
+
+    return {
+        "status": "ok",
+        "sample": _latest_device_sample,
     }

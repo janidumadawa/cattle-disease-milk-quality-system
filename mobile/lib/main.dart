@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'app_shell.dart';
+
 import 'services/milk_sample_api.dart';
 
 const _background = Color(0xFF0D0F0E);
@@ -21,16 +23,17 @@ class MedFarmApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final darkScheme = ColorScheme.fromSeed(
-      seedColor: _green,
-      brightness: Brightness.dark,
-    ).copyWith(
-      primary: _greenBright,
-      secondary: _greenBright,
-      surface: _surface,
-      error: _danger,
-      onSurface: _textPrimary,
-    );
+    final darkScheme =
+        ColorScheme.fromSeed(
+          seedColor: _green,
+          brightness: Brightness.dark,
+        ).copyWith(
+          primary: _greenBright,
+          secondary: _greenBright,
+          surface: _surface,
+          error: _danger,
+          onSurface: _textPrimary,
+        );
 
     return MaterialApp(
       title: 'MedFarm',
@@ -55,7 +58,7 @@ class MedFarmApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const MedFarmHomePage(),
+      home: const AppShell(milkQualityPage: MedFarmHomePage()),
     );
   }
 }
@@ -71,6 +74,9 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
   final MilkSampleApi _api = MilkSampleApi();
 
   bool _isLoading = false;
+  bool _isFetchingLatest = false;
+  bool _isRunningDeviceTest = false;
+  Map<String, dynamic>? _deviceProgress;
   Map<String, dynamic>? _sample;
   Map<String, dynamic>? _previewReadings;
   String? _error;
@@ -78,22 +84,10 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
 
   Future<void> _submitDemo(String scenario) async {
     final demoReadings = <String, Map<String, dynamic>>{
-      'temperature_c': {
-        'value': 4.8,
-        'source': 'SIMULATED',
-      },
-      'conductivity_us_cm': {
-        'value': 850.0,
-        'source': 'SIMULATED',
-      },
-      'turbidity_ntu': {
-        'value': 11.0,
-        'source': 'SIMULATED',
-      },
-      'ph': {
-        'value': 6.65,
-        'source': 'SIMULATED',
-      },
+      'temperature_c': {'value': 4.8, 'source': 'SIMULATED'},
+      'conductivity_us_cm': {'value': 850.0, 'source': 'SIMULATED'},
+      'turbidity_ntu': {'value': 11.0, 'source': 'SIMULATED'},
+      'ph': {'value': 6.65, 'source': 'SIMULATED'},
     };
 
     setState(() {
@@ -113,14 +107,12 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
           _countdownSeconds = remaining;
 
           if (remaining == 12) {
-            _previewReadings!['temperature_c'] =
-                demoReadings['temperature_c']!;
+            _previewReadings!['temperature_c'] = demoReadings['temperature_c']!;
           } else if (remaining == 9) {
             _previewReadings!['conductivity_us_cm'] =
                 demoReadings['conductivity_us_cm']!;
           } else if (remaining == 6) {
-            _previewReadings!['turbidity_ntu'] =
-                demoReadings['turbidity_ntu']!;
+            _previewReadings!['turbidity_ntu'] = demoReadings['turbidity_ntu']!;
           } else if (remaining == 3) {
             _previewReadings!['ph'] = demoReadings['ph']!;
           }
@@ -136,9 +128,7 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
       });
 
       // Submit the sample only after the countdown finishes.
-      final response = await _api.submitDemoSample(
-        demoScenario: scenario,
-      );
+      final response = await _api.submitDemoSample(demoScenario: scenario);
 
       if (!mounted) return;
 
@@ -161,7 +151,67 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
     }
   }
 
+  Future<void> _fetchLatestDeviceSample() async {
+    setState(() {
+      _isLoading = true;
+      _isFetchingLatest = true;
+      _countdownSeconds = 0;
+      _previewReadings = null;
+      _sample = null;
+      _error = null;
+    });
+
+    try {
+      final sample = await _api.getLatestDeviceSample();
+
+      if (!mounted) return;
+
+      if (sample == null) {
+        setState(() {
+          _error = 'No ESP32 sample found. Check that the device is running.';
+        });
+        return;
+      }
+
+      final readings = sample['readings'];
+      final temperature = readings is Map ? readings['temperature_c'] : null;
+
+      if (temperature is! Map || temperature['source'] != 'DS18B20') {
+        setState(() {
+          _error = 'The latest sample has no verified DS18B20 reading.';
+        });
+        return;
+      }
+
+      setState(() {
+        _sample = sample;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _error = e.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isFetchingLatest = false;
+          _countdownSeconds = 0;
+        });
+      }
+    }
+  }
+
   String _readingValue(String key, String unit) {
+    if (_isRunningDeviceTest && _sample == null && key == 'temperature_c') {
+      final temperature = _deviceProgress?['temperature_c'];
+
+      if (temperature is num) {
+        final value = temperature.toStringAsFixed(2);
+        return unit.isEmpty ? value : '$value $unit';
+      }
+    }
     final readings = _sample?['readings'] ?? _previewReadings;
 
     if (readings is! Map) return '—';
@@ -180,7 +230,119 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
     return unit.isEmpty ? formattedValue : '$formattedValue $unit';
   }
 
+  Future<void> _startSynchronizedDeviceTest() async {
+    setState(() {
+      _isLoading = true;
+      _isFetchingLatest = false;
+      _isRunningDeviceTest = true;
+      _countdownSeconds = 15;
+      _deviceProgress = null;
+      _previewReadings = null;
+      _sample = null;
+      _error = null;
+    });
+
+    var sampleReceived = false;
+
+    try {
+      // Ask the backend to start the physical ESP32 measurement.
+      await _api.startDeviceTest();
+
+      // Stop waiting if the device does not complete the cycle.
+      final deadline = DateTime.now().add(const Duration(seconds: 35));
+
+      while (mounted && DateTime.now().isBefore(deadline)) {
+        final progress = await _api.getDeviceProgress();
+
+        if (!mounted) return;
+
+        final status = progress['status']?.toString();
+        final remainingValue = progress['remaining_seconds'];
+
+        final remaining = remainingValue is num
+            ? remainingValue.toInt().clamp(0, 15)
+            : 15;
+
+        setState(() {
+          _deviceProgress = progress;
+          _countdownSeconds = remaining;
+        });
+
+        if (status == 'error') {
+          throw Exception(
+            progress['message']?.toString() ??
+                'The ESP32 reported a measurement error.',
+          );
+        }
+
+        if (status == 'completed') {
+          final sample = await _api.getLatestDeviceSample();
+
+          if (!mounted) return;
+
+          if (sample == null) {
+            throw Exception(
+              'The measurement completed, but no sample was returned.',
+            );
+          }
+
+          final readings = sample['readings'];
+          final temperature = readings is Map
+              ? readings['temperature_c']
+              : null;
+
+          if (temperature is! Map || temperature['source'] != 'DS18B20') {
+            throw Exception(
+              'The latest sample does not contain a DS18B20 reading.',
+            );
+          }
+
+          setState(() {
+            _sample = sample;
+          });
+
+          sampleReceived = true;
+          break;
+        }
+
+        if (status != 'requested' && status != 'measuring') {
+          throw Exception('Unexpected device progress state: $status');
+        }
+
+        // Poll the backend again to follow the ESP32's actual progress.
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+
+      if (!sampleReceived) {
+        throw Exception(
+          'Timed out waiting for the ESP32 measurement. '
+          'Check the device and backend.',
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _error = e.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isRunningDeviceTest = false;
+          _countdownSeconds = 0;
+        });
+      }
+    }
+  }
+
   String _readingSource(String key) {
+    if (_isRunningDeviceTest &&
+        _sample == null &&
+        key == 'temperature_c' &&
+        _deviceProgress?['temperature_c'] != null) {
+      return 'DS18B20';
+    }
     final readings = _sample?['readings'] ?? _previewReadings;
 
     if (readings is! Map) return 'No result yet';
@@ -203,20 +365,20 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
-          children: [
-            Icon(Icons.water_drop_rounded, color: _greenBright, size: 22),
-            SizedBox(width: 10),
-            Text('Milk quality'),
-          ],
+        automaticallyImplyLeading: false,
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 12),
+          child: Icon(Icons.water_drop_rounded, color: _greenBright, size: 22),
+        ),
+        title: const Text(
+          'Milk quality',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
         actions: const [
           Padding(
-            padding: EdgeInsets.only(right: 18),
-            child: _Pill(
-              label: 'PP1 DEMO',
-              color: _greenBright,
-            ),
+            padding: EdgeInsets.only(right: 12),
+            child: _Pill(label: 'PP1 DEMO', color: _greenBright),
           ),
         ],
       ),
@@ -241,10 +403,7 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
                   const SizedBox(height: 7),
                   const Text(
                     'Monitor sample readings during a 15-second test cycle.',
-                    style: TextStyle(
-                      color: _textSecondary,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: _textSecondary, fontSize: 14),
                   ),
                   const SizedBox(height: 22),
 
@@ -256,7 +415,7 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
                           width: 52,
                           height: 52,
                           decoration: BoxDecoration(
-                            color: _green.withOpacity(0.19),
+                            color: _green.withValues(alpha: 0.19),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: const Icon(
@@ -288,7 +447,7 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
                                   SizedBox(width: 7),
                                   Expanded(
                                     child: Text(
-                                      'Software simulation • device not connected',
+                                      'ESP32 integration • temperature from DS18B20',
                                       style: TextStyle(
                                         color: _textSecondary,
                                         fontSize: 12,
@@ -368,8 +527,14 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
                           Center(
                             child: Text(
                               _countdownSeconds > 0
-                                  ? 'Reading simulated sensors…'
-                                  : 'Sending sample to the API…',
+                                  ? _isRunningDeviceTest
+                                        ? 'ESP32 measurement: $_countdownSeconds seconds remaining'
+                                        : 'Reading simulated sensors: $_countdownSeconds seconds remaining'
+                                  : _isFetchingLatest
+                                  ? 'Fetching latest ESP32 sample...'
+                                  : _isRunningDeviceTest
+                                  ? 'Waiting for the completed ESP32 sample...'
+                                  : 'Sending sample to FastAPI...',
                               style: const TextStyle(
                                 color: _textSecondary,
                                 fontWeight: FontWeight.w600,
@@ -421,6 +586,42 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
                                 ),
                               ),
                             ),
+                            OutlinedButton.icon(
+                              onPressed: _isLoading
+                                  ? null
+                                  : _fetchLatestDeviceSample,
+                              icon: const Icon(Icons.sync),
+                              label: const Text('Fetch latest device reading'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: _greenBright,
+                                side: const BorderSide(color: _greenBright),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 17,
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(13),
+                                ),
+                              ),
+                            ),
+                            OutlinedButton.icon(
+                              onPressed: _isLoading
+                                  ? null
+                                  : _startSynchronizedDeviceTest,
+                              icon: const Icon(Icons.sensors),
+                              label: const Text('Start device test'),
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: _greenBright,
+                                side: const BorderSide(color: _greenBright),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 17,
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(13),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ],
@@ -434,7 +635,8 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
                       const Expanded(
                         child: _SectionHeading(
                           title: 'Sensor readings',
-                          subtitle: 'Values appear as the sample cycle progresses.',
+                          subtitle:
+                              'Values appear as the sample cycle progresses.',
                         ),
                       ),
                       _Pill(
@@ -494,7 +696,7 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'API request failed: ' + _error!,
+                              'API request failed: $_error!',
                               style: const TextStyle(color: _textPrimary),
                             ),
                           ),
@@ -534,10 +736,7 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
                                   ),
                                 ),
                               ),
-                              _Pill(
-                                label: 'DEMO ONLY',
-                                color: resultColor,
-                              ),
+                              _Pill(label: 'DEMO ONLY', color: resultColor),
                             ],
                           ),
                           const SizedBox(height: 18),
@@ -552,8 +751,7 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            'Sample ID: ' +
-                                (_sample!['sample_id']?.toString() ?? 'Unknown'),
+                            "Sample ID: ${_sample!['sample_id']?.toString() ?? 'Unknown'}",
                             style: const TextStyle(
                               color: _textSecondary,
                               fontSize: 12,
@@ -579,12 +777,7 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
                               ),
                               const SizedBox(width: 7),
                               Text(
-                                'Research validated: ' +
-                                    ((classification is Map &&
-                                            classification['research_validated'] ==
-                                                true)
-                                        ? 'Yes'
-                                        : 'No'),
+                                "Research validated: ${(classification is Map && classification['research_validated'] == true) ? 'Yes' : 'No'}",
                                 style: const TextStyle(
                                   color: _textSecondary,
                                   fontSize: 12,
@@ -600,7 +793,7 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
                   const SizedBox(height: 22),
                   const Center(
                     child: Text(
-                      'SIMULATION MODE • NO PHYSICAL SENSOR DATA',
+                      'DS18B20 TEMPERATURE • pH / EC / TURBIDITY SIMULATED',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         color: _textSecondary,
@@ -648,10 +841,7 @@ class _DarkPanel extends StatelessWidget {
 }
 
 class _SectionHeading extends StatelessWidget {
-  const _SectionHeading({
-    required this.title,
-    required this.subtitle,
-  });
+  const _SectionHeading({required this.title, required this.subtitle});
 
   final String title;
   final String subtitle;
@@ -663,10 +853,7 @@ class _SectionHeading extends StatelessWidget {
       children: [
         Text(
           title,
-          style: const TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-          ),
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
         ),
         const SizedBox(height: 5),
         Text(
@@ -710,11 +897,7 @@ class _SensorReadingRow extends StatelessWidget {
               color: _surfaceRaised,
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              color: _textSecondary,
-              size: 19,
-            ),
+            child: Icon(icon, color: _textSecondary, size: 19),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -730,7 +913,7 @@ class _SensorReadingRow extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  hasReading ? 'SIMULATED' : 'Waiting for reading',
+                  hasReading ? source : 'Waiting for reading',
                   style: const TextStyle(
                     color: _textSecondary,
                     fontSize: 10,
@@ -744,11 +927,7 @@ class _SensorReadingRow extends StatelessWidget {
           if (hasReading)
             const Padding(
               padding: EdgeInsets.only(right: 7),
-              child: Icon(
-                Icons.check_circle,
-                color: _greenBright,
-                size: 17,
-              ),
+              child: Icon(Icons.check_circle, color: _greenBright, size: 17),
             ),
           Flexible(
             child: Text(
@@ -777,10 +956,7 @@ class _PanelDivider extends StatelessWidget {
 }
 
 class _Pill extends StatelessWidget {
-  const _Pill({
-    required this.label,
-    required this.color,
-  });
+  const _Pill({required this.label, required this.color});
 
   final String label;
   final Color color;
@@ -790,8 +966,8 @@ class _Pill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
-        border: Border.all(color: color.withOpacity(0.55)),
+        color: color.withValues(alpha: 0.12),
+        border: Border.all(color: color.withValues(alpha: 0.55)),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
