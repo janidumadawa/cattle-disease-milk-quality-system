@@ -6,6 +6,7 @@ import 'disease_api.dart';
 import 'disease_result.dart';
 import 'disease_result_view.dart';
 import 'photo_guide.dart';
+import 'scan_history_screen.dart';
 
 /// Image-based cattle disease detection.
 class ScanScreen extends StatefulWidget {
@@ -126,7 +127,19 @@ class _ScanScreenState extends State<ScanScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Image-based Detection')),
+      appBar: AppBar(
+        title: const Text('Image-based Detection'),
+        actions: [
+          IconButton(
+            tooltip: 'Scan history',
+            onPressed: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => ScanHistoryScreen(api: _api)),
+            ),
+            icon: const Icon(Icons.history),
+          ),
+        ],
+      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 600),
