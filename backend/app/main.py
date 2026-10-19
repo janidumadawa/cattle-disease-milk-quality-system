@@ -1,9 +1,17 @@
-from fastapi.middleware.cors import CORSMiddleware
+import os
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Literal
 
-from fastapi import FastAPI
+import psycopg
+from dotenv import load_dotenv
+from fastapi import FastAPI, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+from psycopg.types.json import Jsonb
+
+
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 
 app = FastAPI(
@@ -37,6 +45,26 @@ def health():
         "service": "medfarm-api",
     }
 
+
+def get_db_connection():
+    database_url = os.getenv("DATABASE_URL")
+
+    if not database_url:
+        raise HTTPException(
+            status_code=503,
+            detail="Database configuration is not available.",
+        )
+
+    try:
+        return psycopg.connect(
+            database_url,
+            connect_timeout=10,
+        )
+    except psycopg.Error as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Database connection is unavailable.",
+        ) from exc
 
 # ---------- Sensor reading models ----------
 
@@ -186,13 +214,15 @@ def update_device_progress(update: DeviceProgressUpdate):
 def get_device_progress():
     return _device_progress
 
+
 # ---------- Milk-quality endpoint ----------
 
 @app.post("/api/v1/milk-samples")
 def receive_milk_sample(sample: MilkSampleRequest):
     global _latest_device_sample, _device_progress
 
-    received_at = datetime.now(timezone.utc).isoformat()
+    received_at_dt = datetime.now(timezone.utc)
+    received_at = received_at_dt.isoformat()
 
     response_data = {
         "status": "received",
@@ -214,7 +244,72 @@ def receive_milk_sample(sample: MilkSampleRequest):
         },
     }
 
-    if sample.readings.temperature_c.source == "DS18B20":
+    readings = sample.readings
+
+    # Persist every submitted sample, including clearly labelled
+    # simulated/demo samples, for traceability.
+    try:
+        with get_db_connection() as conn:
+            conn.execute(
+                """
+                INSERT INTO milk_samples (
+                    sample_id,
+                    received_at,
+                    measurement_duration_seconds,
+                    data_mode,
+                    demo_scenario,
+                    temperature_c,
+                    temperature_source,
+                    ph,
+                    ph_source,
+                    conductivity_us_cm,
+                    conductivity_source,
+                    turbidity_ntu,
+                    turbidity_source,
+                    classification_result,
+                    classification_status,
+                    research_validated,
+                    response_payload
+                )
+                VALUES (
+                    %s, %s, %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s, %s, %s, %s
+                )
+                """,
+                (
+                    sample.sample_id,
+                    received_at_dt,
+                    sample.measurement_duration_seconds,
+                    sample.data_mode,
+                    sample.demo_scenario,
+                    readings.temperature_c.value,
+                    readings.temperature_c.source,
+                    readings.ph.value,
+                    readings.ph.source,
+                    readings.conductivity_us_cm.value,
+                    readings.conductivity_us_cm.source,
+                    readings.turbidity_ntu.value,
+                    readings.turbidity_ntu.source,
+                    sample.demo_scenario,
+                    "DEMO_ONLY",
+                    False,
+                    Jsonb(response_data),
+                ),
+            )
+
+    except psycopg.errors.UniqueViolation as exc:
+        raise HTTPException(
+            status_code=409,
+            detail="A sample with this sample_id already exists.",
+        ) from exc
+    except psycopg.Error as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Could not save the sample to the database.",
+        ) from exc
+
+    # Keep the existing in-memory state for the live measurement UI.
+    if readings.temperature_c.source == "DS18B20":
         _latest_device_sample = response_data
 
         _device_progress = {
@@ -224,8 +319,7 @@ def receive_milk_sample(sample: MilkSampleRequest):
             "elapsed_seconds":
                 sample.measurement_duration_seconds,
             "remaining_seconds": 0,
-            "temperature_c":
-                sample.readings.temperature_c.value,
+            "temperature_c": readings.temperature_c.value,
             "temperature_source": "DS18B20",
             "message": "Sample measurement completed.",
             "updated_at": received_at,
@@ -233,11 +327,61 @@ def receive_milk_sample(sample: MilkSampleRequest):
 
     return response_data
 
-# ---------- Latest device sample endpoint ----------
+
+# ---------- Milk sample history endpoint ----------
+
+@app.get("/api/v1/milk-samples")
+def list_milk_samples(
+    limit: int = Query(default=20, ge=1, le=100),
+):
+    try:
+        with get_db_connection() as conn:
+            rows = conn.execute(
+                """
+                SELECT response_payload
+                FROM milk_samples
+                ORDER BY received_at DESC
+                LIMIT %s
+                """,
+                (limit,),
+            ).fetchall()
+
+    except psycopg.Error as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Could not retrieve milk sample history.",
+        ) from exc
+
+    return {
+        "status": "ok",
+        "count": len(rows),
+        "samples": [row[0] for row in rows],
+    }
+
+# ---------- Latest physical device sample endpoint ----------
 
 @app.get("/api/v1/milk-samples/latest")
 def get_latest_device_sample():
-    if _latest_device_sample is None:
+    try:
+        with get_db_connection() as conn:
+            row = conn.execute(
+                """
+                SELECT response_payload
+                FROM milk_samples
+                WHERE temperature_source = %s
+                ORDER BY received_at DESC
+                LIMIT 1
+                """,
+                ("DS18B20",),
+            ).fetchone()
+
+    except psycopg.Error as exc:
+        raise HTTPException(
+            status_code=503,
+            detail="Could not retrieve the latest device sample.",
+        ) from exc
+
+    if row is None:
         return {
             "status": "empty",
             "message": "No ESP32 temperature sample received yet.",
@@ -245,5 +389,5 @@ def get_latest_device_sample():
 
     return {
         "status": "ok",
-        "sample": _latest_device_sample,
+        "sample": row[0],
     }

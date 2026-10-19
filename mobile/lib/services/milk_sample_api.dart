@@ -140,6 +140,52 @@ Future<Map<String, dynamic>> getDeviceProgress() async {
 
   return decoded;
 }
+
+  // Retrieve saved milk samples from PostgreSQL via FastAPI.
+  Future<List<Map<String, dynamic>>> getSampleHistory({
+    int limit = 20,
+  }) async {
+    final uri = _endpoint.replace(
+      queryParameters: {'limit': limit.toString()},
+    );
+
+    final response = await http
+        .get(
+          uri,
+          headers: {
+            'Accept': 'application/json',
+          },
+        )
+        .timeout(const Duration(seconds: 10));
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Sample history request failed '
+        '(${response.statusCode}): ${response.body}',
+      );
+    }
+
+    final decoded = jsonDecode(response.body);
+
+    if (decoded is! Map<String, dynamic> ||
+        decoded['status'] != 'ok' ||
+        decoded['samples'] is! List) {
+      throw const FormatException(
+        'Unexpected sample history response format.',
+      );
+    }
+
+    final samples = decoded['samples'] as List<dynamic>;
+
+    if (!samples.every((item) => item is Map<String, dynamic>)) {
+      throw const FormatException(
+        'Sample history contains an invalid record.',
+      );
+    }
+
+    return samples.cast<Map<String, dynamic>>();
+  }
+
   // Retrieve the latest sample containing a real DS18B20 reading.
   // Returns null if the backend has no device sample yet.
   Future<Map<String, dynamic>?> getLatestDeviceSample() async {

@@ -82,6 +82,63 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
   String? _error;
   int _countdownSeconds = 0;
 
+  List<Map<String, dynamic>> _sampleHistory = [];
+  bool _isLoadingHistory = false;
+  String? _historyError;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSampleHistory();
+  }
+
+  Future<void> _fetchSampleHistory() async {
+    setState(() {
+      _isLoadingHistory = true;
+      _historyError = null;
+    });
+
+    try {
+      final samples = await _api.getSampleHistory(limit: 20);
+
+      if (!mounted) return;
+
+      setState(() {
+        _sampleHistory = samples;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _historyError = e.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoadingHistory = false;
+        });
+      }
+    }
+  }
+
+  String _formatSampleTime(dynamic value) {
+    if (value is! String) return 'Unknown time';
+
+    final parsed = DateTime.tryParse(value);
+    if (parsed == null) return value;
+
+    final local = parsed.toLocal();
+    final date =
+        '${local.year.toString().padLeft(4, '0')}-'
+        '${local.month.toString().padLeft(2, '0')}-'
+        '${local.day.toString().padLeft(2, '0')}';
+    final time =
+        '${local.hour.toString().padLeft(2, '0')}:'
+        '${local.minute.toString().padLeft(2, '0')}';
+
+    return '$date $time';
+  }
+
   Future<void> _submitDemo(String scenario) async {
     final demoReadings = <String, Map<String, dynamic>>{
       'temperature_c': {'value': 4.8, 'source': 'SIMULATED'},
@@ -135,6 +192,7 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
       setState(() {
         _sample = response;
       });
+      await _fetchSampleHistory();
     } catch (e) {
       if (!mounted) return;
 
@@ -300,6 +358,8 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
           setState(() {
             _sample = sample;
           });
+
+          await _fetchSampleHistory();
 
           sampleReceived = true;
           break;
@@ -791,16 +851,122 @@ class _MedFarmHomePageState extends State<MedFarmHomePage> {
                   ],
 
                   const SizedBox(height: 22),
-                  const Center(
-                    child: Text(
-                      'DS18B20 TEMPERATURE • pH / EC / TURBIDITY SIMULATED',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: _textSecondary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1.1,
-                      ),
+                  _DarkPanel(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Expanded(
+                              child: _SectionHeading(
+                                title: 'Sample history',
+                                subtitle: 'Saved records from PostgreSQL',
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: _isLoadingHistory
+                                  ? null
+                                  : _fetchSampleHistory,
+                              tooltip: 'Refresh sample history',
+                              icon: _isLoadingHistory
+                                  ? const SizedBox(
+                                      width: 18,
+                                      height: 18,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Icon(Icons.refresh),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+
+                        if (_historyError != null)
+                          Text(
+                            'Could not load history: $_historyError',
+                            style: const TextStyle(color: _danger),
+                          )
+                        else if (_sampleHistory.isEmpty)
+                          Text(
+                            _isLoadingHistory
+                                ? 'Loading saved samples...'
+                                : 'No saved samples found.',
+                            style: const TextStyle(color: _textSecondary),
+                          )
+                        else
+                          ..._sampleHistory.take(10).map((record) {
+                            final readings = record['readings'];
+                            final temperature = readings is Map
+                                ? readings['temperature_c']
+                                : null;
+
+                            final tempValue =
+                                temperature is Map &&
+                                    temperature['value'] is num
+                                ? '${(temperature['value'] as num).toStringAsFixed(2)} °C'
+                                : 'N/A';
+
+                            final tempSource = temperature is Map
+                                ? temperature['source']?.toString() ?? 'UNKNOWN'
+                                : 'UNKNOWN';
+
+                            final classification = record['classification'];
+                            final result = classification is Map
+                                ? classification['result']?.toString() ?? 'N/A'
+                                : 'N/A';
+
+                            final status = classification is Map
+                                ? classification['status']?.toString() ??
+                                      'UNKNOWN'
+                                : 'UNKNOWN';
+
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 14),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          record['sample_id']?.toString() ??
+                                              'Unknown sample',
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                      _Pill(
+                                        label: status,
+                                        color: _textSecondary,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    _formatSampleTime(record['received_at']),
+                                    style: const TextStyle(
+                                      color: _textSecondary,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text('Temperature: $tempValue'),
+                                  Text(
+                                    'Source: $tempSource • Outcome: $result',
+                                    style: const TextStyle(
+                                      color: _textSecondary,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 10),
+                                  const Divider(),
+                                ],
+                              ),
+                            );
+                          }),
+                      ],
                     ),
                   ),
                 ],
