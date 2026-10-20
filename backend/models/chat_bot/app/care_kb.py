@@ -41,6 +41,9 @@ NOT_DISEASES = {"General cattle health", EM, FEED, SICK}
 
 CARE = [
     # ---- Foot-and-Mouth Disease ----
+    ("KB-200", FMD, "about", "merck-fmd",
+     "FMD does not infect people (it is not a zoonosis), but people can carry the virus to other farms on their clothes and skin, so wash and change clothes after handling sick animals.",
+     "FMD මිනිසුන්ට බෝවන රෝගයක් නොවේ, නමුත් මිනිසුන්ගේ ඇඳුම් හා සම මගින් වෛරසය වෙනත් ගොවිපොළවලට ගෙන යා හැකි බැවින් රෝගී සතුන් අල්ලූ පසු සෝදා ඇඳුම් මාරු කරන්න."),
     ("KB-201", FMD, "sign", "merck-fmd",
      "Cattle with FMD often drool a lot and make smacking sounds with their lips.",
      "FMD ඇති ගවයන්ගේ කටින් බොහෝ කෙළ හැලෙන අතර තොල් සපමින් ශබ්ද කරන්න පුළුවන්."),
@@ -160,6 +163,19 @@ CARE = [
     ("KB-244", EM, "urgent", "merck-bloat",
      "A suddenly swollen left belly with hard breathing can be bloat, which can kill quickly. Call a vet immediately.",
      "හදිසියේ පිම්බුණු වම් බඩ සහ අමාරුවෙන් හුස්ම ගැනීම ඉක්මනින් මරණයට පත් කළ හැකි Bloat විය හැක. වහාම පශු වෛද්‍යවරයෙකුට කතා කරන්න."),
+    # What to do until the vet arrives (bleeding / sudden death, see KB-241, KB-242).
+    ("KB-246", EM, "treatment", "merck-anthrax",
+     "Treatment works best when it starts early, so do not wait: the vet can test for the cause and give medicine.",
+     "ප්‍රතිකාර ඉක්මනින් ආරම්භ කළ විට වඩාත් ඵලදායී නිසා ප්‍රමාද නොවන්න: පශු වෛද්‍යවරයාට හේතුව පරීක්ෂා කර බෙහෙත් ලබා දිය හැක."),
+    ("KB-247", EM, "care", "merck-anthrax",
+     "Until the vet comes, keep the animal apart and do not move, sell or slaughter it. Keep people and other animals away from its blood.",
+     "පශු වෛද්‍යවරයා එන තුරු සතා වෙන් කර තබන්න; එය ගෙන යාම, විකිණීම හෝ මැරීම නොකරන්න. මිනිසුන් හා අනෙක් සතුන් එහි ලේවලින් ඈත් කර තබන්න."),
+    ("KB-248", EM, "care", "merck-anthrax",
+     "Do not touch blood or discharges with bare hands; wear gloves and wash your hands with soap afterwards, because some of these diseases also infect people.",
+     "ලේ හෝ ශ්‍රාවවලට හිස් අතින් අල්ලන්න එපා; අත්වැසුම් පැළඳ, පසුව සබන් යොදා අත් සෝදන්න, මන්ද මෙවැනි සමහර රෝග මිනිසුන්ටත් බෝවේ."),
+    ("KB-249", EM, "prevention", "merck-anthrax",
+     "In areas where anthrax occurs, vaccinating cattle is the best protection; ask your government vet about the vaccination programme.",
+     "Anthrax ඇතිවන ප්‍රදේශවල ගවයන්ට එන්නත් කිරීම හොඳම ආරක්ෂාවයි; එන්නත් වැඩසටහන ගැන රජයේ පශු වෛද්‍යවරයාගෙන් විමසන්න."),
     ("KB-245", EM, "urgent", "merck-milk-fever",
      "A cow that cannot get up in the first days after calving may have milk fever. Call a vet immediately.",
      "පැටවා දැමීමෙන් පසු මුල් දිනවල නැගිටින්න බැරි එළදෙනකට කිරි උණ තිබිය හැක. වහාම පශු වෛද්‍යවරයෙකුට කතා කරන්න."),

@@ -50,6 +50,9 @@ const _suggestions = {
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key, this.api, this.onBack});
 
+  /// The chat's dark background, for the app shell around it.
+  static const backgroundColor = _background;
+
   /// Defaults to a [ChatApi] at [ChatApi.defaultBaseUrl].
   final ChatApi? api;
 
@@ -107,21 +110,46 @@ class _ChatScreenState extends State<ChatScreen> {
     _input.clear();
     final turn = _Turn(question, BotReply(AnswerMode.fast));
     setState(() => _turns.add(turn));
-    await _stream(question, turn.reply, showFrom: turn);
+    await _stream(question, turn.reply, _historyBefore(turn), showFrom: turn);
   }
 
   Future<void> _askModel(_Turn turn) async {
     if (_busy) return;
     final reply = BotReply(AnswerMode.model);
     setState(() => turn.reply.modelReply = reply);
-    await _stream(turn.question, reply);
+    await _stream(turn.question, reply, _historyBefore(turn));
   }
+
+  /// Questions suggested under the latest answer, minus ones already asked.
+  List<String> get _nextQuestions {
+    if (_busy || _turns.isEmpty) return const [];
+    final reply = _turns.last.reply;
+    if (!reply.finished || reply.error != null) return const [];
+    final asked = {for (final t in _turns) t.question.trim().toLowerCase()};
+    return [
+      for (final q in reply.meta?.suggestions ?? const <String>[])
+        if (!asked.contains(q.trim().toLowerCase())) q,
+    ];
+  }
+
+  /// Earlier questions and their topics, so the server can answer follow-ups
+  /// such as "how do I treat it?" or "she also has a fever".
+  List<ChatTurn> _historyBefore(_Turn turn) => [
+    for (final earlier in _turns.takeWhile((t) => t != turn))
+      if (earlier.reply.meta case final meta?)
+        ChatTurn(
+          question: earlier.question,
+          topic: meta.topic,
+          sick: meta.sick,
+        ),
+  ];
 
   /// [showFrom]: keep that question at the top so the answer is read from
   /// its start; otherwise follow the newest text.
   Future<void> _stream(
     String question,
-    BotReply reply, {
+    BotReply reply,
+    List<ChatTurn> history, {
     _Turn? showFrom,
   }) async {
     setState(() => _busy = true);
@@ -139,6 +167,7 @@ class _ChatScreenState extends State<ChatScreen> {
         question,
         mode: reply.mode,
         lang: _lang,
+        history: history,
       )) {
         if (!mounted) return;
         setState(() => reply.apply(event));
@@ -321,6 +350,11 @@ class _ChatScreenState extends State<ChatScreen> {
                           onAskModel: () => _askModel(turn),
                         ),
                       ),
+                    ),
+                  if (_nextQuestions case final next when next.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: _Suggestions(questions: next, onTap: _send),
                     ),
                 ],
               ),

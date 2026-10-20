@@ -69,6 +69,10 @@ class _AppShellState extends State<AppShell> {
     ];
 
     return Scaffold(
+      // Shows above the nav bar beside the raised Scan button: match the dark chat.
+      backgroundColor: pages[_currentIndex] is ChatScreen
+          ? ChatScreen.backgroundColor
+          : null,
       // IndexedStack keeps each tab's state when switching tabs.
       body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: MedFarmBottomNav(

@@ -74,7 +74,8 @@ DOSE_Q = re.compile(
 STOP = set("""a an the and or of in on at to for is are was were be been do does did i my me
 my we our you your it its this that what which who how when where why should can could
 would will about know tell with from by as if not so there their they them cow cows
-cattle animal animals has have had get got its very all over near some much many any""".split())
+cattle animal animals has have had get got its very all over near some much many any
+she her hers he him his also too now again still really just then today yesterday""".split())
 
 
 def normalise_topic(t):
@@ -181,7 +182,9 @@ SYMPTOMS = [
     # --- questions about rather than signs ---
     (r"\bticks?\b|කිනිතුල්", "ticks tick fever කිනිතුල්ලන්", (care_kb.TICK,)),
     (r"\bworms?\b|parasit|deworm|පණුව|පනුව", "worms parasites dewormer පණුවන්", (care_kb.WORM,)),
-    (r"\bfeed|\bfood|\bdiet|fodder|grass|water|ආහාර|කෑම|තෘණ|වතුර", "feed roughage water ආහාර තෘණ වතුර",
+    # Drinking water only: "watery milk" / "කිරි වතුර වගේ" is a mastitis sign.
+    (r"\bfeed|\bfood|\bdiet|fodder|grass|drinking water|(how much|enough|give|clean) water|ආහාර|කෑම|තෘණ|"
+     r"බොන වතුර|වතුර බොන|වතුර දෙන", "feed roughage water ආහාර තෘණ වතුර",
      (care_kb.FEED,)),
     (r"\bhumans?\b|people|person|family|children|catch|\bget\b.*\bfrom\b|spread to|zoonotic|"
      r"මිනිස්|ළමයි|පවුලේ|මටත්|බෝවෙනවද|බෝවේද|බෝවන|බෝවෙයිද", "humans people spread contact මිනිසුන්ට", ()),
@@ -298,7 +301,8 @@ _DOCS = [tokenize(" ".join(filter(None, [f["en"], f["si"], f["topic"], f["aspect
                                            TOPIC_ALIASES.get(f["topic"], "")]))) for f in KB]
 _DOC_GRAMS = [set(ngrams(d)) for d in _DOCS]
 # Fact text only (no topic aliases), for checking a fact really answers a question.
-_DOC_WORD_SETS = [set(tokenize(" ".join(filter(None, [f["en"], f["si"]])))) for f in KB]
+_DOC_WORD_LISTS = [tokenize(" ".join(filter(None, [f["en"], f["si"]]))) for f in KB]
+_DOC_WORD_SETS = [set(words) for words in _DOC_WORD_LISTS]
 WORD_INDEX = BM25(_DOCS)
 GRAM_INDEX = BM25([ngrams(d) for d in _DOCS])
 GRAM_WEIGHT = 0.3     # partial-word matches
@@ -362,17 +366,29 @@ def retrieve(question, k=3):
         "symptoms": [e.split()[0] for e in expansions],
         # Topics that at least one described sign points to.
         "sign_topics": {t for _, topics in signs for t in topics},
-        # Question words (and their KB wording) other than topic names: what the
-        # farmer wants to know.
+        # Question words other than topic names: what the farmer wants to know
+        # ("own": the farmer's words; "content": plus their KB wording).
+        "own": {t for t in tokenize(hide_disease_names(q)) if t not in TOPIC_WORDS},
         "content": {t for t in tokenize(" ".join([hide_disease_names(q)] + expansions))
                     if t not in TOPIC_WORDS},
     }
 
 
+def _common_prefix(a, b):
+    n = 0
+    for x, y in zip(a, b):
+        if x != y:
+            break
+        n += 1
+    return n
+
+
 def _word_in(token, words):
-    """Whole-word match allowing endings: "sell" ~ "selling", "කිරි" ~ "කිරිවල"."""
-    n = min(len(token), 4)
-    return any(w[:n] == token[:n] and abs(len(w) - len(token)) <= 4 for w in words)
+    """Same word with another ending: "sell" ~ "selling", "කිනිතුල්ලෝ" ~ "කිනිතුල්ලන්",
+    but not "contact" ~ "contagious"."""
+    return any(abs(len(w) - len(token)) <= 4
+               and _common_prefix(w, token) >= max(3, min(len(w), len(token)) - 1)
+               for w in words)
 
 
 def answer_match(fact, content):
@@ -380,6 +396,15 @@ def answer_match(fact, content):
     last" shares none with the LSD virus-family fact, so that fact is no answer."""
     words = _DOC_WORD_SETS[KB.index(fact)]
     return sum(_word_in(t, words) for t in content)
+
+
+def answer_rank(fact, found):
+    """Sort key for the fact that best answers an info question: the farmer's own
+    words first (how many, then how often: "how much water" -> the fact about
+    water), then their KB wording."""
+    words = _DOC_WORD_LISTS[KB.index(fact)]
+    own_hits = [sum(_word_in(t, [w]) for w in words) for t in found["own"]]
+    return (sum(h > 0 for h in own_hits), sum(own_hits), answer_match(fact, found["content"]))
 
 
 def diagnose(scores):
@@ -390,6 +415,53 @@ def diagnose(scores):
     ranked = sorted(((sum(sorted(v)[-2:]), t) for t, v in by_topic.items()), reverse=True)
     total = sum(s for s, _ in ranked) or 1
     return [{"disease": t, "share": round(s / total, 2), "score": round(s, 1)} for s, t in ranked[:3] if s > 0]
+
+
+TOPICS = {f["topic"] for f in KB} - {"General cattle health"}
+
+
+def previous_turn(history):
+    """The latest earlier turn of this chat that was answered on a topic.
+    history: [{"question": str, "topic": str | None, "sick": bool}, ...], oldest first."""
+    for turn in reversed((history if isinstance(history, list) else [])[-4:]):
+        if (isinstance(turn, dict) and turn.get("topic") in TOPICS
+                and isinstance(turn.get("question"), str)):
+            return turn
+    return None
+
+
+def has_own_topic(found):
+    """Whether the question alone gets an answer: general hygiene, or a clear topic."""
+    if not found["confident"]:
+        return False
+    topics = [d for d in diagnose(found["scores"])
+              if d["disease"] not in ("General cattle health", care_kb.EM)]
+    return (found["evidence"][0][0]["topic"] == "General cattle health"
+            or bool(topics and topics[0]["share"] >= MIN_DISEASE_SHARE))
+
+
+def followup_kind(question, found, last, lang):
+    """How a question builds on the previous turn:
+    "signs" - more signs of the same sick cow ("she also has a fever"),
+    "topic" - a question about the previous topic ("how do I treat it?"),
+    None    - it stands on its own (names a disease or describes specific signs)."""
+    if (not last or friendly.small_talk(question, lang) or friendly.named_disease(question)
+            or found["sign_topics"]):
+        return None
+    if friendly.is_sick_case(found["symptoms"]) and last.get("sick"):
+        return "signs"
+    want = friendly.intents(question)
+    if friendly.refers_back(question) or want["treat"] or want["prevent"] or want["signs"]:
+        return "topic"
+    if not has_own_topic(found):
+        # "Is the milk safe to drink?" after a mastitis answer: keep the earlier
+        # topic only if one of its facts contains most of the question's words.
+        trial = retrieve(f"{question} ({last['topic']})", 10)
+        words = trial["content"]
+        if words and any(answer_match(f, words) >= 0.6 * len(words)
+                         for f, _ in trial["evidence"] if f["topic"] == last["topic"]):
+            return "topic"
+    return None
 
 
 def detect_lang(text):
@@ -492,6 +564,16 @@ class Handler(BaseHTTPRequestHandler):
         if use_model and lang == "si":
             k = min(k, 2)  # Sinhala costs ~4x the tokens per fact on CPU
         found = retrieve(question, 10)
+        # Follow-ups lean on the latest topic of this chat (sent by the client).
+        last = previous_turn(req.get("history"))
+        follow = followup_kind(question, found, last, lang)
+        ask = question  # the question as understood, with its chat context
+        if follow == "signs":
+            ask = f"{last['question']}. {question}"
+        elif follow == "topic":
+            ask = f"{question} ({last['topic']})"
+        if follow:
+            found = retrieve(ask, 10)
         ranked = found["evidence"]
         if found["confident"]:
             # Only facts about the matched disease, so the model cannot drift to a
@@ -500,20 +582,28 @@ class Handler(BaseHTTPRequestHandler):
             ranked = same + [e for e in ranked if e not in same]
         evidence = ranked[:k]
         ev_ids = [f"{f['id']}-{stage}" for f, _ in evidence]
-        prompt = build_prompt(question, lang, evidence, stage)
+        prompt = build_prompt(ask, lang, evidence, stage)
         topics = diagnose(found["scores"]) if found["confident"] else []
         topics = [d for d in topics if d["disease"] not in ("General cattle health", care_kb.EM)]
         friendly_style = req.get("style", "friendly") == "friendly"
         # Short greetings win even if a word looks medical ("ආයුබෝවන්" contains "බෝවන").
         chat = (friendly.small_talk(question, lang)
-                if friendly_style and (not found["confident"] or len(question.split()) <= 3)
+                if friendly_style and not follow
+                and (not found["confident"] or len(question.split()) <= 3)
                 else None)
         if chat:
             found["confident"], topics = False, []
         want = friendly.intents(question)
         urgent = friendly.urgent_ids(question) if friendly_style and not chat else []
         # Name a topic only on a clear match (or when the farmer names it).
-        named = None if chat else friendly.named_disease(question)
+        named = None if chat else friendly.named_disease(ask)
+        if follow == "topic":
+            named, topics = last["topic"], []  # "how do I treat it?": the earlier topic
+        owned = (named is not None and not (want["treat"] or want["prevent"])
+                 and not friendly.is_sick_case(found["symptoms"])
+                 and friendly.about_my_animal(question))
+        if owned:
+            want["treat"] = True  # "my cow has mastitis": how it is treated and cared for
         sign_topics = found["sign_topics"]
         top = topics[0]["disease"] if topics else None
         if top and (topics[0]["share"] >= MIN_DISEASE_SHARE or top in (named,) or top in sign_topics):
@@ -522,13 +612,21 @@ class Handler(BaseHTTPRequestHandler):
             topic = named
         # "How do I treat bloat?" asks about a disease; it does not describe a sick cow.
         asks_how = named is not None and (want["treat"] or want["prevent"])
+        # A follow-up about the topic ("what are the signs of it?") is not a new
+        # report of a sick cow, even though the topic name ("pneumonia") is a sign.
         sick = (friendly.is_sick_case(found["symptoms"]) and found["confident"]
-                and not chat and not asks_how)
+                and not chat and not asks_how and follow != "topic")
         if sick and (named is None or topic != named) and topic not in sign_topics:
             # Fever, not eating, weakness ... fit many illnesses: name a disease only
             # when a described sign points to it, else give general sick-cow advice.
             match = next((d for d in topics if d["disease"] in sign_topics), None)
             topic = match["disease"] if match else care_kb.SICK
+        if urgent and (topic is None or topic != named) and topic not in sign_topics:
+            # A warning sign without signs of a known disease: never a guide to a
+            # disease that merely shares words ("cannot stand" is in a diarrhoea
+            # fact). Bleeding or sudden death get the emergency guide (what to do
+            # until the vet comes), other warnings the general sick-cow advice.
+            topic = care_kb.EM if {"KB-241", "KB-242"} & set(urgent) else care_kb.SICK
         # "Signs match ..." only for a sick animal, with the chosen disease first.
         diseases = []
         if sick and topic not in care_kb.NOT_DISEASES:
@@ -540,17 +638,18 @@ class Handler(BaseHTTPRequestHandler):
         if sick:
             signs = [e for e in pool if e[0]["kind"] in ("fact", "sign")]
             facts = extractive_facts(signs) if signs else []
-        elif topic and (want["treat"] or want["prevent"]):
-            facts = []  # the opened treatment / prevention sections are the answer
+        elif topic in (care_kb.EM, care_kb.SICK) or (topic and (want["treat"] or want["prevent"]
+                                                                 or want["signs"])):
+            facts = []  # the opened sections are the answer
         else:
             # Info questions: the entry sharing the most words with the question;
             # ties go to what the topic is (about / facts / signs), then retrieval
             # order. None if it shares no words.
             basic = {"about": 2, "fact": 2, "sign": 1}
-            matches = [(answer_match(f, found["content"]), basic.get(f["kind"], 0), -n, f)
+            matches = [(answer_rank(f, found), basic.get(f["kind"], 0), -n, f)
                        for n, (f, _) in enumerate(pool) if f["kind"] != "urgent"]
             best = max(matches, key=lambda m: m[:3], default=None)
-            facts = [best[-1]] if best and best[0] > 0 else []
+            facts = [best[-1]] if best and best[0][2] > 0 else []
         guarded = req.get("guard", True) and bool(DOSE_Q.search(question))
         # A named disease ("හරකාගේ ඇඟේ දද") always gets its topic guide.
         has_answer = bool((found["confident"] and (topic or facts)) or urgent or named)
@@ -561,7 +660,10 @@ class Handler(BaseHTTPRequestHandler):
             card, card_ids = friendly.refuse_card(KB, lang, stage, topic)
         elif friendly_style and not chat and has_answer:
             card, card_ids = friendly.card(KB, lang, stage, topic=topic, facts=facts, sick=sick,
-                                           want=want, urgent=urgent)
+                                           want=want, urgent=urgent, owned=owned)
+        # Next questions to tap; greetings and "I don't know" offer starter questions.
+        suggest = (friendly.suggestions(topic if card else None, lang, card, want, question)
+                   if friendly_style else [])
         shown = {f["id"] for f, _ in evidence}
         extra = [KB_BY_ID[i] for i in (card_ids if card else []) if i not in shown]
         ev_ids += [f"{f['id']}-{stage}" for f in extra]
@@ -587,6 +689,9 @@ class Handler(BaseHTTPRequestHandler):
         emit({"type": "meta", "lang": lang, "stage": stage, "prompt": prompt,
               "confident": found["confident"], "coverage": found["coverage"],
               "symptoms": found["symptoms"],
+              # For the client's chat history (follow-up questions).
+              "topic": topic if card else None, "sick": bool(sick and card), "followup": follow,
+              "suggestions": suggest,
               "diseases": [dict(d, label=friendly.disease_name(d["disease"], lang)) for d in diseases],
               "urgent": card["urgent"] if card else [], "urgent_title": card["urgent_title"] if card else "",
               "evidence": [ev_row(f, s) for f, s in evidence] + [ev_row(f, f["kind"]) for f in extra]})

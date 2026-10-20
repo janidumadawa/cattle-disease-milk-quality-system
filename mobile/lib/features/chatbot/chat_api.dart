@@ -47,6 +47,7 @@ class ChatApi {
     String question, {
     AnswerMode mode = AnswerMode.fast,
     String lang = 'auto',
+    List<ChatTurn> history = const [],
   }) async* {
     final request = http.Request('POST', Uri.parse('$baseUrl/api/ask'))
       ..headers['Content-Type'] = 'application/json'
@@ -55,6 +56,7 @@ class ChatApi {
         'mode': mode.name,
         'lang': lang,
         'style': 'friendly',
+        'history': [for (final turn in history) turn.toJson()],
       });
     final response = await _client.send(request);
     if (response.statusCode != 200) {

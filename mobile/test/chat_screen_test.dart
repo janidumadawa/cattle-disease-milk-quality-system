@@ -16,6 +16,9 @@ final _fmdReply = _ndjson([
     'type': 'meta',
     'lang': 'en',
     'confident': true,
+    'topic': 'Foot-and-Mouth Disease',
+    'sick': true,
+    'suggestions': ['Can people catch it?', 'How can I prevent it?'],
     'diseases': [
       {
         'disease': 'Foot-and-Mouth Disease',
@@ -130,6 +133,80 @@ void main() {
     await tester.tap(find.text('Mastitis වළක්වන්නේ කොහොමද?'));
     await tester.pumpAndSettle();
     expect(sent['lang'], 'si');
+  });
+
+  testWidgets('follow-up questions send the earlier topic as history', (
+    tester,
+  ) async {
+    final asked = <Map<String, dynamic>>[];
+    final client = MockClient((request) async {
+      if (request.url.path == '/api/status') {
+        return http.Response('{"ollama": true, "model": true}', 200);
+      }
+      asked.add(jsonDecode(request.body) as Map<String, dynamic>);
+      return http.Response.bytes(utf8.encode(_fmdReply), 200);
+    });
+    await _pumpChat(tester, client);
+
+    await tester.enterText(find.byType(TextField), 'my cow has blisters');
+    await tester.testTextInput.receiveAction(TextInputAction.send);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'how do I treat it?');
+    await tester.testTextInput.receiveAction(TextInputAction.send);
+    await tester.pumpAndSettle();
+
+    expect(asked.first['history'], isEmpty);
+    expect(asked.last['history'], [
+      {
+        'question': 'my cow has blisters',
+        'topic': 'Foot-and-Mouth Disease',
+        'sick': true,
+      },
+    ]);
+  });
+
+  testWidgets('suggested next questions can be tapped and are not repeated', (
+    tester,
+  ) async {
+    final asked = <Map<String, dynamic>>[];
+    final client = MockClient((request) async {
+      if (request.url.path == '/api/status') {
+        return http.Response('{"ollama": true, "model": true}', 200);
+      }
+      asked.add(jsonDecode(request.body) as Map<String, dynamic>);
+      return http.Response.bytes(utf8.encode(_fmdReply), 200);
+    });
+    await _pumpChat(tester, client);
+
+    await tester.enterText(find.byType(TextField), 'my cow has blisters');
+    await tester.testTextInput.receiveAction(TextInputAction.send);
+    await tester.pumpAndSettle();
+    // The chips sit under the (long) answer.
+    final chat = find.byType(ListView).first;
+    await tester.dragUntilVisible(
+      find.text('Can people catch it?'),
+      chat,
+      const Offset(0, -300),
+    );
+    await tester.tap(find.text('Can people catch it?'));
+    await tester.pumpAndSettle();
+    await tester.dragUntilVisible(
+      find.text('How can I prevent it?'),
+      chat,
+      const Offset(0, -300),
+    );
+
+    expect(asked.last['question'], 'Can people catch it?');
+    expect(asked.last['history'], hasLength(1));
+    // Already asked: only the other suggestion is offered now.
+    expect(
+      find.widgetWithText(ActionChip, 'Can people catch it?'),
+      findsNothing,
+    );
+    expect(
+      find.widgetWithText(ActionChip, 'How can I prevent it?'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('explains how to start the server when it is offline', (

@@ -102,6 +102,9 @@ class AskMeta {
     required this.urgentTitle,
     required this.urgent,
     required this.evidenceIds,
+    this.topic,
+    this.sick = false,
+    this.suggestions = const [],
   });
 
   factory AskMeta.fromJson(Map<String, dynamic> json) => AskMeta(
@@ -114,6 +117,9 @@ class AskMeta {
       for (final e in (json['evidence'] as List? ?? const []))
         (e as Map<String, dynamic>)['id'] as String,
     ],
+    topic: json['topic'] as String?,
+    sick: json['sick'] as bool? ?? false,
+    suggestions: _strings(json['suggestions']),
   );
 
   final String lang;
@@ -126,6 +132,31 @@ class AskMeta {
 
   /// Citations the answer may use; anything else is an invented citation.
   final List<String> evidenceIds;
+
+  /// The topic the answer was about, sent back with follow-up questions.
+  final String? topic;
+
+  /// The question described a sick animal.
+  final bool sick;
+
+  /// Next questions to offer as chips under the answer.
+  final List<String> suggestions;
+}
+
+/// An earlier question and the topic it was answered with, so the server can
+/// answer follow-ups such as "how do I treat it?".
+class ChatTurn {
+  const ChatTurn({required this.question, this.topic, this.sick = false});
+
+  final String question;
+  final String? topic;
+  final bool sick;
+
+  Map<String, Object?> toJson() => {
+    'question': question,
+    'topic': topic,
+    'sick': sick,
+  };
 }
 
 /// The server's checks on the final answer (same as the held-out eval).

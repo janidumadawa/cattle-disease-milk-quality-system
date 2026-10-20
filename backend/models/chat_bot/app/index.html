@@ -42,6 +42,7 @@ main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px;
 .examples button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--panel);
   color: var(--ink); border-radius: 99px; padding: 5px 12px; cursor: pointer; }
 .examples button:hover { border-color: var(--accent); }
+.examples.next { justify-content: flex-start; margin-top: -4px; }
 .q { align-self: flex-end; background: var(--accent); color: #fff; padding: 8px 14px;
   border-radius: 14px 14px 4px 14px; max-width: 80%; }
 .a { border: 1px solid var(--line); border-radius: 4px 14px 14px 14px; padding: 12px 14px; max-width: 92%; }
@@ -124,7 +125,7 @@ td.n, th.n { text-align: right; }
   </div>
   <div id="status" class="status">Checking…</div>
 </header>
-<div class="notice">Research prototype: not clinically approved. It answers only from 42 knowledge-base facts. For treatment or doses, contact a veterinarian.</div>
+<div class="notice">Research prototype: not clinically approved. It answers only from its knowledge base (with sources). For treatment or doses, contact a veterinarian.</div>
 
 <main>
   <section id="chat" class="panel">
@@ -197,6 +198,8 @@ td.n, th.n { text-align: right; }
 const $ = s => document.querySelector(s);
 const log = $('#log'), q = $('#q'), send = $('#send');
 let KB = [], busy = false;
+// Earlier questions and their topics, so follow-ups ("how do I treat it?") keep context.
+const HISTORY = [];
 
 function esc(s) { return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
@@ -296,7 +299,7 @@ function cardHTML(c, evIds, withUrgent) {
 
 // POST /api/ask and stream the NDJSON reply into the slots inside root:
 // .urg-slot (warnings, shown at once), .text (streamed answer), .cardw (topic card), .badges.
-async function stream(question, mode, root, onMeta, withCard = true) {
+async function stream(question, mode, root, onMeta, withCard = true, history = []) {
   const textEl = root.querySelector('.text'), badgeEl = root.querySelector('.badges');
   const urgEl = root.querySelector('.urg-slot'), cardEl = root.querySelector('.cardw');
   let text = '', evIds = [], lang = 'en', tick;
@@ -306,7 +309,7 @@ async function stream(question, mode, root, onMeta, withCard = true) {
   try {
     const res = await fetch('/api/ask', { method: 'POST', headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({ question, mode, style: $('#style').value, lang: $('#lang').value, stage: $('#stage').value,
-        k: +$('#k').value, guard: $('#guard').checked }) });
+        k: +$('#k').value, guard: $('#guard').checked, history }) });
     const reader = res.body.getReader(), dec = new TextDecoder();
     let buf = '';
     if (mode === 'model') tick = setInterval(() => { if (!text) textEl.textContent = `AI model is reading the evidence… ${Math.round((Date.now() - started) / 1000)}s`; }, 1000);
@@ -356,6 +359,7 @@ async function ask(question) {
   card.innerHTML = `<div class="dxw"></div><div class="urg-slot"></div><div class="text"></div><div class="cardw"></div><div class="badges"></div><div class="aiw"></div><div class="extra"></div>`;
   log.appendChild(card); log.scrollTop = log.scrollHeight;
   let meta;
+  const history = HISTORY.slice(-4);
   await stream(question, mode, card, m => {
     meta = m;
     card.querySelector('.dxw').innerHTML = diagnosisHTML(m);
@@ -365,7 +369,22 @@ async function ask(question) {
         (e.sources && e.sources.length ? `<div class="src">Source: ${e.sources.map(u => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(new URL(u).hostname.replace('www.', ''))}</a>`).join(', ')}</div>` : '') +
         `</div>`).join('') +
       `</details><details><summary>Prompt for the AI model</summary><pre>${esc(m.prompt)}</pre></details>`;
-  });
+  }, true, history);
+  if (meta) HISTORY.push({ question, topic: meta.topic, sick: meta.sick });
+  // Next questions to tap, under the latest answer only, minus ones already asked.
+  document.querySelectorAll('.examples.next').forEach(n => n.remove());
+  const asked = new Set(HISTORY.map(h => h.question.trim().toLowerCase()));
+  const next = ((meta && meta.suggestions) || []).filter(s => !asked.has(s.trim().toLowerCase()));
+  if (next.length) {
+    const row = document.createElement('div');
+    row.className = 'examples next';
+    for (const s of next) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.textContent = s; b.onclick = () => ask(s);
+      row.appendChild(b);
+    }
+    log.appendChild(row);
+  }
   // Offer the slower generated answer under an instant one (just its sentence:
   // the topic sections are already shown above).
   if (mode === 'fast' && meta && meta.confident) {
@@ -375,7 +394,7 @@ async function ask(question) {
       if (busy) return;
       busy = true; send.disabled = true;
       aiw.innerHTML = `<div class="sub"><b>AI model answer</b><div class="text"></div><div class="badges"></div></div>`;
-      await stream(question, 'model', aiw.querySelector('.sub'), null, false);
+      await stream(question, 'model', aiw.querySelector('.sub'), null, false, history);
       busy = false; send.disabled = false;
     };
   }

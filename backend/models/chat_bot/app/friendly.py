@@ -49,16 +49,18 @@ DISEASE = {
 SIGN_WORDS = {"blisters", "hooves", "mouth", "nodules", "fever", "udder", "milk",
               "swelling", "hair", "itching", "eyes", "body", "tears", "nasal",
               "appetite", "lameness", "foul-smelling", "cloudy", "diarrhoea", "bloat",
-              "cough", "urine", "pale", "weight", "calving", "weakness"}
+              "cough", "urine", "pale", "weight", "calving", "weakness", "watery"}
 
 TEXT = {
     "en": {
         "sick_open": "I'm sorry to hear about your cow. From what you describe, this may be {d}.",
         "info_open": "Good question! Here's what I know about {d}:",
         "treat_open": "Here's how {d} is usually treated and managed:",
+        "has_open": "I'm sorry your cow has {d}. Here's how it is treated and what you can do at home:",
         "prevent_open": "Here's how to protect your herd from {d}:",
         "plain_open": "Here's what I know:",
         "unclear": "I can't tell which disease this is from this description alone.",
+        "emergency_open": "This can be serious, so please call a vet or the government veterinary office now. Here is what to do until the vet arrives:",
         "general_open": "These signs can be caused by many different illnesses, so I can't say which disease it is from this description alone. Here is what to do now. If you notice more signs (in the udder or milk, mouth, feet, skin, dung or breathing), tell me and I can narrow it down.",
         "urgent_head": "Urgent:",
         "signs_head": "Signs that match:",
@@ -78,9 +80,11 @@ TEXT = {
         "sick_open": "ඔබේ ගවයාට මෙහෙම වීම ගැන කනගාටුයි. ඔබ කියන ලක්ෂණ අනුව මෙය {d} වෙන්න පුළුවන්.",
         "info_open": "හොඳ ප්‍රශ්නයක්! {d} ගැන මම දන්නා දේ:",
         "treat_open": "{d} සාමාන්‍යයෙන් ප්‍රතිකාර කරන සහ පාලනය කරන ආකාරය:",
+        "has_open": "ඔබේ ගවයාට {d} වැළඳීම ගැන කනගාටුයි. එයට ප්‍රතිකාර කරන ආකාරය සහ ඔබට නිවසේදී කළ හැකි දේ මෙන්න:",
         "prevent_open": "{d} වලින් ඔබේ රංචුව ආරක්ෂා කරගන්නා ආකාරය:",
         "plain_open": "මම දන්නා දේ:",
         "unclear": "මේ විස්තරයෙන් පමණක් මෙය කුමන රෝගයදැයි මට කියන්න බැහැ.",
+        "emergency_open": "මෙය බරපතල විය හැකි නිසා වහාම පශු වෛද්‍යවරයාට හෝ රජයේ පශු වෛද්‍ය කාර්යාලයට කතා කරන්න. පශු වෛද්‍යවරයා එන තුරු කළ යුතු දේ:",
         "general_open": "මෙම ලක්ෂණ විවිධ රෝග රාශියක් නිසා ඇති විය හැකි බැවින්, මේ විස්තරයෙන් පමණක් මෙය කුමන රෝගයදැයි මට කියන්න බැහැ. දැන් කළ යුතු දේ මෙන්න. තවත් ලක්ෂණ (බුරුල්ලේ හෝ කිරිවල, කටේ, පාදවල, සමේ, ගොමවල හෝ හුස්ම ගැනීමේ) දුටුවොත් මට කියන්න, එවිට මට වඩාත් නිවැරදිව කියන්න පුළුවන්.",
         "urgent_head": "හදිසි අවධානයට:",
         "signs_head": "ගැළපෙන ලක්ෂණ:",
@@ -149,6 +153,26 @@ def disease_name(topic, lang):
     return DISEASE[lang].get(topic, topic)
 
 
+# "it", "this disease", "ඒකට" ... point back to the previous answer's topic.
+REFERS = re.compile(r"\b(it|its|this|that|these|those|she|her|he|him|they|them)\b|"
+                    r"ඒක|මේක|ඕක|එය|ඒ රෝග|මේ රෝග|ඒ ලෙඩ|මේ ලෙඩ|ඒ ගව|එම ගව|ඒ හරක|ඇයට|ඌට", re.I)
+
+
+def refers_back(question):
+    return bool(REFERS.search(question))
+
+
+# A statement about the farmer's own animal ("my cow has mastitis"), not a question.
+MY_ANIMAL = re.compile(r"\b(my|our)\b.{0,25}\b(cows?|cattle|calf|calves|heifers?|bulls?|herd|animals?)\b|"
+                       r"මගේ|මගෙ|අපේ|අපෙ", re.I)
+QUESTION = re.compile(r"\?|^\s*(what|how|is|are|can|does|do|why|when|which|should)\b|"
+                      r"\b(ද|කොහොමද|මොකද|මොනවද|ඇයි)\s*$", re.I)
+
+
+def about_my_animal(question):
+    return bool(MY_ANIMAL.search(question)) and not QUESTION.search(question)
+
+
 def named_disease(question):
     for rx, topic in NAMED:
         if rx.search(question):
@@ -156,8 +180,12 @@ def named_disease(question):
     return None
 
 
+SIGNS_Q = re.compile(r"\bsigns?\b|symptom|look for|ලක්ෂණ", re.I)
+
+
 def intents(question):
-    return {"treat": bool(TREAT_Q.search(question)), "prevent": bool(PREVENT_Q.search(question))}
+    return {"treat": bool(TREAT_Q.search(question)), "prevent": bool(PREVENT_Q.search(question)),
+            "signs": bool(SIGNS_Q.search(question))}
 
 
 MILK_BLOOD = re.compile(r"milk.{0,20}blood|blood.{0,15}milk|bloody milk|කිරි.{0,6}ලේ|ලේ.{0,6}කිරි", re.I)
@@ -211,7 +239,7 @@ def is_sick_case(symptoms):
 # order a farmer would want them. Care entries (KB-2xx) join by their kind.
 TOPIC_SETS = {
     "Foot-and-Mouth Disease": {
-        "about": ["KB-001", "KB-002", "KB-003", "KB-005"],
+        "about": ["KB-001", "KB-002", "KB-003", "KB-005", "KB-200"],
         "signs": ["KB-006", "KB-007", "KB-008", "KB-201", "KB-202", "KB-203", "KB-204"]},
     "Lumpy Skin Disease": {
         "about": ["KB-028", "KB-029", "KB-030", "KB-213", "KB-053"],
@@ -254,16 +282,18 @@ def open_sections(sick, want, refusing=False, advice=False):
         return {"treatment"}
     if sick:
         return {"treatment", "care", "prevention"}
-    if want["treat"] or want["prevent"]:
-        return ({"treatment", "care"} if want["treat"] else set()) | \
-               ({"prevention"} if want["prevent"] else set())
+    asked = (({"treatment", "care"} if want["treat"] else set())
+             | ({"prevention"} if want["prevent"] else set())
+             | ({"signs"} if want.get("signs") else set()))
+    if asked:
+        return asked
     if advice:
         return {"about", "care", "prevention"}
     return {"about"}
 
 
 def card(kb, lang, stage, *, topic, facts=(), sick=False, want=None, urgent=(),
-         intro=None, skip=(), refusing=False):
+         intro=None, skip=(), refusing=False, owned=False):
     """Structured answer. Each entry appears once; returns (card, cited KB ids)."""
     want = want or {"treat": False, "prevent": False}
     by_id = {e["id"]: e for e in kb}
@@ -283,7 +313,8 @@ def card(kb, lang, stage, *, topic, facts=(), sick=False, want=None, urgent=(),
     if intro is None:
         key = (("unclear" if urgent else "plain_open") if not topic else
                "general_open" if topic == care_kb.SICK else
-               "sick_open" if sick else "treat_open" if want["treat"] else
+               "emergency_open" if topic == care_kb.EM else
+               "sick_open" if sick else "has_open" if owned else "treat_open" if want["treat"] else
                "prevent_open" if want["prevent"] else "info_open")
         intro = t[key].format(d=d)
     c = {"intro": intro, "urgent_title": t["urgent_head"].rstrip(":"), "urgent": rows(urgent),
@@ -292,7 +323,7 @@ def card(kb, lang, stage, *, topic, facts=(), sick=False, want=None, urgent=(),
          "sections": [],
          "closing": t["sick_close"] if (sick or urgent or want["treat"] or refusing) else t["info_close"]}
     if topic and topic != "General cattle health":
-        opened = open_sections(sick or topic == care_kb.SICK, want, refusing,
+        opened = open_sections(sick or topic in (care_kb.SICK, care_kb.EM), want, refusing,
                                advice=topic == care_kb.FEED)
         for key in SECTION_KEYS:
             items = rows(section_entries(kb, topic, key))
@@ -315,6 +346,79 @@ def card_text(c):
         parts.append(s["title"] + ":\n" + "\n".join(f"• {r['text']} [{r['id']}]" for r in s["items"]))
     parts.append(c["closing"])
     return "\n\n".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# Next questions to offer under an answer, so farmers can tap instead of typing.
+# Each one is answered by the server as a follow-up on the same topic.
+
+SUGGEST = {
+    "en": {
+        "treat": "How is it treated?",
+        "prevent": "How can I prevent it?",
+        "signs": "What are the signs of it?",
+        "people": "Can people catch it?",
+        "milk": "Is the milk safe to drink?",
+        "milk_use": "Can I use or sell its milk?",
+        "vet_wait": "What should I do until the vet comes?",
+        "water": "How much water does a cow need?",
+        "milk_drop": "Why did my cow's milk drop?",
+        "more": ["Her udder is swollen and hot", "She has blisters in her mouth", "She has diarrhoea"],
+        "start": ["My cow has blisters in its mouth", "My cow's udder is swollen", "My calf has diarrhoea"],
+    },
+    "si": {
+        "treat": "ඒකට ප්‍රතිකාර මොනවද?",
+        "prevent": "ඒක වළක්වන්නේ කොහොමද?",
+        "signs": "ඒකේ ලක්ෂණ මොනවද?",
+        "people": "ඒක මිනිසුන්ටත් බෝවෙනවද?",
+        "milk": "කිරි බොන්න පුළුවන්ද?",
+        "milk_use": "ඒ ගවයාගේ කිරි භාවිත කරන්න පුළුවන්ද?",
+        "vet_wait": "වෛද්‍යවරයා එනකම් මොකද කරන්න ඕන?",
+        "water": "එළදෙනකට බොන වතුර කොච්චර ඕනද?",
+        "milk_drop": "කිරි අඩු වුණේ ඇයි?",
+        "more": ["තන ඉදිමිලා රස්නෙයි", "කටේ බිබිලි තියෙනවා", "බඩ යනවා"],
+        "start": ["හරකාගේ කටේ බිබිලි", "හරකාගේ තන ඉදිමිලා", "වස්සාට බඩ යනවා"],
+    },
+}
+# Topic-specific questions the knowledge base can answer.
+TOPIC_SUGGEST = {
+    "Foot-and-Mouth Disease": ["milk_use", "people"],
+    "Lumpy Skin Disease": ["people"],
+    "Ringworm": ["people"],
+    "Mastitis": ["milk"],
+}
+MILK_ASKED = re.compile(r"drink|safe|sell|බොන්න|විකුණ", re.I)
+PEOPLE_ASKED = re.compile(r"\bhumans?\b|people|person|catch|zoono|මිනිස්|බෝවෙ", re.I)
+
+
+def suggestions(topic, lang, card, want, question, limit=3):
+    """Up to `limit` next questions, leaving out what this answer already shows."""
+    t = SUGGEST[lang]
+    if card is None:
+        return t["start"]
+    if topic == care_kb.SICK:
+        return t["more"][:limit]  # more signs narrow the disease down
+    if topic == care_kb.EM:
+        return []  # the emergency card is already complete: call the vet
+    if topic == care_kb.FEED:
+        keys = ["water", "milk_drop"]
+    elif topic and topic != "General cattle health":
+        keys = ["treat", "prevent"] + TOPIC_SUGGEST.get(topic, []) + ["signs"]
+    else:
+        return t["start"]
+    opened = {s["key"] for s in card["sections"] if s["open"]}
+    skip = {
+        "treat": "treatment" in opened or want["treat"],
+        "prevent": "prevention" in opened or want["prevent"],
+        "signs": "signs" in opened or want.get("signs"),
+        "milk": bool(MILK_ASKED.search(question)),
+        "milk_use": bool(MILK_ASKED.search(question) or re.search(r"\buse\b|භාවිත", question, re.I)),
+        "people": bool(PEOPLE_ASKED.search(question)),
+        "vet_wait": want["treat"],
+        "milk_drop": bool(re.search(r"drop|less|අඩු", question, re.I)),
+        "water": bool(re.search(r"water|වතුර", question, re.I)),
+    }
+    return [t[k] for k in keys if not skip.get(k)][:limit]
 
 
 def refuse_card(kb, lang, stage, topic):
