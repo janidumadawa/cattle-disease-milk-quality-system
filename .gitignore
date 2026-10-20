@@ -38,3 +38,5 @@ logs/
 *.gguf
 *.safetensors
 backend/models/chat_bot/hf_lora_adapter/tokenizer.json
+*.onnx
+*.keras

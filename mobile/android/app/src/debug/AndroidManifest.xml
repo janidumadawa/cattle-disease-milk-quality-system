@@ -5,6 +5,6 @@
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Debug builds call the local backend over plain HTTP
-         (http://10.0.2.2:8000 from the emulator). -->
+         (http://10.0.2.2:8000 and :8001 from the emulator). -->
     <application android:usesCleartextTraffic="true"/>
 </manifest>

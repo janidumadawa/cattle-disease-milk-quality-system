@@ -4,7 +4,8 @@ Rebuilds the 42-fact MedFarm KB from ../dataset.jsonl, retrieves evidence with
 BM25, builds the exact llm_answer() prompt the adapter was trained on, and
 streams the answer from Ollama (model: medfarm-llama).
 
-Run:  python app/server.py   then open http://localhost:8000
+Run:  python app/server.py   then open http://localhost:8001
+(port 8001: the main FastAPI backend in backend/app uses 8000)
 """
 import json
 import math
@@ -26,7 +27,7 @@ ROOT = os.path.dirname(HERE)
 DATASET = os.path.join(ROOT, "dataset.jsonl")
 OLLAMA = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/")
 MODEL = os.environ.get("MEDFARM_MODEL", "medfarm-llama")
-PORT = int(os.environ.get("PORT", "8000"))
+PORT = int(os.environ.get("PORT", "8001"))
 # 0.0.0.0 lets a phone on the same Wi-Fi reach the server (the emulator works with 127.0.0.1).
 HOST = os.environ.get("MEDFARM_HOST", "127.0.0.1")
 
@@ -840,7 +841,7 @@ if __name__ == "__main__":
         server = ThreadingHTTPServer((HOST, PORT), Handler)
     except OSError:
         sys.exit(f"Port {PORT} is already in use. Close the other MedFarm server first "
-                 f"(or set PORT=8001).")
+                 f"(or set PORT=8002).")
     threading.Thread(target=prewarm, daemon=True).start()
     print(f"Open http://127.0.0.1:{PORT}")
     server.serve_forever()

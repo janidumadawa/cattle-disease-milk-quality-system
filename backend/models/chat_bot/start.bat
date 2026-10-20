@@ -25,5 +25,5 @@ if errorlevel 1 (
   ollama create medfarm-llama -f Modelfile || (pause & exit /b 1)
 )
 
-start "" http://127.0.0.1:8000
+start "" http://127.0.0.1:8001
 python app\server.py

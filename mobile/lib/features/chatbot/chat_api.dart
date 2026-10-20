@@ -14,16 +14,16 @@ class ChatApi {
   final http.Client _client;
   final String baseUrl;
 
-  /// Override with `--dart-define=MEDFARM_CHAT_URL=http://192.168.1.10:8000`
+  /// Override with `--dart-define=MEDFARM_CHAT_URL=http://192.168.1.10:8001`
   /// when running on a phone.
   static String get defaultBaseUrl {
     const fromEnv = String.fromEnvironment('MEDFARM_CHAT_URL');
     if (fromEnv.isNotEmpty) return fromEnv;
     // The Android emulator reaches the host computer at 10.0.2.2.
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:8000';
+      return 'http://10.0.2.2:8001';
     }
-    return 'http://127.0.0.1:8000';
+    return 'http://127.0.0.1:8001';
   }
 
   Future<ServerStatus> status() async {
