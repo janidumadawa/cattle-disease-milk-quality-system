@@ -210,10 +210,18 @@ SI_TERMS = [("Clinical mastitis හි", "පැහැදිලි ලක්ෂ�
             ("Mastitis", "බුරුලු ප්‍රදාහය"), ("Ringworm", "දද")]
 
 
+# Proper names that contain a disease name and must stay as they are.
+KEEP_NAMES = ["California Mastitis Test"]
+
+
 def localize(text, lang):
     if lang == "si":
+        for i, name in enumerate(KEEP_NAMES):
+            text = text.replace(name, f"\x00{i}\x00")
         for en, si in SI_TERMS:
             text = text.replace(en, si)
+        for i, name in enumerate(KEEP_NAMES):
+            text = text.replace(f"\x00{i}\x00", name)
     return text
 
 
@@ -265,6 +273,116 @@ TITLES = {
 }
 TEXT["en"]["info_open"] = "Good question! Here's a simple guide to {d}."
 TEXT["si"]["info_open"] = "හොඳ ප්\u200dරශ්නයක්! {d} ගැන සරල මඟපෙන්වීමක්."
+
+# Several ways to say the same framing, so answers do not read word for word the
+# same every time. Only the framing varies: KB facts keep their exact, cited wording.
+VARIANTS = {
+    "en": {
+        "sick_open": [
+            "I'm sorry to hear about your cow. From what you describe, this may be {d}.",
+            "That must be worrying. The signs you describe can point to {d}.",
+            "Thank you for the details. These signs often match {d}.",
+        ],
+        "info_open": [
+            "Good question! Here's a simple guide to {d}.",
+            "Here's what you should know about {d}.",
+            "Let me explain {d} simply.",
+        ],
+        "treat_open": [
+            "Here's how {d} is usually treated and managed:",
+            "This is how {d} is treated, and what you can do yourself:",
+            "Treatment for {d} works like this:",
+        ],
+        "prevent_open": [
+            "Here's how to protect your herd from {d}:",
+            "You can lower the risk of {d} with these steps:",
+            "To keep {d} away from your herd:",
+        ],
+        "has_open": [
+            "I'm sorry your cow has {d}. Here's how it is treated and what you can do at home:",
+            "Sorry to hear that. Here's what helps a cow with {d}, and what the vet will do:",
+        ],
+        "sick_close": [
+            TEXT["en"]["sick_close"],
+            "A vet visit soon is the safest step; they can examine your cow and treat it properly. "
+            "Ask me anything else you need.",
+            "Please don't wait too long to call your vet or the government veterinary office. "
+            "I'm here if you have more questions.",
+        ],
+        "info_close": [
+            TEXT["en"]["info_close"],
+            "Hope that's useful. Ask me anytime.",
+            "Is there anything else you'd like to know?",
+        ],
+        "hello": [
+            TEXT["en"]["hello"],
+            "Hi there! I'm MedFarm. Tell me what you see in your cow, such as \"her udder is "
+            "swollen\", and I'll help you understand it and what to do.",
+        ],
+        "thanks": [
+            TEXT["en"]["thanks"],
+            "Happy to help! I hope your cattle stay healthy.",
+            "Anytime! Come back whenever you have a question.",
+        ],
+    },
+    "si": {
+        "sick_open": [
+            "ඔබේ ගවයාට මෙහෙම වීම ගැන කනගාටුයි. ඔබ කියන ලක්ෂණ අනුව මෙය {d} වෙන්න පුළුවන්.",
+            "මේක කරදරයක් තමයි. ඔබ කියන ලක්ෂණ {d} වලට ගැළපෙනවා.",
+            "ලක්ෂණ කිව්වාට ස්තූතියි. ඒවා බොහෝවිට {d} වලට ගැළපෙනවා.",
+        ],
+        "info_open": [
+            TEXT["si"]["info_open"],
+            "{d} ගැන ඔබ දැනගත යුතු දේ මෙන්න.",
+            "{d} ගැන සරලව කියන්නම්.",
+        ],
+        "treat_open": [
+            TEXT["si"]["treat_open"],
+            "{d} වලට ප්‍රතිකාර කරන ආකාරය සහ ඔබට කළ හැකි දේ මෙන්න:",
+            "{d} සඳහා ප්‍රතිකාර මෙහෙමයි:",
+        ],
+        "prevent_open": [
+            TEXT["si"]["prevent_open"],
+            "මේ පියවරවලින් {d} ඇතිවීමේ අවදානම අඩු කරගන්න පුළුවන්:",
+            "{d} ඔබේ රංචුවට නොඑන්න නම්:",
+        ],
+        "has_open": [
+            TEXT["si"]["has_open"],
+            "ඒ ගැන කනගාටුයි. {d} ඇති ගවයෙකුට උදව් වන දේ සහ පශු වෛද්‍යවරයා කරන දේ මෙන්න:",
+        ],
+        "sick_close": [
+            TEXT["si"]["sick_close"],
+            "ඉක්මනින් පශු වෛද්‍යවරයෙකු ලවා පරීක්ෂා කරවීම ආරක්ෂිතම පියවරයි. තව දෙයක් දැනගන්න ඕන නම් අහන්න.",
+            "පශු වෛද්‍යවරයාට හෝ රජයේ පශු වෛද්‍ය කාර්යාලයට කතා කිරීම ප්‍රමාද කරන්න එපා. "
+            "තව ප්‍රශ්න තියෙනවා නම් මම ඉන්නවා.",
+        ],
+        "info_close": [
+            TEXT["si"]["info_close"],
+            "මේක ප්‍රයෝජනවත් වෙයි කියලා හිතනවා. ඕනම වෙලාවක අහන්න.",
+            "තව දැනගන්න ඕන දෙයක් තියෙනවද?",
+        ],
+        "hello": [
+            TEXT["si"]["hello"],
+            "හලෝ! මම MedFarm. ඔබේ ගවයාට තියෙන ලක්ෂණ කියන්න, උදාහරණයක් ලෙස \"තන ඉදිමිලා\". "
+            "ඒ ගැන තේරුම් ගන්නත් කළ යුතු දේ දැනගන්නත් මම උදව් කරන්නම්.",
+        ],
+        "thanks": [
+            TEXT["si"]["thanks"],
+            "කමක් නැහැ! ඔබේ ගවයන්ට සුවය ලැබේවා.",
+            "උදව් කරන්න ලැබුණාට සතුටුයි. ඕනම වෙලාවක අහන්න.",
+        ],
+    },
+}
+for _lang, _texts in VARIANTS.items():
+    TEXT[_lang].update(_texts)
+
+
+def say(lang, key, **fields):
+    """A TEXT phrase; keys with several wordings get a random one each time."""
+    value = TEXT[lang][key]
+    if isinstance(value, list):
+        value = random.choice(value)
+    return value.format(**fields) if fields else value
 
 
 def section_entries(kb, topic, key):

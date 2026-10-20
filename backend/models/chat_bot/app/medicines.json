@@ -1,5 +1,5 @@
 {
-  "_note": "Medicines shown on the treatment screen. Every entry comes from the source given. dose, frequency, duration and withdrawal are deliberately empty unless the source gives them: fill them only from the official DAPH treatment guideline or the product label, checked by a veterinarian. Empty fields are shown as 'set by your vet'.",
+  "_note": "Medicines shown on the treatment screen. Optional \"stages\": [\"High\"] shows an entry only for that stage. Every entry comes from the source given. dose, frequency, duration and withdrawal are deliberately empty unless the source gives them: fill them only from the official DAPH treatment guideline or the product label, checked by a veterinarian. Empty fields are shown as 'set by your vet'.",
   "Foot-and-Mouth Disease": [
     {
       "name": {"en": "Pain and fever relief (anti-inflammatory medicine)",
@@ -66,6 +66,7 @@
       "route": {"en": "Into the vein (by the vet) or by mouth", "si": "නහරයට (පශු වෛද්‍යවරයා මගින්) හෝ මුඛයෙන්"},
       "dose": null, "frequency": null, "duration": null, "withdrawal": null,
       "prescription": true,
+      "stages": ["High"],
       "source": "merck-mastitis"
     }
   ],

@@ -111,7 +111,12 @@ void main() {
       const Offset(0, -300),
     );
     expect(find.text('Medicines'), findsOneWidget);
-    expect(find.text('Set by your vet'), findsWidgets);
+    // Everything set by the vet: said once, not in every box.
+    expect(
+      find.text('Dose, how often and how long: set by your vet'),
+      findsOneWidget,
+    );
+    expect(find.text('Set by your vet'), findsNothing);
     expect(find.text('Into the teat'), findsOneWidget);
     await tester.dragUntilVisible(
       find.text('Do this first'),

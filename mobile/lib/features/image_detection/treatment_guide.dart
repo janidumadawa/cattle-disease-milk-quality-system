@@ -84,6 +84,7 @@ class TreatmentGuide {
     required this.heading,
     required this.stage,
     required this.severe,
+    this.stageNote,
     required this.noMedicine,
     required this.sections,
     required this.medicinesTitle,
@@ -104,6 +105,7 @@ class TreatmentGuide {
     heading: json['heading'] as String,
     stage: json['stage'] as String?,
     severe: json['severe'] as String?,
+    stageNote: json['stage_note'] as String?,
     noMedicine: json['no_medicine'] as String,
     sections: [
       for (final s in json['sections'] as List)
@@ -142,6 +144,9 @@ class TreatmentGuide {
 
   /// A "call your vet today" warning for the high stage.
   final String? severe;
+
+  /// A note for the early (low) stage.
+  final String? stageNote;
 
   /// Why the guide has no medicines or doses.
   final String noMedicine;

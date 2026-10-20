@@ -171,6 +171,14 @@ class _GuideView extends StatelessWidget {
             ),
           ),
         ],
+        if (guide.stageNote case final note?) ...[
+          const SizedBox(height: 10),
+          _Box(
+            color: const Color(0xFF1A2A20),
+            border: const Color(0xFF2F5A3E),
+            child: _IconLine(Icons.eco_outlined, note, color: _accent),
+          ),
+        ],
         if (first != null) ...[
           _Heading(first.title),
           _Steps(items: first.items, done: done, onToggle: onToggle),
@@ -316,6 +324,10 @@ class _MedicineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final byVet = _label('by_vet', 'Set by your vet');
+    final setByVet =
+        medicine.dose == null &&
+        medicine.frequency == null &&
+        medicine.duration == null;
     Widget field(String key, String fallback, String? value) => Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       spacing: 2,
@@ -367,26 +379,43 @@ class _MedicineCard extends StatelessWidget {
               medicine.use,
               style: const TextStyle(fontSize: 13.5, height: 1.35),
             ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 12,
-            children: [
-              Expanded(child: field('dose', 'Dose', medicine.dose)),
-              Expanded(
-                child: field('route', 'How it is given', medicine.route),
+          // When the vet sets everything, say it once instead of in every box.
+          if (setByVet) ...[
+            if (medicine.route != null)
+              field('route', 'How it is given', medicine.route),
+            _IconLine(
+              Icons.person_search_outlined,
+              _label(
+                'all_by_vet',
+                'Dose, how often and how long: set by your vet',
               ),
-            ],
-          ),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 12,
-            children: [
-              Expanded(
-                child: field('frequency', 'How often', medicine.frequency),
-              ),
-              Expanded(child: field('duration', 'How long', medicine.duration)),
-            ],
-          ),
+              color: _muted,
+              small: true,
+            ),
+          ] else ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 12,
+              children: [
+                Expanded(child: field('dose', 'Dose', medicine.dose)),
+                Expanded(
+                  child: field('route', 'How it is given', medicine.route),
+                ),
+              ],
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 12,
+              children: [
+                Expanded(
+                  child: field('frequency', 'How often', medicine.frequency),
+                ),
+                Expanded(
+                  child: field('duration', 'How long', medicine.duration),
+                ),
+              ],
+            ),
+          ],
           Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
