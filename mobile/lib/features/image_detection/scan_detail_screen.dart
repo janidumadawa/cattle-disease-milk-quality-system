@@ -14,6 +14,28 @@ String formatScanTime(BuildContext context, DateTime time) {
       '${l.formatTimeOfDay(TimeOfDay.fromDateTime(time))}';
 }
 
+/// Asks before a scan is deleted. Returns true when the user confirms.
+Future<bool> confirmDeleteScan(BuildContext context) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('Delete this scan?'),
+      content: const Text('The photo and its result will be removed.'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(context, true),
+          child: const Text('Delete'),
+        ),
+      ],
+    ),
+  );
+  return confirmed ?? false;
+}
+
 /// One saved scan, shown the same way as a fresh result.
 ///
 /// Pops with `true` when the scan was deleted.
@@ -51,24 +73,7 @@ class _ScanDetailScreenState extends State<ScanDetailScreen> {
   }
 
   Future<void> _delete() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Delete this scan?'),
-        content: const Text('The photo and its result will be removed.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed != true || !mounted) {
+    if (!await confirmDeleteScan(context) || !mounted) {
       return;
     }
 

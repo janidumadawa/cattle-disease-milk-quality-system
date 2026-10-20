@@ -70,11 +70,32 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
       ),
     );
     if (deleted == true && mounted) {
-      setState(() {
-        _scans.remove(scan);
-        _total--;
-      });
+      _removeFromList(scan);
     }
+  }
+
+  /// Asks, then deletes the scan on the server. Returns true when it is gone.
+  Future<bool> _delete(ScanSummary scan) async {
+    if (!await confirmDeleteScan(context)) {
+      return false;
+    }
+    try {
+      await widget.api.deleteScan(scan.id);
+      return true;
+    } on DiseaseApiException catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(e.message)));
+      }
+      return false;
+    }
+  }
+
+  void _removeFromList(ScanSummary scan) {
+    setState(() {
+      _scans.remove(scan);
+      _total--;
+    });
   }
 
   @override
@@ -117,7 +138,24 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
                     ),
                   ),
                 for (final scan in _scans)
-                  _ScanTile(scan: scan, onTap: () => _open(scan)),
+                  // Swipe left to delete; the row only goes once the server
+                  // has deleted the scan.
+                  Dismissible(
+                    key: ValueKey(scan.id),
+                    direction: DismissDirection.endToStart,
+                    confirmDismiss: (_) => _delete(scan),
+                    onDismissed: (_) => _removeFromList(scan),
+                    background: const _DeleteBackground(),
+                    child: _ScanTile(
+                      scan: scan,
+                      onTap: () => _open(scan),
+                      onDelete: () async {
+                        if (await _delete(scan) && mounted) {
+                          _removeFromList(scan);
+                        }
+                      },
+                    ),
+                  ),
                 if (_loading)
                   const Padding(
                     padding: EdgeInsets.all(16),
@@ -137,11 +175,35 @@ class _ScanHistoryScreenState extends State<ScanHistoryScreen> {
   }
 }
 
+class _DeleteBackground extends StatelessWidget {
+  const _DeleteBackground();
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+    return Card(
+      color: colors.errorContainer,
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 20),
+          child: Icon(Icons.delete_outline, color: colors.onErrorContainer),
+        ),
+      ),
+    );
+  }
+}
+
 class _ScanTile extends StatelessWidget {
-  const _ScanTile({required this.scan, required this.onTap});
+  const _ScanTile({
+    required this.scan,
+    required this.onTap,
+    required this.onDelete,
+  });
 
   final ScanSummary scan;
   final VoidCallback onTap;
+  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
@@ -154,7 +216,7 @@ class _ScanTile extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: ListTile(
         onTap: onTap,
-        contentPadding: const EdgeInsets.fromLTRB(8, 4, 12, 4),
+        contentPadding: const EdgeInsets.fromLTRB(8, 4, 4, 4),
         leading: ClipRRect(
           borderRadius: BorderRadius.circular(8),
           child: SizedBox.square(
@@ -172,7 +234,17 @@ class _ScanTile extends StatelessWidget {
         ),
         title: Text('${top.disease}$stage'),
         subtitle: Text(formatScanTime(context, scan.createdAt)),
-        trailing: Text(confidence, style: theme.textTheme.titleSmall),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(confidence, style: theme.textTheme.titleSmall),
+            IconButton(
+              tooltip: 'Delete scan',
+              onPressed: onDelete,
+              icon: const Icon(Icons.delete_outline),
+            ),
+          ],
+        ),
       ),
     );
   }
