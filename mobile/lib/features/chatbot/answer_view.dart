@@ -559,6 +559,7 @@ const _behaviourLabels = {
 };
 const _sourceLabels = {
   'kb': 'Instant · knowledge base',
+  'vet': 'Vet office contacts',
   'guard': 'Instant · safety filter',
   'retrieval': 'Instant · no matching fact',
   'chat': 'Instant',
@@ -586,7 +587,10 @@ class _Checks extends StatelessWidget {
         answered ? ok : plain,
       ),
       if (_sourceLabels[done.source] case final source?) (source, plain),
-      if (checks.behaviour == 'answer' && checks.validCites.isEmpty)
+      // Vet office contacts are not health facts, so they need no citation.
+      if (checks.behaviour == 'answer' &&
+          checks.validCites.isEmpty &&
+          done.source != 'vet')
         ('No citation', bad),
       if (checks.inventedCites.isNotEmpty)
         ('Invented citation: ${checks.inventedCites.join(', ')}', bad),

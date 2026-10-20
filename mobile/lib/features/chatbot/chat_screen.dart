@@ -364,7 +364,6 @@ class _ChatScreenState extends State<ChatScreen> {
               hint: _hint[_lang]!,
               busy: _busy,
               onSend: _send,
-              onMic: () => _snack('Voice questions are coming soon.'),
             ),
           ],
         ),
@@ -652,14 +651,12 @@ class _InputBar extends StatelessWidget {
     required this.hint,
     required this.busy,
     required this.onSend,
-    required this.onMic,
   });
 
   final TextEditingController controller;
   final String hint;
   final bool busy;
   final ValueChanged<String> onSend;
-  final VoidCallback onMic;
 
   @override
   Widget build(BuildContext context) {
@@ -691,12 +688,7 @@ class _InputBar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(28),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.fromLTRB(20, 14, 4, 14),
-                suffixIcon: IconButton(
-                  tooltip: 'Voice question',
-                  onPressed: onMic,
-                  icon: const Icon(Icons.mic_none, color: _muted),
-                ),
+                contentPadding: const EdgeInsets.fromLTRB(20, 14, 20, 14),
               ),
             ),
           ),
