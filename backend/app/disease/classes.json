@@ -1,0 +1,59 @@
+{
+  "_note": "Display text for each class. Order and ids must match backend/models/disease/labels.json (index = model output position); the classifier checks this at startup.",
+  "classes": [
+    {
+      "id": "FMD_High",
+      "disease": "Foot-and-Mouth Disease",
+      "severity": "High",
+      "info": "Viral disease. Look for fever, blisters or erosions in the mouth and on the feet, drooling and lameness."
+    },
+    {
+      "id": "FMD_Low",
+      "disease": "Foot-and-Mouth Disease",
+      "severity": "Low",
+      "info": "Viral disease. Look for fever, blisters or erosions in the mouth and on the feet, drooling and lameness."
+    },
+    {
+      "id": "Healthy",
+      "disease": "Healthy / Normal",
+      "severity": null,
+      "info": "No visible signs of the diseases this model knows about."
+    },
+    {
+      "id": "LSD_High",
+      "disease": "Lumpy Skin Disease",
+      "severity": "High",
+      "info": "Viral disease causing firm skin nodules, fever and swollen lymph nodes. Spread by biting insects."
+    },
+    {
+      "id": "LSD_Low",
+      "disease": "Lumpy Skin Disease",
+      "severity": "Low",
+      "info": "Viral disease causing firm skin nodules, fever and swollen lymph nodes. Spread by biting insects."
+    },
+    {
+      "id": "Mastitis_High",
+      "disease": "Mastitis",
+      "severity": "High",
+      "info": "Inflammation of the udder, often bacterial. Look for swelling, heat, pain and abnormal milk."
+    },
+    {
+      "id": "Mastitis_Low",
+      "disease": "Mastitis",
+      "severity": "Low",
+      "info": "Inflammation of the udder, often bacterial. Look for swelling, heat, pain and abnormal milk."
+    },
+    {
+      "id": "Ringworm_High",
+      "disease": "Ringworm",
+      "severity": "High",
+      "info": "Fungal skin infection with circular, crusty, hairless patches. Can spread to people."
+    },
+    {
+      "id": "Ringworm_Low",
+      "disease": "Ringworm",
+      "severity": "Low",
+      "info": "Fungal skin infection with circular, crusty, hairless patches. Can spread to people."
+    }
+  ]
+}
