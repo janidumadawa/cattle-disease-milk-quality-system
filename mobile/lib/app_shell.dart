@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'features/chatbot/chat_launcher.dart';
 import 'features/chatbot/chat_screen.dart';
 import 'features/home/home_screen.dart';
 import 'features/image_detection/scan_screen.dart';
@@ -52,7 +53,28 @@ class _AppShellState extends State<AppShell> {
     ),
   ];
 
+  static const _chatIndex = 4;
+
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    chatQuestionRequest.addListener(_openChat);
+  }
+
+  @override
+  void dispose() {
+    chatQuestionRequest.removeListener(_openChat);
+    super.dispose();
+  }
+
+  /// Another screen asked the chatbot a question: show the Chat tab.
+  void _openChat() {
+    if (chatQuestionRequest.value != null) {
+      setState(() => _currentIndex = _chatIndex);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

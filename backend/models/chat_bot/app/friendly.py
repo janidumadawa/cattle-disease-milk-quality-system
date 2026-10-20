@@ -5,6 +5,7 @@ greetings, headings, plain-language framing and a vet referral. Sections come fr
 care_kb.py (signs / treatment / care / prevention / urgent). No medicine names or
 doses are ever added.
 """
+import random
 import re
 
 import care_kb
@@ -222,7 +223,7 @@ def small_talk(question, lang):
         return None
     for rx, key in ((THANKS, "thanks"), (ABOUT, "about"), (GREETING, "hello")):
         if rx.search(question):
-            return TEXT[lang][key]
+            return say(lang, key)
     return None
 
 
@@ -316,12 +317,12 @@ def card(kb, lang, stage, *, topic, facts=(), sick=False, want=None, urgent=(),
                "emergency_open" if topic == care_kb.EM else
                "sick_open" if sick else "has_open" if owned else "treat_open" if want["treat"] else
                "prevent_open" if want["prevent"] else "info_open")
-        intro = t[key].format(d=d)
+        intro = say(lang, key, d=d)
     c = {"intro": intro, "urgent_title": t["urgent_head"].rstrip(":"), "urgent": rows(urgent),
          "answer_title": titles["check" if topic == care_kb.SICK else "match" if sick else "answer"],
          "answer": rows(facts),
          "sections": [],
-         "closing": t["sick_close"] if (sick or urgent or want["treat"] or refusing) else t["info_close"]}
+         "closing": say(lang, "sick_close" if (sick or urgent or want["treat"] or refusing) else "info_close")}
     if topic and topic != "General cattle health":
         opened = open_sections(sick or topic in (care_kb.SICK, care_kb.EM), want, refusing,
                                advice=topic == care_kb.FEED)

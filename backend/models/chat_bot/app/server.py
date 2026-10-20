@@ -14,12 +14,14 @@ import re
 import sys
 import threading
 import urllib.error
+import urllib.parse
 import urllib.request
 from collections import Counter, defaultdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import care_kb
 import friendly
+import treatment
 import vets
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -548,6 +550,17 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(status())
         elif self.path == "/api/kb":
             self.send_json(KB)
+        elif urllib.parse.urlsplit(self.path).path == "/api/treatment":
+            # /api/treatment?disease=Mastitis_High&lang=si : the guide behind "See treatment".
+            query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
+            disease = (query.get("disease") or [""])[0]
+            lang = "si" if (query.get("lang") or ["en"])[0] == "si" else "en"
+            stage = "High" if disease.endswith("_High") or query.get("stage") == ["High"] else None
+            plan = treatment.guide(KB_BY_ID, disease, lang, stage)
+            if plan is None:
+                self.send_json({"error": f"no treatment guide for {disease!r}"}, 404)
+            else:
+                self.send_json(plan)
         else:
             self.send_json({"error": "not found"}, 404)
 

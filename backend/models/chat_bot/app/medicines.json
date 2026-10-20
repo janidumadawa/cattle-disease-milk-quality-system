@@ -1,0 +1,100 @@
+{
+  "_note": "Medicines shown on the treatment screen. Every entry comes from the source given. dose, frequency, duration and withdrawal are deliberately empty unless the source gives them: fill them only from the official DAPH treatment guideline or the product label, checked by a veterinarian. Empty fields are shown as 'set by your vet'.",
+  "Foot-and-Mouth Disease": [
+    {
+      "name": {"en": "Pain and fever relief (anti-inflammatory medicine)",
+               "si": "වේදනාව හා උණ අඩු කරන ඖෂධ (ප්‍රදාහ නාශක)"},
+      "kind": {"en": "Given by a vet", "si": "පශු වෛද්‍යවරයා ලබා දෙයි"},
+      "use": {"en": "No medicine kills the FMD virus; this eases pain and fever so the animal keeps eating and drinking.",
+              "si": "FMD වෛරසය නැති කරන බෙහෙතක් නැත; මෙය වේදනාව හා උණ අඩු කර සතාට කන්න බොන්න උදව් කරයි."},
+      "route": null, "dose": null, "frequency": null, "duration": null, "withdrawal": null,
+      "prescription": true,
+      "source": "merck-fmd"
+    },
+    {
+      "name": {"en": "Antibiotics for infected sores",
+               "si": "ආසාදනය වූ තුවාල සඳහා ප්‍රතිජීවක"},
+      "kind": {"en": "Only if sores get infected", "si": "තුවාල ආසාදනය වුවහොත් පමණි"},
+      "use": {"en": "Foot blisters can become infected by bacteria and cause long-lasting lameness; antibiotics treat that infection, not the virus.",
+              "si": "පාදවල බිබිලි බැක්ටීරියා මගින් ආසාදනය වී දිගුකාලීන කොර ගැසීමක් ඇති විය හැක; ප්‍රතිජීවක එම ආසාදනයට මිස වෛරසයට නොවේ."},
+      "route": null, "dose": null, "frequency": null, "duration": null, "withdrawal": null,
+      "prescription": true,
+      "source": "merck-fmd"
+    }
+  ],
+  "Lumpy Skin Disease": [
+    {
+      "name": {"en": "Antibiotics for infected skin sores",
+               "si": "ආසාදනය වූ සමේ තුවාල සඳහා ප්‍රතිජීවක"},
+      "kind": {"en": "Only if sores get infected", "si": "තුවාල ආසාදනය වුවහොත් පමණි"},
+      "use": {"en": "No medicine kills the LSD virus; bacterial infection of the skin sores often makes the disease worse, and antibiotics treat that.",
+              "si": "LSD වෛරසය නැති කරන බෙහෙතක් නැත; සමේ තුවාලවල බැක්ටීරියා ආසාදනය බොහෝවිට රෝගය උග්‍ර කරන අතර ප්‍රතිජීවක එයට ප්‍රතිකාර කරයි."},
+      "route": null, "dose": null, "frequency": null, "duration": null, "withdrawal": null,
+      "prescription": true,
+      "source": "merck-lsd"
+    },
+    {
+      "name": {"en": "Pain and fever relief (anti-inflammatory medicine)",
+               "si": "වේදනාව හා උණ අඩු කරන ඖෂධ (ප්‍රදාහ නාශක)"},
+      "kind": {"en": "Given by a vet", "si": "පශු වෛද්‍යවරයා ලබා දෙයි"},
+      "use": {"en": "Treats the symptoms (fever and painful lumps) while the animal recovers.",
+              "si": "සතා සුවය ලබන අතරතුර රෝග ලක්ෂණවලට (උණ සහ වේදනාකාරී ගැටිති) ප්‍රතිකාර කරයි."},
+      "route": null, "dose": null, "frequency": null, "duration": null, "withdrawal": null,
+      "prescription": true,
+      "source": "merck-lsd"
+    }
+  ],
+  "Mastitis": [
+    {
+      "name": {"en": "Intramammary antibiotic (amoxicillin, penicillin or a cephalosporin)",
+               "si": "තන තුළට දෙන ප්‍රතිජීවක (amoxicillin, penicillin හෝ cephalosporin)"},
+      "kind": {"en": "Tube into the teat", "si": "තන පුඩුව තුළට දෙන නළ"},
+      "use": {"en": "Treats the bacterial infection in the affected quarter. Use a product labelled for this, chosen by the vet (ideally after a milk test).",
+              "si": "බලපෑමට ලක් වූ බුරුල්ලේ කොටසේ බැක්ටීරියා ආසාදනයට ප්‍රතිකාර කරයි. මේ සඳහා ලේබල් කළ, පශු වෛද්‍යවරයා තෝරන (හැකි නම් කිරි පරීක්ෂාවකින් පසු) නිෂ්පාදනයක් භාවිත කරන්න."},
+      "route": {"en": "Into the teat, after cleaning the teat end with an alcohol pad",
+                "si": "තන පුඩුවේ කෙළවර මද්‍යසාර පෑඩ් එකකින් පිරිසිදු කළ පසු තන තුළට"},
+      "dose": null, "frequency": null, "duration": null, "withdrawal": null,
+      "prescription": true,
+      "source": "merck-mastitis"
+    },
+    {
+      "name": {"en": "Fluids and anti-inflammatory medicine (severe mastitis)",
+               "si": "දියර සහ ප්‍රදාහ නාශක ඖෂධ (උග්‍ර බුරුලු ප්‍රදාහය)"},
+      "kind": {"en": "Given by a vet", "si": "පශු වෛද්‍යවරයා ලබා දෙයි"},
+      "use": {"en": "For a cow with fever, weakness or not eating: fluids are often the most important part of treatment.",
+              "si": "උණ, දුර්වලතාවය හෝ ආහාර නොගන්නා ගවයෙකුට: දියර බොහෝවිට ප්‍රතිකාරයේ වැදගත්ම කොටසයි."},
+      "route": {"en": "Into the vein (by the vet) or by mouth", "si": "නහරයට (පශු වෛද්‍යවරයා මගින්) හෝ මුඛයෙන්"},
+      "dose": null, "frequency": null, "duration": null, "withdrawal": null,
+      "prescription": true,
+      "source": "merck-mastitis"
+    }
+  ],
+  "Ringworm": [
+    {
+      "name": {"en": "Lime sulfur rinse", "si": "Lime sulfur සේදුම"},
+      "kind": {"en": "Skin rinse", "si": "සමේ සේදුම"},
+      "use": {"en": "Kills the fungus on the skin. Brush off the crusts first (then throw away the brush and burn the crusts).",
+              "si": "සමේ ඇති දිලීරය නැති කරයි. මුලින් පොතු බුරුසුවකින් ඉවත් කරන්න (පසුව බුරුසුව ඉවත දමා පොතු පුළුස්සන්න)."},
+      "route": {"en": "Leave-on rinse over the patches", "si": "පැල්ලම් මත සෝදා නොසෝදා තබන්න"},
+      "dose": {"en": "Diluted 1:16 with water", "si": "ජලය සමඟ 1:16 ලෙස තනුක කර"},
+      "frequency": {"en": "Twice a week", "si": "සතියකට දෙවරක්"},
+      "duration": {"en": "Until the patches heal and no new ones appear", "si": "පැල්ලම් සුව වී අලුත් ඒවා ඇති නොවන තුරු"},
+      "withdrawal": null,
+      "prescription": false,
+      "source": "merck-ringworm"
+    },
+    {
+      "name": {"en": "Enilconazole rinse", "si": "Enilconazole සේදුම"},
+      "kind": {"en": "Skin rinse", "si": "සමේ සේදුම"},
+      "use": {"en": "Kills the fungus on the skin; an alternative to lime sulfur. Do not use bleach.",
+              "si": "සමේ ඇති දිලීරය නැති කරයි; lime sulfur වෙනුවට භාවිත කළ හැක. Bleach භාවිත කරන්න එපා."},
+      "route": {"en": "Leave-on rinse over the patches", "si": "පැල්ලම් මත සෝදා නොසෝදා තබන්න"},
+      "dose": {"en": "Diluted 1:100 with water", "si": "ජලය සමඟ 1:100 ලෙස තනුක කර"},
+      "frequency": {"en": "Twice a week", "si": "සතියකට දෙවරක්"},
+      "duration": {"en": "Until the patches heal and no new ones appear", "si": "පැල්ලම් සුව වී අලුත් ඒවා ඇති නොවන තුරු"},
+      "withdrawal": null,
+      "prescription": false,
+      "source": "merck-ringworm"
+    }
+  ]
+}

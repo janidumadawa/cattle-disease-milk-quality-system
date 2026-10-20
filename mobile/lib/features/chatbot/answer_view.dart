@@ -466,7 +466,7 @@ class _CardView extends StatelessWidget {
             children: [_Bullets(rows: section.items, ids: ids)],
           ),
         if (card.contacts.isNotEmpty)
-          _ContactsBox(
+          VetContactsBox(
             title: card.contactsTitle,
             contacts: card.contacts,
             callLabel: card.callLabel,
@@ -502,8 +502,9 @@ class _ContactLine extends StatelessWidget {
 }
 
 /// Vet offices with a button that dials the number.
-class _ContactsBox extends StatelessWidget {
-  const _ContactsBox({
+class VetContactsBox extends StatelessWidget {
+  const VetContactsBox({
+    super.key,
     required this.title,
     required this.contacts,
     required this.callLabel,

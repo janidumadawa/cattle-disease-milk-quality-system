@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'answer_view.dart';
 import 'chat_api.dart';
 import 'chat_history_api.dart';
+import 'chat_launcher.dart';
 import 'chat_models.dart';
 
 // Dark chat palette.
@@ -99,6 +100,18 @@ class _ChatScreenState extends State<ChatScreen> {
     super.initState();
     _checkStatus();
     _loadConversation();
+    chatQuestionRequest.addListener(_askRequested);
+  }
+
+  /// A question from another screen ("Ask the assistant about this").
+  void _askRequested() {
+    final question = chatQuestionRequest.value;
+    if (question == null) return;
+    chatQuestionRequest.value = null;
+    if (RegExp('[඀-෿]').hasMatch(question)) {
+      setState(() => _lang = 'si');
+    }
+    _send(question);
   }
 
   /// Shows this device's earlier conversation, so the chat (and follow-ups
@@ -151,6 +164,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    chatQuestionRequest.removeListener(_askRequested);
     _ticker?.cancel();
     _input.dispose();
     _scroll.dispose();

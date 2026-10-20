@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'disease_guide.dart';
 import 'disease_result.dart';
+import 'treatment_screen.dart';
 
 /// Below this confidence the user is asked to try a better photo.
 const lowConfidence = 0.6;
@@ -192,9 +193,10 @@ class DiseaseResultView extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           FilledButton.icon(
-            // TODO: open the treatment page once it is built.
-            onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Treatment guide coming soon.')),
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => TreatmentScreen(classId: top.classId),
+              ),
             ),
             icon: const Icon(Icons.medical_services_outlined),
             label: const Text('See treatment'),
