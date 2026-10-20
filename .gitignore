@@ -34,5 +34,5 @@ Thumbs.db
 logs/
 
 # Model weights: too large for git, shared outside the repo (see backend/models/README.md)
-backend/models/**/*.keras
+
 backend/models/**/*.onnx
