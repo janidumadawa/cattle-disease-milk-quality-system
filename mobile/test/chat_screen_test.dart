@@ -209,6 +209,70 @@ void main() {
     );
   });
 
+  testWidgets('shows the nearest vet office with a call button', (
+    tester,
+  ) async {
+    final vetReply = _ndjson([
+      {
+        'type': 'meta',
+        'lang': 'en',
+        'confident': false,
+        'evidence': [],
+        'topic': null,
+        'suggestions': [],
+      },
+      {'type': 'token', 'text': 'plain text'},
+      {
+        'type': 'done',
+        'source': 'vet',
+        'card': {
+          'intro':
+              'Here is the nearest government veterinary office for Buttala:',
+          'urgent': [],
+          'answer': [],
+          'sections': [],
+          'closing': 'Please call before you go.',
+          'contacts_title': 'Nearest vet office',
+          'contacts': [
+            {
+              'office': "Government Veterinary Surgeon's Office, Buttala",
+              'area': 'Buttala',
+              'phone': '+94 55 227 3360',
+              'doctor': 'Dr. D.P. Amarasiri (Veterinary Surgeon)',
+              'address': 'Moneragala Road, Buttala',
+            },
+          ],
+          'call_label': 'Call',
+        },
+        'checks': {'behaviour': 'answer'},
+      },
+    ]);
+    final client = MockClient((request) async {
+      if (request.url.path == '/api/status') {
+        return http.Response('{"ollama": true, "model": true}', 200);
+      }
+      return http.Response.bytes(utf8.encode(vetReply), 200);
+    });
+    await _pumpChat(tester, client);
+
+    await tester.enterText(find.byType(TextField), 'nearest vet in Buttala');
+    await tester.testTextInput.receiveAction(TextInputAction.send);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Nearest vet office'), findsOneWidget);
+    expect(
+      find.text("Government Veterinary Surgeon's Office, Buttala"),
+      findsOneWidget,
+    );
+    expect(find.text('+94 55 227 3360'), findsOneWidget);
+    expect(
+      find.text('Dr. D.P. Amarasiri (Veterinary Surgeon)'),
+      findsOneWidget,
+    );
+    expect(find.text('Moneragala Road, Buttala'), findsOneWidget);
+    expect(find.widgetWithText(FilledButton, 'Call'), findsOneWidget);
+  });
+
   testWidgets('explains how to start the server when it is offline', (
     tester,
   ) async {

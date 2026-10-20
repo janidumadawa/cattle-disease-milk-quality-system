@@ -294,7 +294,12 @@ function cardHTML(c, evIds, withUrgent) {
     (c.intro ? `<p class="intro">${esc(c.intro)}</p>` : '') +
     (c.answer.length ? `<div class="ans"><div class="lbl">${esc(c.answer_title)}</div>${list(c.answer)}</div>` : '') +
     c.sections.map(s => `<details class="sec"${s.open ? ' open' : ''}><summary>${ICONS[s.key] || ''} ${esc(s.title)} <span class="n">${s.items.length}</span></summary>${list(s.items)}</details>`).join('') +
-    `<p class="closing">${esc(c.closing)}</p>`;
+    (c.contacts && c.contacts.length ? `<div class="ans"><div class="lbl">${esc(c.contacts_title)}</div><ul>` +
+      c.contacts.map(v => `<li><b>${esc(v.office)}</b>` +
+        (v.doctor ? `<br>${esc(v.doctor)}` : '') + (v.address ? `<br>${esc(v.address)}` : '') +
+        `<br><a href="tel:${esc(v.phone.replace(/[^0-9+]/g, ''))}">📞 ${esc(v.phone)}</a></li>`).join('') +
+      `</ul></div>` : '') +
+    (c.closing ? `<p class="closing">${esc(c.closing)}</p>` : '');
 }
 
 // POST /api/ask and stream the NDJSON reply into the slots inside root:

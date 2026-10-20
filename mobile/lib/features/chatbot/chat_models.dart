@@ -48,6 +48,32 @@ class CardSection {
   final List<CardRow> items;
 }
 
+/// A government veterinary office to call ("doctor" and "address" are
+/// optional).
+class VetContact {
+  const VetContact({
+    required this.office,
+    required this.area,
+    required this.phone,
+    this.doctor,
+    this.address,
+  });
+
+  factory VetContact.fromJson(Map<String, dynamic> json) => VetContact(
+    office: json['office'] as String,
+    area: json['area'] as String? ?? '',
+    phone: json['phone'] as String,
+    doctor: json['doctor'] as String?,
+    address: json['address'] as String?,
+  );
+
+  final String office;
+  final String area;
+  final String phone;
+  final String? doctor;
+  final String? address;
+}
+
 /// Structured answer: intro, direct answer, topic sections, closing.
 class AnswerCard {
   const AnswerCard({
@@ -58,6 +84,9 @@ class AnswerCard {
     required this.answer,
     required this.sections,
     required this.closing,
+    this.contactsTitle = '',
+    this.contacts = const [],
+    this.callLabel = 'Call',
   });
 
   factory AnswerCard.fromJson(Map<String, dynamic> json) => AnswerCard(
@@ -68,6 +97,9 @@ class AnswerCard {
     answer: _list(json['answer'], CardRow.fromJson),
     sections: _list(json['sections'], CardSection.fromJson),
     closing: json['closing'] as String? ?? '',
+    contactsTitle: json['contacts_title'] as String? ?? '',
+    contacts: _list(json['contacts'], VetContact.fromJson),
+    callLabel: json['call_label'] as String? ?? 'Call',
   );
 
   final String intro;
@@ -77,6 +109,13 @@ class AnswerCard {
   final List<CardRow> answer;
   final List<CardSection> sections;
   final String closing;
+
+  /// Vet offices to call, e.g. the one nearest the farmer's town.
+  final String contactsTitle;
+  final List<VetContact> contacts;
+
+  /// Label of the dial button, in the answer's language.
+  final String callLabel;
 }
 
 /// A disease the described signs match. Not a diagnosis.

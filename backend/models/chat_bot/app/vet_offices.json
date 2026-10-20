@@ -1,0 +1,39 @@
+[
+  {
+    "id": "wellawaya",
+    "area": {"en": "Wellawaya", "si": "වැල්ලවාය"},
+    "office": {"en": "Government Veterinary Surgeon's Office - Wellawaya",
+               "si": "රජයේ පශු වෛද්‍ය කාර්යාලය - වැල්ලවාය"},
+    "phone": "+94 55 227 4776",
+    "doctor": {"en": "Dr. B. Niroshinie Mendis",
+               "si": "වෛද්‍ය බී. නිරෝෂිනි මෙන්ඩිස්"},
+    "address": {"en": "Department of Animal Production & Health, Ella Road, Wellawaya, Moneragala District, Sri Lanka",
+                "si": "සත්ව නිෂ්පාදන හා සෞඛ්‍ය දෙපාර්තමේන්තුව, ඇල්ල පාර, වැල්ලවාය, මොනරාගල දිස්ත්‍රික්කය, ශ්‍රී ලංකාව"},
+    "names": ["wellawaya", "welawaya", "wellawaye", "වැල්ලවාය", "වැල්ලවායේ", "වෙල්ලවාය", "වෙල්ලවායේ"]
+  },
+  {
+    "id": "buttala",
+    "area": {"en": "Buttala", "si": "බුත්තල"},
+    "office": {"en": "Government Veterinary Surgeon's Office - Buttala",
+               "si": "රජයේ පශු වෛද්‍ය කාර්යාලය - බුත්තල"},
+    "phone": "+94 55 227 3360",
+    "doctor": {"en": "Dr. D.P. Amarasiri (Veterinary Surgeon)",
+               "si": "වෛද්‍ය ඩී.පී. අමරසිරි (පශු වෛද්‍ය)"},
+    "address": {"en": "Department of Animal Production & Health, Moneragala Road, Buttala, Moneragala District, Sri Lanka",
+                "si": "සත්ව නිෂ්පාදන හා සෞඛ්‍ය දෙපාර්තමේන්තුව, මොනරාගල පාර, බුත්තල, මොනරාගල දිස්ත්‍රික්කය, ශ්‍රී ලංකාව"},
+    "names": ["buttala", "buththala", "buthtala", "butala", "බුත්තල", "බුත්තලේ"]
+  },
+  {
+    "id": "thanamalwila",
+    "area": {"en": "Thanamalwila", "si": "තණමල්විල"},
+    "office": {"en": "Government Veterinary Surgeon Office - Thanamalwila",
+               "si": "රජයේ පශු වෛද්‍ය කාර්යාලය - තණමල්විල"},
+    "phone": "+94 47 223 4062",
+    "doctor": {"en": "Dr. P.P.S.K. Premathilaka (Veterinary Surgeon)",
+               "si": "වෛද්‍ය පී.පී.එස්.කේ. ප්‍රේමතිලක (පශු වෛද්‍ය)"},
+    "address": {"en": "Department of Animal Production & Health, Thanamalwila, Moneragala District, Sri Lanka",
+                "si": "සත්ව නිෂ්පාදන හා සෞඛ්‍ය දෙපාර්තමේන්තුව, තණමල්විල, මොනරාගල දිස්ත්‍රික්කය, ශ්‍රී ලංකාව"},
+    "names": ["thanamalwila", "tanamalwila", "thanamalvila", "tanamalvila", "thanamalwla",
+              "තණමල්විල", "තනමල්විල", "තණමල්විලේ", "තනමල්විලේ"]
+  }
+]

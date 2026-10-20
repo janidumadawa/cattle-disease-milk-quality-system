@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'chat_models.dart';
 
@@ -427,9 +428,125 @@ class _CardView extends StatelessWidget {
             ),
             children: [_Bullets(rows: section.items, ids: ids)],
           ),
+        if (card.contacts.isNotEmpty)
+          _ContactsBox(
+            title: card.contactsTitle,
+            contacts: card.contacts,
+            callLabel: card.callLabel,
+          ),
         if (card.closing.isNotEmpty)
           Text(card.closing, style: TextStyle(color: colors.onSurfaceVariant)),
       ],
+    );
+  }
+}
+
+class _ContactLine extends StatelessWidget {
+  const _ContactLine(this.icon, this.text, this.style);
+
+  final IconData icon;
+  final String text;
+  final TextStyle style;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      spacing: 6,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Icon(icon, size: 14, color: style.color),
+        ),
+        Expanded(child: Text(text, style: style)),
+      ],
+    );
+  }
+}
+
+/// Vet offices with a button that dials the number.
+class _ContactsBox extends StatelessWidget {
+  const _ContactsBox({
+    required this.title,
+    required this.contacts,
+    required this.callLabel,
+  });
+
+  final String title;
+  final List<VetContact> contacts;
+  final String callLabel;
+
+  Future<void> _call(BuildContext context, String phone) async {
+    final dialled = await launchUrl(
+      Uri(scheme: 'tel', path: phone.replaceAll(RegExp(r'[^0-9+]'), '')),
+    );
+    if (!dialled && context.mounted) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Call $phone')));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final muted = TextStyle(color: colors.onSurfaceVariant, fontSize: 13);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        border: Border.all(color: colors.primary.withValues(alpha: 0.5)),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        spacing: 10,
+        children: [
+          Row(
+            spacing: 8,
+            children: [
+              Icon(Icons.local_hospital_outlined, color: colors.primary),
+              Expanded(
+                child: Text(
+                  title,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    color: colors.primary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          for (final vet in contacts)
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 10,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    spacing: 2,
+                    children: [
+                      Text(
+                        vet.office,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      if (vet.doctor case final doctor?)
+                        _ContactLine(Icons.person_outline, doctor, muted),
+                      if (vet.address case final address?)
+                        _ContactLine(Icons.place_outlined, address, muted),
+                      _ContactLine(Icons.phone_outlined, vet.phone, muted),
+                    ],
+                  ),
+                ),
+                FilledButton.icon(
+                  onPressed: () => _call(context, vet.phone),
+                  icon: const Icon(Icons.call, size: 18),
+                  label: Text(callLabel),
+                ),
+              ],
+            ),
+        ],
+      ),
     );
   }
 }

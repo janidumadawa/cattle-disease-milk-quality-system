@@ -344,8 +344,12 @@ def card_text(c):
         parts.append("\n".join(f"• {r['text']} [{r['id']}]" for r in c["answer"]))
     for s in c["sections"]:
         parts.append(s["title"] + ":\n" + "\n".join(f"• {r['text']} [{r['id']}]" for r in s["items"]))
+    if c.get("contacts"):
+        parts.append(c["contacts_title"] + ":\n" + "\n".join(
+            "• " + ", ".join(filter(None, [v["office"], v.get("doctor"), v.get("address"), v["phone"]]))
+            for v in c["contacts"]))
     parts.append(c["closing"])
-    return "\n\n".join(parts)
+    return "\n\n".join(p for p in parts if p)
 
 
 # ---------------------------------------------------------------------------
@@ -397,7 +401,7 @@ def suggestions(topic, lang, card, want, question, limit=3):
     if card is None:
         return t["start"]
     if topic == care_kb.SICK:
-        return t["more"][:limit]  # more signs narrow the disease down
+        return t["more"][:limit] + vet_chip(lang, card)  # more signs narrow it down
     if topic == care_kb.EM:
         return []  # the emergency card is already complete: call the vet
     if topic == care_kb.FEED:
@@ -418,7 +422,65 @@ def suggestions(topic, lang, card, want, question, limit=3):
         "milk_drop": bool(re.search(r"drop|less|අඩු", question, re.I)),
         "water": bool(re.search(r"water|වතුර", question, re.I)),
     }
-    return [t[k] for k in keys if not skip.get(k)][:limit]
+    picked = [t[k] for k in keys if not skip.get(k)][:limit]
+    return picked if topic == care_kb.FEED else picked + vet_chip(lang, card)
+
+
+def vet_chip(lang, card):
+    """"Where is the nearest vet?" under health answers that show no vet yet."""
+    return [] if card.get("contacts") else [SUGGEST[lang]["find_vet"]]
+
+
+# ---------------------------------------------------------------------------
+# Finding a vet (office details come from vets.py / vet_offices.json).
+
+VET_TEXT = {
+    "en": {
+        "found": "Here is the nearest government veterinary office for {area}:",
+        "ask": "Where are you? Tell me your town and I'll give you the nearest government "
+               "veterinary office. I have details for Wellawaya, Buttala and Thanamalwila.",
+        "unknown": "Sorry, I only have contact details for these government veterinary offices. "
+                   "Please call the one nearest to you:",
+        "urgent": "Here are the government veterinary offices. Call the one nearest to you now. "
+                  "Tell me your town and I'll show just the nearest one.",
+        "close": "Please call before you go. If it is an emergency, call right away.",
+        "nearest": "Nearest vet office",
+        "offices": "Government vet offices",
+        "call": "Call",
+    },
+    "si": {
+        "found": "{area} ප්‍රදේශයට ළඟම රජයේ පශු වෛද්‍ය කාර්යාලය මෙන්න:",
+        "ask": "ඔබ ඉන්නේ කොහෙද? ඔබේ නගරය කිව්වොත් ළඟම රජයේ පශු වෛද්‍ය කාර්යාලය මම කියන්නම්. "
+               "මා ළඟ වැල්ලවාය, බුත්තල සහ තණමල්විල කාර්යාලවල තොරතුරු තියෙනවා.",
+        "unknown": "සමාවෙන්න, මා ළඟ තියෙන්නේ මේ රජයේ පශු වෛද්‍ය කාර්යාලවල තොරතුරු පමණයි. "
+                   "ඔබට ළඟම කාර්යාලයට කතා කරන්න:",
+        "urgent": "රජයේ පශු වෛද්‍ය කාර්යාල මෙන්න. ඔබට ළඟම කාර්යාලයට දැන්ම කතා කරන්න. "
+                  "ඔබේ නගරය කිව්වොත් ළඟම කාර්යාලය පමණක් මම පෙන්වන්නම්.",
+        "close": "යන්න කලින් කතා කරන්න. හදිසි අවස්ථාවක් නම් වහාම කතා කරන්න.",
+        "nearest": "ළඟම පශු වෛද්‍ය කාර්යාලය",
+        "offices": "රජයේ පශු වෛද්‍ය කාර්යාල",
+        "call": "අමතන්න",
+    },
+}
+SUGGEST["en"]["find_vet"] = "Where is the nearest vet?"
+SUGGEST["si"]["find_vet"] = "ළඟම පශු වෛද්‍යවරයා කොහෙද?"
+
+
+def vet_card(lang, contacts, intro, closing=""):
+    """A card with only vet office contacts."""
+    t = VET_TEXT[lang]
+    return {"intro": intro, "urgent_title": TEXT[lang]["urgent_head"].rstrip(":"), "urgent": [],
+            "answer_title": "", "answer": [], "sections": [], "closing": closing,
+            "contacts_title": t["nearest"] if len(contacts) == 1 else t["offices"],
+            "contacts": contacts, "call_label": t["call"]}
+
+
+def add_contacts(c, lang, contacts):
+    """Add vet office contacts under an answer card."""
+    t = VET_TEXT[lang]
+    c["contacts_title"] = t["nearest"] if len(contacts) == 1 else t["offices"]
+    c["contacts"] = contacts
+    c["call_label"] = t["call"]
 
 
 def refuse_card(kb, lang, stage, topic):

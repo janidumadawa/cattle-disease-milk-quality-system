@@ -19,6 +19,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import care_kb
 import friendly
+import vets
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -595,6 +596,19 @@ class Handler(BaseHTTPRequestHandler):
             found["confident"], topics = False, []
         want = friendly.intents(question)
         urgent = friendly.urgent_ids(question) if friendly_style and not chat else []
+        # Finding a vet. The town comes from this message or an earlier one in the chat.
+        history = req.get("history") if isinstance(req.get("history"), list) else []
+        here = vets.find_office(question) or next(
+            (o for h in reversed(history[-6:]) if isinstance(h, dict)
+             for o in [vets.find_office(str(h.get("question") or ""))] if o), None)
+        # The previous answer asked "where are you?", so this message is the reply.
+        asked_where = bool(history) and isinstance(history[-1], dict) \
+            and history[-1].get("topic") == vets.TOPIC
+        # Health questions ("my cow in Buttala has blisters") get the health answer,
+        # with the vet's contact added below.
+        vet_turn = (friendly_style and not chat and not urgent and not found["sign_topics"]
+                    and not friendly.named_disease(question)
+                    and (vets.wants_vet(question) or vets.only_place(question) or asked_where))
         # Name a topic only on a clear match (or when the farmer names it).
         named = None if chat else friendly.named_disease(ask)
         if follow == "topic":
@@ -656,14 +670,39 @@ class Handler(BaseHTTPRequestHandler):
 
         # Friendly answers are topic cards; their extra KB entries join the evidence list.
         card = None
-        if friendly_style and guarded:
+        if vet_turn:
+            t = friendly.VET_TEXT[lang]
+            if here:
+                card = friendly.vet_card(lang, [vets.contact(here, lang)],
+                                         t["found"].format(area=here["area"][lang]), t["close"])
+                topic = None
+            elif asked_where:  # a town we have no office for
+                card = friendly.vet_card(lang, vets.all_contacts(lang), t["unknown"], t["close"])
+                topic = None
+            elif vets.is_urgent(question):  # no time to ask the town first
+                card = friendly.vet_card(lang, vets.all_contacts(lang), t["urgent"], t["close"])
+                topic = vets.TOPIC  # a town in the next message narrows it to one office
+            else:
+                card = friendly.vet_card(lang, [], t["ask"])
+                topic = vets.TOPIC  # the next message answers "where are you?"
+            card_ids, sick, diseases, guarded = [], False, [], False
+        elif friendly_style and guarded:
             card, card_ids = friendly.refuse_card(KB, lang, stage, topic)
         elif friendly_style and not chat and has_answer:
             card, card_ids = friendly.card(KB, lang, stage, topic=topic, facts=facts, sick=sick,
                                            want=want, urgent=urgent, owned=owned)
+        if card and not vet_turn:
+            # The vet to call: the farmer's town if known; every office for an emergency.
+            if here and topic not in (None, care_kb.FEED, "General cattle health"):
+                friendly.add_contacts(card, lang, [vets.contact(here, lang)])
+            elif urgent or topic == care_kb.EM:
+                friendly.add_contacts(card, lang, vets.all_contacts(lang))
         # Next questions to tap; greetings and "I don't know" offer starter questions.
-        suggest = (friendly.suggestions(topic if card else None, lang, card, want, question)
-                   if friendly_style else [])
+        if vet_turn:
+            suggest = vets.town_names(lang) if topic == vets.TOPIC else []
+        else:
+            suggest = (friendly.suggestions(topic if card else None, lang, card, want, question)
+                       if friendly_style else [])
         shown = {f["id"] for f, _ in evidence}
         extra = [KB_BY_ID[i] for i in (card_ids if card else []) if i not in shown]
         ev_ids += [f"{f['id']}-{stage}" for f in extra]
@@ -697,6 +736,8 @@ class Handler(BaseHTTPRequestHandler):
               "evidence": [ev_row(f, s) for f, s in evidence] + [ev_row(f, f["kind"]) for f in extra]})
 
         try:
+            if vet_turn:
+                return finish(friendly.card_text(card), "vet", "answer", card)
             # Hard guard: dose/medicine questions get the fixed refusal.
             if guarded:
                 if card:
