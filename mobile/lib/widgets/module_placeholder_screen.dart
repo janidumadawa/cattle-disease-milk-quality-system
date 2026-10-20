@@ -18,9 +18,7 @@ class ModulePlaceholderScreen extends StatelessWidget {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
+      appBar: AppBar(title: Text(title)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -29,11 +27,7 @@ class ModulePlaceholderScreen extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  icon,
-                  size: 64,
-                  color: theme.colorScheme.primary,
-                ),
+                Icon(icon, size: 64, color: theme.colorScheme.primary),
                 const SizedBox(height: 16),
                 Text(
                   title,
@@ -41,14 +35,9 @@ class ModulePlaceholderScreen extends StatelessWidget {
                   style: theme.textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  description,
-                  textAlign: TextAlign.center,
-                ),
+                Text(description, textAlign: TextAlign.center),
                 const SizedBox(height: 16),
-                const Chip(
-                  label: Text('Coming soon'),
-                ),
+                const Chip(label: Text('Coming soon')),
               ],
             ),
           ),

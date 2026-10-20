@@ -8,9 +8,7 @@ class HomeScreen extends StatelessWidget {
     const primaryGreen = Color(0xFF006239);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('MedFarm'),
-      ),
+      appBar: AppBar(title: const Text('MedFarm')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -27,13 +25,10 @@ class HomeScreen extends StatelessWidget {
                 const SizedBox(height: 20),
                 Text(
                   'MedFarm',
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineLarge
-                      ?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: primaryGreen,
-                      ),
+                  style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: primaryGreen,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(

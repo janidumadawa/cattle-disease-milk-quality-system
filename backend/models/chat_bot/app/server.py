@@ -26,6 +26,8 @@ DATASET = os.path.join(ROOT, "dataset.jsonl")
 OLLAMA = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434").rstrip("/")
 MODEL = os.environ.get("MEDFARM_MODEL", "medfarm-llama")
 PORT = int(os.environ.get("PORT", "8000"))
+# 0.0.0.0 lets a phone on the same Wi-Fi reach the server (the emulator works with 127.0.0.1).
+HOST = os.environ.get("MEDFARM_HOST", "127.0.0.1")
 
 # Fixed sentences the model was trained to emit (from dataset.jsonl).
 ABSTAIN = {
@@ -107,62 +109,110 @@ def load_kb():
 
 
 # Farmer wording -> KB wording (both languages). Matched as substrings so
-# Sinhala inflections ("කුරවල", "තුවාලයක්") still hit.
+# Sinhala inflections ("කුරවල", "තුවාලයක්") still hit. The third item lists the
+# topics a sign points to; signs with none (fever, not eating ...) fit many
+# illnesses and never name a disease on their own.
+FMD, LSD, MAS, RW = care_kb.FMD, care_kb.LSD, care_kb.MAS, care_kb.RW
 SYMPTOMS = [
-    # --- feet / mouth (FMD) ---
-    (r"wound|sore|ulcer|තුවාල|වණ|කැපුම", "blisters lesions ulcers බිබිලි තුවාල"),
-    (r"hoof|hooves|claw|feet|limp|lame|කුර|කකුල|පාදවල|කොර|ඇවිද", "hooves claws feet lameness කුර පාදවල කොර"),
-    (r"lying down|lie down|lies down|stamp|වැතිරී|වැතිරිල|පාද ගස", "lameness lie down stamp වැතිරී"),
-    (r"blister|vesicle|bubble|බිබිලි|බුබුළු", "blisters vesicles බිබිලි"),
+    # --- feet / mouth (FMD, foot rot) ---
+    (r"wound|sore|ulcer|තුවාල|වණ|කැපුම", "blisters lesions ulcers බිබිලි තුවාල",
+     (FMD, LSD, care_kb.FOOT)),
+    (r"hoof|hooves|claw|feet|limp|lame|කුර|කකුල|පාදවල|කොර|ඇවිද", "hooves claws feet lameness කුර පාදවල කොර",
+     (FMD, care_kb.FOOT)),
+    (r"lying down|lie down|lies down|stamp|වැතිරී|වැතිරිල|පාද ගස", "lameness lie down stamp වැතිරී", ()),
+    (r"blister|vesicle|bubble|බිබිලි|බුබුළු", "blisters vesicles බිබිලි", (FMD,)),
     (r"mouth|tongue|\blips?\b|drool|saliva|slobber|කටේ|කටින්|කටෙන්|කට ඇතුළ|මුඛය|දිව|තොල්|කෙළ|කෙල",
-     "mouth tongue lips drool බිබිලි මුඛය දිව කෙළ"),
+     "mouth tongue lips drool බිබිලි මුඛය දිව කෙළ", (FMD,)),
+    (r"foul|stink|rotten|(smell|odou?r).{0,30}(foot|feet|hoof|claw)|between the (claws|toes)|"
+     r"split.{0,20}(claw|hoof|skin)|කුර.{0,20}(ගඳ|කුණු|පැලී)|දුගඳ",
+     "foul-smelling claws splits foot rot දුගඳ කුර", (care_kb.FOOT,)),
     # --- skin lumps (LSD) ---
-    (r"lump|bump|nodule|knot|ගැටිති|ගැට|ගෙඩි|කුරුලෑ", "nodules lumpy skin ගැටිති සමේ"),
-    (r"fever|hot body|temperature|උණ|රස්නෙ", "fever උණ"),
-    (r"\btears?\b|watery eye|කඳුළු", "tears watery eyes කඳුළු ඇස්වලින්"),
-    (r"\bnose\b|nasal|snot|නාස|සෙම", "nasal discharge නාසයෙන් දියර"),
+    (r"lump|bump|nodule|knot|ගැටිති|ගැට|ගෙඩි|කුරුලෑ", "nodules lumpy skin ගැටිති සමේ", (LSD,)),
+    (r"fever|hot body|temperature|උණ|රස්නෙ", "fever උණ", ()),
+    (r"\btears?\b|watery eye|කඳුළු", "tears watery eyes කඳුළු ඇස්වලින්", (LSD, care_kb.EYE)),
+    # Discharge, not just "nose": "blood from the nose" is an emergency, not this sign.
+    (r"nasal|snot|runny nose|nose.{0,15}(discharge|running|runs|mucus|dripping)|discharge.{0,15}nose|"
+     r"නාසයෙන් (දියර|සෙම)|සෙම", "nasal discharge නාසයෙන් දියර", (LSD, care_kb.PNE)),
+    (r"cloudy eye|eye.{0,20}(cloudy|white|blue|closed|shut)|(white|blue) (spot|patch) on.{0,12}eye|"
+     r"pink ?eye|squint|ඇස.{0,15}(සුදු|බොඳ|වහ)", "cloudy eye shut pinkeye බොඳ ඇස", (care_kb.EYE,)),
     # --- udder / milk (Mastitis) ---
     (r"udder|teat|quarter|බුරුල්ල|බුරුල|බුරුලු|තනය|තනයක්|තනේ|තනවල|තන පුඩු|තන ඉදි|තන තද|තන රතු|"
-     r"(?<![඀-෿])තන(?![඀-෿])", "udder quarter බුරුල්ලේ කොටස"),
-    (r"clot|flake|කිරි කැටි|කැටි|තුණ්ඩ", "milk clots flakes කිරි කැටි"),
+     r"(?<![඀-෿])තන(?![඀-෿])", "udder quarter බුරුල්ලේ කොටස", (MAS,)),
+    (r"clot|flake|කිරි කැටි|කැටි|තුණ්ඩ", "milk clots flakes කිරි කැටි", (MAS,)),
     (r"watery milk|thin milk|milk.{0,12}water|කිරි වතුර|වතුර වගේ|වතුර වැනි|දියර වගේ",
-     "watery secretion milk appearance වතුර වැනි දියර කිරි පෙනුමේ"),
-    (r"blood in (the )?milk|bloody milk|milk.{0,20}blood|කිරිවල ලේ|කිරි වල ලේ|කිරියේ ලේ|ලේ පාට කිරි|ලේ මිශ්‍?ර කිරි",
-     "milk appearance changes කිරි පෙනුමේ වෙනස්කම්"),
-    (r"milk colou?r|colou?r of (the )?milk|smell|කිරි පාට|කිරිවල පාට|කිරි ගඳ|කිරිවල ගඳ",
-     "milk appearance changes කිරි පෙනුමේ වෙනස්කම්"),
-    (r"less milk|milk (drop|yield|reduc|less)|කිරි අඩු", "milk yield less milk කිරි අඩුවෙන් ප්‍රමාණය"),
-    (r"swell|swollen|\bhard\b|ඉදිම|ඉදිමු|තද වෙලා|තද වුණා|තදයි|ගල් වගේ", "swelling ඉදිමීම"),
-    (r"pain|hurt|tender|රිදෙනව|රිදුම|වේදනා|අල්ලනකොට|අල්ලද්දි|ඇල්ලුවම", "painful hot වේදනාකාරී උණුසුම්"),
-    (r"\bhot\b|warm|උණුසුම්|රස්නෙයි|රස්නෙ වෙලා|රස්නය", "painful hot වේදනාකාරී උණුසුම්"),
-    (r"\bred\b|redness|රතු", "redness රතු වීම"),
+     "watery secretion milk appearance වතුර වැනි දියර කිරි පෙනුමේ", (MAS,)),
+    (r"blood in (the )?milk|bloody milk|milk.{0,20}blood|කිරිවල ලේ|කිරි වල ලේ|කිරියේ ලේ|ලේ පාට කිරි|"
+     r"ලේ මිශ්‍?ර කිරි", "milk appearance changes කිරි පෙනුමේ වෙනස්කම්", (MAS,)),
+    (r"milk colou?r|colou?r of (the )?milk|milk.{0,20}smell|smell.{0,20}milk|කිරි පාට|කිරිවල පාට|කිරි ගඳ|"
+     r"කිරිවල ගඳ", "milk appearance changes කිරි පෙනුමේ වෙනස්කම්", (MAS,)),
+    (r"less milk|milk (drop|yield|reduc|less|production)|(increase|more|boost).{0,15}milk|කිරි අඩු|කිරි වැඩි",
+     "yield milk less milk කිරි අඩුවෙන් ප්‍රමාණය", (care_kb.FEED,)),
+    (r"swell|swollen|\bhard\b|ඉදිම|ඉදිමු|තද වෙලා|තද වුණා|තදයි|ගල් වගේ", "swelling ඉදිමීම", ()),
+    (r"pain|hurt|tender|රිදෙනව|රිදුම|වේදනා|අල්ලනකොට|අල්ලද්දි|ඇල්ලුවම", "painful hot වේදනාකාරී උණුසුම්", ()),
+    (r"\bhot\b|warm|උණුසුම්|රස්නෙයි|රස්නෙ වෙලා|රස්නය", "painful hot වේදනාකාරී උණුසුම්", ()),
+    (r"\bred\b|redness|රතු", "redness රතු වීම", ()),
     # --- skin patches (Ringworm) ---
     (r"hair loss|bald|hairless|patch|round|crust|scab|scal|flak|ලොම්|රෝම|පොතු|කොරපොතු|රවුම්|රවුමට|මුඩු|ගැලව|"
-     r"පැල්ලම|ලප", "hair loss crusts patches රෝම ගැලවුණු පොතු පැල්ලම්"),
-    (r"white|gr[ae]y|සුදු|අළු|අලු(?!ත)", "gray-white crusts අළු-සුදු පැහැති පොතු"),  # not "අලුත" (new)
-    (r"itch|scratch|කැසීම|කසනව|කහනව|කසන", "itching කැසීම"),
-    (r"\beyes?\b|\bface\b|ඇස්|ඇහැ|මූණ|මුහුණ|ඇස් වට", "eyes ඇස් වටා"),
-    (r"\bcalf|calves|වස්ස|පැටි|පැටව", "calves young කුඩා පැටවුන්"),
-    (r"chest|පපුව", "chest පපුවේ"),
-    # --- people / body ---
+     r"පැල්ලම|ලප", "hair loss crusts patches රෝම ගැලවුණු පොතු පැල්ලම්", (RW,)),
+    (r"white|gr[ae]y|සුදු|අළු|අලු(?!ත)", "gray-white crusts අළු-සුදු පැහැති පොතු", (RW,)),  # not "අලුත" (new)
+    (r"itch|scratch|කැසීම|කසනව|කහනව|කසන", "itching කැසීම", ()),
+    (r"\beyes?\b|\bface\b|ඇස්|ඇහැ|මූණ|මුහුණ|ඇස් වට", "eyes ඇස් වටා", ()),
+    (r"\bcalf|calves|වස්ස|පැටි|පැටව", "calves young කුඩා පැටවුන්", ()),
+    (r"chest|පපුව", "chest පපුවේ", ()),
+    # --- gut, breathing, blood (common farm problems) ---
+    (r"diarr?h|scour|loose (dung|stool|motion)|(watery|runny) (dung|stool|faeces|feces|poo)|පාචන|බඩ යනව|"
+     r"බඩ යාම|ගොම දියර|දියර ගොම", "diarrhoea scours dung පාචනය ගොම", (care_kb.DIA, care_kb.WORM)),
+    (r"bloat|(left|stomach|belly|abdomen|rumen).{0,25}(swol|swell|bigger|tight|distend|blown)|"
+     r"(swol|swell|blown).{0,25}(left side|stomach|belly|abdomen)|බඩ පිම්බ|බඩ පිපිල|බඩ ඉදිම|බඩ පිපී",
+     "bloat left belly rumen gas බඩ පිපීම", (care_kb.BLO,)),
+    (r"cough|pneumonia|breath|pant|wheez|sneez|කැස්ස|කහිනව|කැස්සක්|හුස්ම|හති",
+     "cough pneumonia breathing කැස්ස නියුමෝනියාව හුස්ම", (care_kb.PNE,)),
+    (r"(red|dark|brown|bloody|coffee).{0,15}(urine|pee)|(urine|pee).{0,20}(red|dark|brown|blood)|"
+     r"මුත්‍?රා.{0,15}(රතු|කළු|දුඹුරු|ලේ)", "urine red dark-brown tick fever මුත්‍රා", (care_kb.TICK,)),
+    (r"\bpale\b|yellow (gums|eyes)|jaundice|ana?emi|සුදුමැලි", "pale gums yellow anaemia සුදුමැලි",
+     (care_kb.TICK, care_kb.WORM)),
+    (r"\bthin\b(?!\s+milk)|weight loss|losing weight|lost weight|skinny|not growing|poor growth|rough coat|"
+     r"bottle jaw|කෙට්ටු|බර අඩු|වැඩෙන්නේ නැ", "weight loss poor growth rough coat බර අඩුවීම",
+     (care_kb.WORM,)),
+    (r"(after|since) (calving|giving birth|delivery).{0,60}(down|stand|get up|weak)|"
+     r"(down|stand|get up|weak).{0,60}after (calving|giving birth|delivery)|milk fever|"
+     r"පැටවා.{0,40}(නැගිටින්න බැ|වැටිල|නැගිටින්නේ නැ)|කිරි උණ",
+     "calving cannot get up milk fever calcium කිරි උණ", (care_kb.MF,)),
+    # --- questions about rather than signs ---
+    (r"\bticks?\b|කිනිතුල්", "ticks tick fever කිනිතුල්ලන්", (care_kb.TICK,)),
+    (r"\bworms?\b|parasit|deworm|පණුව|පනුව", "worms parasites dewormer පණුවන්", (care_kb.WORM,)),
+    (r"\bfeed|\bfood|\bdiet|fodder|grass|water|ආහාර|කෑම|තෘණ|වතුර", "feed roughage water ආහාර තෘණ වතුර",
+     (care_kb.FEED,)),
     (r"\bhumans?\b|people|person|family|children|catch|\bget\b.*\bfrom\b|spread to|zoonotic|"
-     r"මිනිස්|ළමයි|පවුලේ|මටත්|බෝවෙනවද|බෝවේද|බෝවන|බෝවෙයිද", "humans people spread contact මිනිසුන්ට"),
-    (r"\bbody\b|all over|ඇඟ|ශරීර|සිරුර", "body සිරුරේ"),
-    (r"not eating|off feed|appetite|won'?t eat|eat(s|ing)? less|කන්නේ නැ|කෑම අඩු|කන්න අකමැති|අරුචි",
-     "appetite eat less ආහාර අරුචිය අඩුවෙන් කන්නත්"),
-    (r"\bfl(y|ies)\b|mosquito|\bticks?\b|මැස්ස|මදුරු|කිනිතුල්", "flies mosquitoes ticks මැස්සන් මදුරුවන් කිනිතුල්ලන්"),
+     r"මිනිස්|ළමයි|පවුලේ|මටත්|බෝවෙනවද|බෝවේද|බෝවන|බෝවෙයිද", "humans people spread contact මිනිසුන්ට", ()),
+    (r"\bbody\b|all over|ඇඟ|ශරීර|සිරුර", "body සිරුරේ", ()),
+    (r"not eating|off feed|appetite|won'?t eat|eat(s|ing)? less|stopped eating|කන්නේ නැ|කෑම අඩු|"
+     r"කන්න අකමැති|අරුචි", "appetite eat less ආහාර අරුචිය අඩුවෙන් කන්නත්", ()),
+    (r"weak|dull|lethargic|තෙහෙට්ටු|දුර්වල|අලස", "weakness dullness දුර්වලතාවය", ()),
+    (r"\bfl(y|ies)\b|mosquito|මැස්ස|මදුරු", "flies mosquitoes මැස්සන් මදුරුවන්", (LSD, care_kb.EYE)),
 ]
-SYMPTOM_RE = [(re.compile(p, re.I), exp) for p, exp in SYMPTOMS]
-# Bilingual disease names, so "මුඛ හා පාද රෝගය" counts as matched by any FMD fact.
+SYMPTOM_RE = [(re.compile(p, re.I), exp, topics) for p, exp, topics in SYMPTOMS]
+# Bilingual topic names, so "මුඛ හා පාද රෝගය" counts as matched by any FMD fact.
 TOPIC_ALIASES = {
-    "Foot-and-Mouth Disease": "foot mouth fmd මුඛ පාද රෝගය",
-    "Lumpy Skin Disease": "lumpy skin lsd ගැටිති රෝගය",
-    "Mastitis": "mastitis udder බුරුල්ලේ බුරුළු බුරුලු ප්‍රදාහය රෝගය",
-    "Ringworm": "ringworm dermatophytosis fungal දද දිලීර සමේ රෝගය",
+    FMD: "foot mouth fmd මුඛ පාද රෝගය",
+    LSD: "lumpy skin lsd ගැටිති රෝගය",
+    MAS: "mastitis udder බුරුල්ලේ බුරුළු බුරුලු ප්‍රදාහය රෝගය",
+    RW: "ringworm dermatophytosis fungal දද දිලීර සමේ රෝගය",
     "General cattle health": "health hygiene biosecurity සෞඛ්‍යය සෞඛ්‍ය",
+    care_kb.DIA: "diarrhoea diarrhea scours පාචනය බඩ යාම",
+    care_kb.BLO: "bloat බඩ පිපීම",
+    care_kb.PNE: "pneumonia respiratory cough කැස්ස නියුමෝනියාව ශ්වසන",
+    care_kb.TICK: "ticks tick fever babesiosis anaplasmosis කිනිතුල්ලන් කිනිතුලු උණ",
+    care_kb.WORM: "worms parasites deworming පණුවන් පණු",
+    care_kb.EYE: "pinkeye eye infection ඇසේ ආසාදනය",
+    care_kb.FOOT: "foot rot hoof කුර කුණුවීම",
+    care_kb.MF: "milk fever calcium calving කිරි උණ",
+    care_kb.FEED: "feeding feed food diet nutrition milk yield ආහාර කිරි",
+    care_kb.SICK: "sick ill fever not eating අසනීප රෝගී",
 }
-# Disease names contain symptom words ("foot-and-MOUTH"); hide them from SYMPTOMS.
-DISEASE_NAMES = re.compile(r"foot[- ]and[- ]mouth|මුඛ හා පාද|lumpy skin", re.I)
+# Topic names contain symptom words ("foot-and-MOUTH"); hide them from SYMPTOMS.
+DISEASE_NAMES = re.compile(r"foot[- ]and[- ]mouth|මුඛ හා පාද|lumpy skin|ring ?worm|milk fever|කිරි උණ|"
+                           r"pink ?eye|foot ?rot|tick fever", re.I)
 STAGE_SUFFIX = re.compile(r"\((?:low.moderate|high) stage\)", re.I)
 # Sinhala words for "my / cow / how / what / is there" etc.
 SI_STOP_PREFIX = ("හරක", "ගවය", "ගවයෙ", "එළදෙන", "මගේ", "මගෙ", "මම", "මට", "කොහොම", "මොක",
@@ -173,7 +223,7 @@ SI_STOP_PREFIX = ("හරක", "ගවය", "ගවයෙ", "එළදෙන", "
 SI_STOP = {"වෙලා", "වුණා", "වෙනවා", "එනවා", "යනවා", "වගේ", "නැති", "නෑ", "නැහැ", "ඇති",
            "කරලා", "දෙනවා", "ගහනවා", "හරි", "ගොඩක්", "ටිකක්", "දැන්", "වටේ", "වටා", "පාට",
            "වෙලාද", "එනවද", "යනවද", "තමයි", "ඔක්කොම", "තැන්", "තැනක", "ඉඳන්", "වලින්",
-           "මොනවද", "මොනවා", "කන්න", "දෙන්න"}
+           "මොනවද", "මොනවා", "කන්න", "දෙන්න", "ඉන්නවා", "ඉන්නව", "ඉන්නේ", "ඉන්න"}
 TOKEN_RE = re.compile(r"[a-z0-9]+|[඀-෿‍]+")
 
 
@@ -187,8 +237,9 @@ def hide_disease_names(question):
 
 
 def symptom_terms(question):
+    """(KB wording, topics the sign points to) for each sign in the question."""
     q = hide_disease_names(question)
-    return [exp for rx, exp in SYMPTOM_RE if rx.search(q)]
+    return [(exp, topics) for rx, exp, topics in SYMPTOM_RE if rx.search(q)]
 
 
 def _keep(t):
@@ -246,6 +297,8 @@ KB_BY_ID = {f["id"]: f for f in KB}
 _DOCS = [tokenize(" ".join(filter(None, [f["en"], f["si"], f["topic"], f["aspect"],
                                            TOPIC_ALIASES.get(f["topic"], "")]))) for f in KB]
 _DOC_GRAMS = [set(ngrams(d)) for d in _DOCS]
+# Fact text only (no topic aliases), for checking a fact really answers a question.
+_DOC_WORD_SETS = [set(tokenize(" ".join(filter(None, [f["en"], f["si"]])))) for f in KB]
 WORD_INDEX = BM25(_DOCS)
 GRAM_INDEX = BM25([ngrams(d) for d in _DOCS])
 GRAM_WEIGHT = 0.3     # partial-word matches
@@ -253,6 +306,14 @@ EXPAND_WEIGHT = 0.5   # symptom-dictionary terms count half of the farmer's own 
 MIN_COVERAGE = 0.6    # share of question words the top fact must explain
 COVER_FACTS = 4       # top-ranked facts (same disease as the best) used for coverage
 MIN_DISEASE_SHARE = 0.35  # below this the signs fit several diseases: don't name one
+# Words that only name a disease say nothing about what the farmer wants to know
+# (multi-word names are already blanked by DISEASE_NAMES).
+TOPIC_WORDS = set(tokenize(
+    "fmd lsd mastitis diarrhoea diarrhea scours bloat pneumonia babesiosis anaplasmosis "
+    "disease diseases illness infection rot calf calves animal animals "
+    "පාචනය බුරුලු ප්‍රදාහය රෝගය රෝග දද "
+    # everyday verbs that say nothing about the subject
+    "keep make give take use need want help happen happens"))
 
 
 def _score(tokens):
@@ -269,7 +330,8 @@ def retrieve(question, k=3):
     q = clean_question(question)
     spans = token_spans(q)
     q_tokens = [t for t, _, _ in spans]
-    expansions = symptom_terms(q)
+    signs = symptom_terms(q)
+    expansions = [exp for exp, _ in signs]
     base = _score(q_tokens)
     extra = _score(tokenize(" ".join(expansions))) if expansions else [0.0] * len(KB)
     scores = [a + EXPAND_WEIGHT * b for a, b in zip(base, extra)]
@@ -286,7 +348,7 @@ def retrieve(question, k=3):
     # symptom phrase ("කිරි පාට", "කුරවල") whose KB wording they contain.
     hidden = hide_disease_names(q).lower()
     explained = []
-    for rx, exp in SYMPTOM_RE:
+    for rx, exp, _ in SYMPTOM_RE:
         if any(explains(e) for e in tokenize(exp)):
             explained += [(m.start(), m.end()) for m in rx.finditer(hidden)]
     covered = sum(1 for t, s, e in spans
@@ -298,7 +360,26 @@ def retrieve(question, k=3):
         "coverage": round(coverage, 2),
         "confident": coverage >= MIN_COVERAGE and scores[top] > 0,
         "symptoms": [e.split()[0] for e in expansions],
+        # Topics that at least one described sign points to.
+        "sign_topics": {t for _, topics in signs for t in topics},
+        # Question words (and their KB wording) other than topic names: what the
+        # farmer wants to know.
+        "content": {t for t in tokenize(" ".join([hide_disease_names(q)] + expansions))
+                    if t not in TOPIC_WORDS},
     }
+
+
+def _word_in(token, words):
+    """Whole-word match allowing endings: "sell" ~ "selling", "කිරි" ~ "කිරිවල"."""
+    n = min(len(token), 4)
+    return any(w[:n] == token[:n] and abs(len(w) - len(token)) <= 4 for w in words)
+
+
+def answer_match(fact, content):
+    """How many of the question's words the fact contains. "How long does LSD
+    last" shares none with the LSD virus-family fact, so that fact is no answer."""
+    words = _DOC_WORD_SETS[KB.index(fact)]
+    return sum(_word_in(t, words) for t in content)
 
 
 def diagnose(scores):
@@ -362,6 +443,17 @@ class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
         sys.stderr.write("[medfarm] " + fmt % args + "\n")
 
+    def end_headers(self):
+        # The Flutter web app (flutter run -d chrome) is served from another origin.
+        self.send_header("Access-Control-Allow-Origin", "*")
+        super().end_headers()
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type")
+        self.end_headers()
+
     def send_json(self, obj, code=200):
         body = json.dumps(obj, ensure_ascii=False).encode()
         self.send_response(code)
@@ -409,32 +501,56 @@ class Handler(BaseHTTPRequestHandler):
         evidence = ranked[:k]
         ev_ids = [f"{f['id']}-{stage}" for f, _ in evidence]
         prompt = build_prompt(question, lang, evidence, stage)
-        diseases = diagnose(found["scores"]) if found["confident"] else []
-        diseases = [d for d in diseases if d["disease"] not in ("General cattle health", "Emergency")]
+        topics = diagnose(found["scores"]) if found["confident"] else []
+        topics = [d for d in topics if d["disease"] not in ("General cattle health", care_kb.EM)]
         friendly_style = req.get("style", "friendly") == "friendly"
         # Short greetings win even if a word looks medical ("ආයුබෝවන්" contains "බෝවන").
         chat = (friendly.small_talk(question, lang)
                 if friendly_style and (not found["confident"] or len(question.split()) <= 3)
                 else None)
         if chat:
-            found["confident"], diseases = False, []
+            found["confident"], topics = False, []
         want = friendly.intents(question)
         urgent = friendly.urgent_ids(question) if friendly_style and not chat else []
-        # Name a disease only on a clear match (or when the farmer names it).
+        # Name a topic only on a clear match (or when the farmer names it).
         named = None if chat else friendly.named_disease(question)
-        if diseases and (diseases[0]["share"] >= MIN_DISEASE_SHARE or diseases[0]["disease"] == named):
-            topic = diseases[0]["disease"]
+        sign_topics = found["sign_topics"]
+        top = topics[0]["disease"] if topics else None
+        if top and (topics[0]["share"] >= MIN_DISEASE_SHARE or top in (named,) or top in sign_topics):
+            topic = top
         else:
-            topic, diseases = named, []
-        sick = friendly.is_sick_case(found["symptoms"]) and found["confident"] and topic is not None
-        # Direct-answer facts come from the matched disease (or general health if none).
+            topic = named
+        # "How do I treat bloat?" asks about a disease; it does not describe a sick cow.
+        asks_how = named is not None and (want["treat"] or want["prevent"])
+        sick = (friendly.is_sick_case(found["symptoms"]) and found["confident"]
+                and not chat and not asks_how)
+        if sick and (named is None or topic != named) and topic not in sign_topics:
+            # Fever, not eating, weakness ... fit many illnesses: name a disease only
+            # when a described sign points to it, else give general sick-cow advice.
+            match = next((d for d in topics if d["disease"] in sign_topics), None)
+            topic = match["disease"] if match else care_kb.SICK
+        # "Signs match ..." only for a sick animal, with the chosen disease first.
+        diseases = []
+        if sick and topic not in care_kb.NOT_DISEASES:
+            diseases = sorted((d for d in topics if d["disease"] not in care_kb.NOT_DISEASES),
+                              key=lambda d: d["disease"] != topic)
+        # Direct-answer facts come from the chosen topic (or general health if none).
         fact_topic = topic or "General cattle health"
-        signs = [e for e in evidence if e[0]["kind"] in ("fact", "sign") and e[0]["topic"] == fact_topic]
-        facts = extractive_facts(signs) if found["confident"] and signs else []
-        if not sick:
-            # Info questions: the best fact, then the topic sections. For "how do I
-            # treat/prevent" the opened sections are the answer, so no fact box.
-            facts = [] if (topic and (want["treat"] or want["prevent"])) else facts[:1]
+        pool = [e for e in found["evidence"] if e[0]["topic"] == fact_topic]
+        if sick:
+            signs = [e for e in pool if e[0]["kind"] in ("fact", "sign")]
+            facts = extractive_facts(signs) if signs else []
+        elif topic and (want["treat"] or want["prevent"]):
+            facts = []  # the opened treatment / prevention sections are the answer
+        else:
+            # Info questions: the entry sharing the most words with the question;
+            # ties go to what the topic is (about / facts / signs), then retrieval
+            # order. None if it shares no words.
+            basic = {"about": 2, "fact": 2, "sign": 1}
+            matches = [(answer_match(f, found["content"]), basic.get(f["kind"], 0), -n, f)
+                       for n, (f, _) in enumerate(pool) if f["kind"] != "urgent"]
+            best = max(matches, key=lambda m: m[:3], default=None)
+            facts = [best[-1]] if best and best[0] > 0 else []
         guarded = req.get("guard", True) and bool(DOSE_Q.search(question))
         # A named disease ("හරකාගේ ඇඟේ දද") always gets its topic guide.
         has_answer = bool((found["confident"] and (topic or facts)) or urgent or named)
@@ -575,7 +691,7 @@ if __name__ == "__main__":
     # requests; fail loudly instead.
     ThreadingHTTPServer.allow_reuse_address = False
     try:
-        server = ThreadingHTTPServer(("127.0.0.1", PORT), Handler)
+        server = ThreadingHTTPServer((HOST, PORT), Handler)
     except OSError:
         sys.exit(f"Port {PORT} is already in use. Close the other MedFarm server first "
                  f"(or set PORT=8001).")

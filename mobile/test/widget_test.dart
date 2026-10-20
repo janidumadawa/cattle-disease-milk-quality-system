@@ -3,8 +3,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:medfarm_mobile/main.dart';
 
 void main() {
-  testWidgets('displays the shared MedFarm application shell',
-      (WidgetTester tester) async {
+  testWidgets('displays the shared MedFarm application shell', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const MedFarmApp());
 
     expect(
@@ -12,14 +13,12 @@ void main() {
       findsOneWidget,
     );
 
-    expect(
-      find.text('Shared mobile application foundation'),
-      findsOneWidget,
-    );
+    expect(find.text('Shared mobile application foundation'), findsOneWidget);
   });
 
-  testWidgets('bottom nav bar switches between modules',
-      (WidgetTester tester) async {
+  testWidgets('bottom nav bar switches between modules', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(const MedFarmApp());
 
     for (final label in ['Home', 'Scan', 'Voice', 'Milk', 'Chat', 'More']) {
@@ -30,7 +29,7 @@ void main() {
       'Scan': 'Image-based Detection',
       'Voice': 'Voice-based Analysis',
       'Milk': 'Milk Quality Check',
-      'Chat': 'Chatbot',
+      'Chat': 'MedFarm Assistant',
     };
     for (final MapEntry(key: tab, value: title) in pages.entries) {
       await tester.tap(find.text(tab));
@@ -43,6 +42,22 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.byIcon(Icons.camera_alt_outlined).last);
     await tester.pumpAndSettle();
-    expect(find.widgetWithText(AppBar, 'Image-based Detection'), findsOneWidget);
+    expect(
+      find.widgetWithText(AppBar, 'Image-based Detection'),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('chat back arrow returns to the home tab', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MedFarmApp());
+
+    await tester.tap(find.text('Chat'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byTooltip('Back'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Shared mobile application foundation'), findsOneWidget);
   });
 }

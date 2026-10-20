@@ -52,26 +52,25 @@ class _AppShellState extends State<AppShell> {
     ),
   ];
 
-  // Same order as _items.
-  static const _pages = [
-    HomeScreen(),
-    ScanScreen(),
-    VoiceScreen(),
-    MilkQualityScreen(),
-    ChatScreen(),
-    MoreScreen(),
-  ];
-
   int _currentIndex = 0;
 
   @override
   Widget build(BuildContext context) {
+    void goHome() => setState(() => _currentIndex = 0);
+
+    // Same order as _items.
+    final pages = [
+      const HomeScreen(),
+      const ScanScreen(),
+      const VoiceScreen(),
+      const MilkQualityScreen(),
+      ChatScreen(onBack: goHome),
+      const MoreScreen(),
+    ];
+
     return Scaffold(
       // IndexedStack keeps each tab's state when switching tabs.
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: pages),
       bottomNavigationBar: MedFarmBottomNav(
         items: _items,
         currentIndex: _currentIndex,

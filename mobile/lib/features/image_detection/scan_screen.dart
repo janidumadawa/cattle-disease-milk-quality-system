@@ -11,7 +11,8 @@ class ScanScreen extends StatelessWidget {
     return const ModulePlaceholderScreen(
       title: 'Image-based Detection',
       icon: Icons.camera_alt_outlined,
-      description: 'Take or upload a photo of the animal or the affected '
+      description:
+          'Take or upload a photo of the animal or the affected '
           'area to identify possible diseases.',
     );
   }

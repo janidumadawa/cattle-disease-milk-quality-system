@@ -5,7 +5,7 @@ Written from the sources listed in SOURCES (checked 2026-10-20). No medicine nam
 doses or withdrawal times: treatment entries describe what the vet does.
 Sinhala text is a draft translation and needs native-speaker review.
 
-kind: sign | treatment | care | prevention | urgent
+kind: about | sign | treatment | care | prevention | urgent
 """
 
 SOURCES = {
@@ -16,10 +16,28 @@ SOURCES = {
     "merck-mastitis": "https://www.merckvetmanual.com/reproductive-system/mastitis-in-large-animals/mastitis-in-cattle",
     "merck-ringworm": "https://www.merckvetmanual.com/integumentary-system/dermatophytosis/dermatophytosis-in-cattle",
     "merck-anthrax": "https://www.merckvetmanual.com/generalized-conditions/anthrax/anthrax-in-animals",
+    "merck-bloat": "https://www.merckvetmanual.com/digestive-system/diseases-of-the-ruminant-forestomach/bloat-in-ruminants",
+    "merck-calf-diarrhea": "https://www.merckvetmanual.com/digestive-system/intestinal-diseases-in-ruminants/diarrhea-in-neonatal-ruminants",
+    "merck-intestinal": "https://www.merckvetmanual.com/digestive-system/intestinal-diseases-in-ruminants/intestinal-diseases-in-cattle",
+    "merck-brd": "https://www.merckvetmanual.com/respiratory-system/respiratory-diseases-of-cattle/bovine-respiratory-disease-complex",
+    "merck-babesiosis": "https://www.merckvetmanual.com/circulatory-system/blood-parasites/babesiosis-in-animals",
+    "merck-anaplasmosis": "https://www.merckvetmanual.com/circulatory-system/blood-parasites/anaplasmosis-in-ruminants",
+    "merck-worms": "https://www.merckvetmanual.com/digestive-system/gastrointestinal-parasites-of-ruminants/gastrointestinal-parasites-of-cattle",
+    "merck-pinkeye": "https://www.merckvetmanual.com/eye-diseases-and-disorders/infectious-keratoconjunctivitis/infectious-keratoconjunctivitis-in-animals",
+    "merck-foot-rot": "https://www.merckvetmanual.com/musculoskeletal-system/lameness-in-cattle/interdigital-phlegmon-in-cattle",
+    "merck-milk-fever": "https://www.merckvetmanual.com/metabolic-disorders/disorders-of-calcium-metabolism/parturient-paresis-in-cows",
+    "merck-dairy-nutrition": "https://www.merckvetmanual.com/management-and-nutrition/nutrition-dairy-cattle/nutritional-requirements-of-dairy-cattle",
+    "merck-temperature": "https://www.merckvetmanual.com/multimedia/table/normal-rectal-temperature-ranges",
 }
 
 FMD, LSD, MAS, RW, EM = ("Foot-and-Mouth Disease", "Lumpy Skin Disease", "Mastitis",
                          "Ringworm", "Emergency")
+# Common farm problems outside the original four diseases (checked 2026-10-20).
+DIA, BLO, PNE, TICK, WORM, EYE, FOOT, MF, FEED, SICK = (
+    "Diarrhoea", "Bloat", "Pneumonia", "Tick fever", "Worms", "Pinkeye", "Foot rot",
+    "Milk fever", "Feeding and milk yield", "Sick cow")
+# Topics that are not a disease: never shown as "signs match ...".
+NOT_DISEASES = {"General cattle health", EM, FEED, SICK}
 
 CARE = [
     # ---- Foot-and-Mouth Disease ----
@@ -50,6 +68,9 @@ CARE = [
     ("KB-209", FMD, "prevention", "merck-fmd",
      "Report suspected FMD quickly to the government veterinary surgeon; fast reporting is key to stopping an outbreak.",
      "FMD යැයි සැක නම් ඉක්මනින් රජයේ පශු වෛද්‍ය නිලධාරියාට දන්වන්න; ඉක්මන් දැනුම් දීම රෝගය පැතිරීම නැවැත්වීමට වැදගත්ය."),
+    ("KB-210", FMD, "prevention", "merck-fmd",
+     "The FMD virus can spread through milk, so during an outbreak follow the government vet's rules on using, selling or moving milk.",
+     "FMD වෛරසය කිරි හරහාද පැතිරිය හැකි බැවින්, රෝගය පැතිරෙන කාලයේ කිරි භාවිත කිරීම, විකිණීම හෝ ප්‍රවාහනය ගැන රජයේ පශු වෛද්‍යවරයාගේ නීති අනුගමනය කරන්න."),
 
     # ---- Lumpy Skin Disease ----
     ("KB-211", LSD, "sign", "merck-lsd",
@@ -61,6 +82,9 @@ CARE = [
     ("KB-213", LSD, "sign", "woah-lsd,merck-lsd",
      "LSD spreads mainly through biting flies, mosquitoes and ticks, and also through contaminated equipment and moving animals.",
      "LSD ප්‍රධාන වශයෙන් පැතිරෙන්නේ ලේ උරා බොන මැස්සන්, මදුරුවන් සහ කිනිතුල්ලන් මගිනි; අපිරිසිදු උපකරණ හා සතුන් ගෙනයාම මගින්ද පැතිරේ."),
+    ("KB-219", LSD, "sign", "merck-lsd",
+     "LSD lowers milk yield, and badly affected cattle can become very thin; the skin sores often become infected.",
+     "LSD නිසා කිරි ප්‍රමාණය අඩු වන අතර දැඩි ලෙස රෝගී වූ ගවයන් ඉතා කෙට්ටු විය හැක; සමේ තුවාල බොහෝවිට ආසාදනය වේ."),
     ("KB-214", LSD, "treatment", "merck-lsd",
      "No medicine kills the LSD virus. A vet treats the symptoms and prevents infection of the skin sores, which often makes the disease worse.",
      "LSD වෛරසය නැති කරන බෙහෙතක් නැත. පශු වෛද්‍යවරයා රෝග ලක්ෂණවලට ප්‍රතිකාර කර, බොහෝවිට රෝගය උග්‍ර කරන සමේ තුවාලවල ආසාදන වළක්වයි."),
@@ -102,6 +126,9 @@ CARE = [
     ("KB-227", MAS, "prevention", "merck-mastitis",
      "Ask your vet about dry cow therapy at the end of lactation; a quarter that keeps getting mastitis may need to be dried off.",
      "කිරි දෙන කාලය අවසානයේ dry cow therapy ගැන පශු වෛද්‍යවරයාගෙන් විමසන්න; නැවත නැවත Mastitis ඇතිවන බුරුල්ලේ කොටසක් වියළීමට සිදු විය හැක."),
+    ("KB-229", MAS, "care", "merck-mastitis",
+     "Do not sell or drink abnormal milk (with clots, flakes, blood or a watery look) from a cow with mastitis; milk it out and throw it away safely.",
+     "Mastitis ඇති ගවයාගේ අසාමාන්‍ය කිරි (කැටි, පතුරු, ලේ සහිත හෝ වතුර වැනි) විකුණන්න හෝ බොන්න එපා; එම කිරි දොවා ආරක්ෂිතව ඉවත දමන්න."),
 
     # ---- Ringworm ----
     ("KB-231", RW, "sign", "merck-ringworm",
@@ -130,6 +157,173 @@ CARE = [
     ("KB-243", EM, "urgent", "merck-anthrax",
      "A cow that cannot stand, is struggling to breathe, is trembling or collapses needs a vet immediately.",
      "නැගිටින්න බැරි, හුස්ම ගැනීමට අපහසු, වෙව්ලන හෝ ඇද වැටෙන ගවයෙකුට වහාම පශු වෛද්‍ය ප්‍රතිකාර අවශ්‍යයි."),
+    ("KB-244", EM, "urgent", "merck-bloat",
+     "A suddenly swollen left belly with hard breathing can be bloat, which can kill quickly. Call a vet immediately.",
+     "හදිසියේ පිම්බුණු වම් බඩ සහ අමාරුවෙන් හුස්ම ගැනීම ඉක්මනින් මරණයට පත් කළ හැකි Bloat විය හැක. වහාම පශු වෛද්‍යවරයෙකුට කතා කරන්න."),
+    ("KB-245", EM, "urgent", "merck-milk-fever",
+     "A cow that cannot get up in the first days after calving may have milk fever. Call a vet immediately.",
+     "පැටවා දැමීමෙන් පසු මුල් දිනවල නැගිටින්න බැරි එළදෙනකට කිරි උණ තිබිය හැක. වහාම පශු වෛද්‍යවරයෙකුට කතා කරන්න."),
+
+    # ---- Diarrhoea ----
+    ("KB-301", DIA, "about", "merck-intestinal,merck-calf-diarrhea",
+     "Diarrhoea (loose, watery dung, also called scours) has many causes, such as infections, worms and feeding problems.",
+     "පාචනය (දියර ගොම, බඩ යාම) ආසාදන, පණුවන් සහ ආහාර ගැටලු වැනි බොහෝ හේතු නිසා ඇති විය හැක."),
+    ("KB-302", DIA, "sign", "merck-calf-diarrhea",
+     "Diarrhoea quickly drains water from the body (dehydration). Calves that become weak, cannot stand or will not drink are in danger and can die within hours.",
+     "පාචනය නිසා ශරීරයේ ජලය ඉක්මනින් අඩු වේ. දුර්වල වූ, නැගිටින්න බැරි හෝ වතුර නොබොන වසු පැටවුන් අනතුරේ සිටින අතර පැය කිහිපයකින් මිය යා හැක."),
+    ("KB-303", DIA, "treatment", "merck-calf-diarrhea",
+     "Call a vet if the animal is weak, cannot stand, will not drink or has blood in the dung. Badly dehydrated calves need fluids into the vein from a vet.",
+     "සතා දුර්වල නම්, නැගිටින්න බැරි නම්, වතුර නොබොන්නේ නම් හෝ ගොමවල ලේ තිබේ නම් පශු වෛද්‍යවරයාට කතා කරන්න. ජලය බොහෝ අඩු වූ වසු පැටවුන්ට පශු වෛද්‍යවරයා නහරයට දියර ලබා දිය යුතුය."),
+    ("KB-304", DIA, "care", "merck-calf-diarrhea",
+     "Give a calf with diarrhoea oral rehydration (electrolyte) solution mixed exactly as the packet says, and keep feeding it milk; do not stop the milk.",
+     "පාචනය ඇති වසු පැටවාට පැකට්ටුවේ සඳහන් ආකාරයටම මිශ්‍ර කළ ජලය හා ලවණ (electrolyte) දියරය දෙන්න; කිරි දීම නවත්වන්න එපා."),
+    ("KB-305", DIA, "care", "merck-calf-diarrhea",
+     "Keep the sick animal in a clean, dry, sheltered pen with clean water, away from other calves.",
+     "රෝගී සතා පිරිසිදු, වියළි, ආවරණය කළ කොටුවක, පිරිසිදු වතුර සමඟ, අනෙක් වසු පැටවුන්ගෙන් වෙන්ව තබන්න."),
+    ("KB-306", DIA, "prevention", "merck-calf-diarrhea",
+     "Make sure every newborn calf drinks enough good colostrum (the first milk) within its first 2 hours of life.",
+     "අලුතින් උපන් සෑම වසු පැටවෙක්ම උපතින් පළමු පැය 2 ඇතුළත ප්‍රමාණවත් තරම් හොඳ කිරි මුල (colostrum) බොන බවට වග බලා ගන්න."),
+    ("KB-307", DIA, "prevention", "merck-calf-diarrhea",
+     "Keep calving and calf pens clean, keep sick calves apart, and do not mix older calves with newborns.",
+     "පැටවුන් දමන සහ වසු පැටවුන් තබන කොටු පිරිසිදුව තබන්න, රෝගී පැටවුන් වෙන් කරන්න, වයසින් වැඩි පැටවුන් අලුත උපන් පැටවුන් සමඟ මිශ්‍ර නොකරන්න."),
+
+    # ---- Bloat ----
+    ("KB-311", BLO, "about", "merck-bloat",
+     "Bloat is a build-up of gas or froth in the rumen, the large stomach on the cow's left side. It can kill a cow quickly.",
+     "Bloat (බඩ පිපීම) යනු ගවයාගේ වම් පැත්තේ ඇති විශාල ආමාශයේ (රූමනයේ) වායුව හෝ පෙණ එකතු වීමයි. එයින් ගවයා ඉක්මනින් මිය යා හැක."),
+    ("KB-312", BLO, "sign", "merck-bloat",
+     "The left side of the belly swells up suddenly and feels tight like a drum; the cow struggles to breathe and grunts.",
+     "බඩේ වම් පැත්ත හදිසියේ පිම්බී බෙරයක් මෙන් තද වේ; ගවයාට හුස්ම ගැනීමට අපහසු වී කෙඳිරි ගායි."),
+    ("KB-313", BLO, "sign", "merck-bloat",
+     "Bloat is most common in cattle grazing lush legume pasture such as clover or lucerne, or young green cereal crops, often 1–3 days after moving onto it.",
+     "Bloat බහුලව ඇතිවන්නේ clover හෝ lucerne වැනි රනිල කුලයේ සරු තෘණ හෝ ළපටි ධාන්‍ය බෝග කන ගවයන්ටයි; බොහෝවිට එවැනි තණබිමකට ගෙන ගිය දින 1–3 ඇතුළතදීය."),
+    ("KB-314", BLO, "treatment", "merck-bloat",
+     "Bloat is an emergency: call a vet at once. The vet may pass a tube into the stomach to let the gas out, give an anti-foaming treatment, or operate in severe cases.",
+     "Bloat හදිසි තත්ත්වයකි: වහාම පශු වෛද්‍යවරයාට කතා කරන්න. වායුව පිට කිරීමට ආමාශයට නළයක් යැවීම, පෙණ නැති කරන ප්‍රතිකාරයක් දීම හෝ බරපතල අවස්ථාවල සැත්කමක් කිරීම පශු වෛද්‍යවරයා කළ හැක."),
+    ("KB-315", BLO, "care", "merck-bloat",
+     "While you wait for the vet, move the cow away from the pasture or feed that caused it and keep her calm.",
+     "පශු වෛද්‍යවරයා එන තුරු, රෝගයට හේතු වූ තණබිමෙන් හෝ ආහාරයෙන් ගවයා ඉවත් කර සන්සුන්ව තබන්න."),
+    ("KB-316", BLO, "prevention", "merck-bloat",
+     "Feed hay before turning hungry cattle onto lush legume pasture, and limit their grazing at first (for example by strip grazing).",
+     "බඩගිනි ගවයන් සරු රනිල තණබිමකට යැවීමට පෙර පිදුරු (hay) කවන්න, මුලින් තෘණ කන ප්‍රමාණය සීමා කරන්න (උදා: කොටස් වශයෙන් තෘණ කැවීම)."),
+
+    # ---- Pneumonia ----
+    ("KB-321", PNE, "about", "merck-brd",
+     "Coughing in cattle is often caused by pneumonia (bovine respiratory disease). It is more common after stress such as transport, mixing animals or bad weather.",
+     "ගවයන්ගේ කැස්සට බොහෝවිට හේතුව නියුමෝනියාව (ශ්වසන රෝග) වේ. ප්‍රවාහනය, සතුන් මිශ්‍ර කිරීම හෝ අයහපත් කාලගුණය වැනි ආතතියෙන් පසු එය බහුලව ඇතිවේ."),
+    ("KB-322", PNE, "sign", "merck-brd",
+     "Signs of pneumonia include fever, coughing, nasal discharge, fast or hard breathing, dullness and eating less.",
+     "නියුමෝනියාවේ ලක්ෂණ: උණ, කැස්ස, නාසයෙන් දියර ගැලීම, වේගයෙන් හෝ අමාරුවෙන් හුස්ම ගැනීම, අලස බව සහ අඩුවෙන් කෑම."),
+    ("KB-323", PNE, "treatment", "merck-brd",
+     "Pneumonia needs a vet: treatment works best when started early, and the vet decides which medicine is needed.",
+     "නියුමෝනියාවට පශු වෛද්‍යවරයෙකු අවශ්‍යයි: ප්‍රතිකාර ඉක්මනින් ආරම්භ කළ විට වඩාත් හොඳින් ක්‍රියා කරයි; අවශ්‍ය බෙහෙත තීරණය කරන්නේ පශු වෛද්‍යවරයාය."),
+    ("KB-324", PNE, "care", "merck-brd",
+     "Keep the sick animal in a well-ventilated shed, out of rain and draughts, with clean water and feed, and away from the herd.",
+     "රෝගී සතා හොඳින් වාතාශ්‍රය ඇති, වැස්සෙන් හා සුළඟින් ආරක්ෂිත ගාලක, පිරිසිදු වතුර හා ආහාර සමඟ, රංචුවෙන් වෙන්ව තබන්න."),
+    ("KB-325", PNE, "prevention", "merck-brd",
+     "Reduce stress when moving or mixing cattle, avoid overcrowding, keep sheds well ventilated, and ask your vet about vaccines against respiratory disease.",
+     "ගවයන් ගෙන යන විට හෝ මිශ්‍ර කරන විට ආතතිය අඩු කරන්න, තදබදය වළක්වන්න, ගාල්වල හොඳ වාතාශ්‍රයක් තබන්න, ශ්වසන රෝග එන්නත් ගැන පශු වෛද්‍යවරයාගෙන් විමසන්න."),
+
+    # ---- Ticks and tick fever ----
+    ("KB-331", TICK, "about", "merck-babesiosis,merck-anaplasmosis",
+     "Ticks suck blood and spread serious blood diseases called tick fever, such as babesiosis and anaplasmosis.",
+     "කිනිතුල්ලන් ලේ උරා බොන අතර babesiosis සහ anaplasmosis වැනි කිනිතුලු උණ නම් බරපතල රුධිර රෝග පතුරුවයි."),
+    ("KB-332", TICK, "sign", "merck-babesiosis,merck-anaplasmosis",
+     "Tick fever causes high fever, weakness, pale gums that later turn yellow, and sometimes red or dark-brown urine. It can kill.",
+     "කිනිතුලු උණ නිසා අධික උණ, දුර්වලතාවය, සුදුමැලි වී පසුව කහ පාට වන විදුරුමස් සහ සමහරවිට රතු හෝ තද දුඹුරු පාට මුත්‍රා ඇතිවේ. එයින් සතා මිය යා හැක."),
+    ("KB-333", TICK, "sign", "merck-anaplasmosis",
+     "Pregnant cows with tick fever may lose their calf (abort).",
+     "කිනිතුලු උණ ඇති ගැබිනි එළදෙනුන්ගේ ගැබ් වැටිය හැක."),
+    ("KB-334", TICK, "treatment", "merck-babesiosis",
+     "Tick fever needs a vet quickly: a blood test confirms it, and the vet gives specific medicine.",
+     "කිනිතුලු උණට ඉක්මනින් පශු වෛද්‍යවරයෙකු අවශ්‍යයි: රුධිර පරීක්ෂාවකින් එය තහවුරු කර පශු වෛද්‍යවරයා විශේෂිත බෙහෙත් ලබා දෙයි."),
+    ("KB-335", TICK, "prevention", "merck-babesiosis",
+     "Check your cattle for ticks regularly and follow a tick-control plan from your vet or livestock officer.",
+     "ඔබේ ගවයන්ගේ කිනිතුල්ලන් සිටීදැයි නිතර පරීක්ෂා කර, පශු වෛද්‍යවරයා හෝ ගොවි උපදේශක දෙන කිනිතුලු පාලන සැලැස්ම අනුගමනය කරන්න."),
+
+    # ---- Worms ----
+    ("KB-341", WORM, "about", "merck-worms",
+     "Stomach and gut worms harm young cattle most, especially calves and weaned calves on pasture. Ringworm is a skin fungus, not a worm.",
+     "ආමාශයේ හා අන්ත්‍රවල පණුවන් වැඩිපුරම හානි කරන්නේ තරුණ ගවයන්ට, විශේෂයෙන් තණබිම්වල සිටින වසු පැටවුන්ටය. දද (Ringworm) යනු සමේ දිලීරයක් මිස පණුවෙක් නොවේ."),
+    ("KB-342", WORM, "sign", "merck-worms",
+     "Worms cause weight loss, poor growth, a rough coat and diarrhoea; some cause pale gums (anaemia) and a soft swelling under the jaw (bottle jaw).",
+     "පණුවන් නිසා බර අඩුවීම, දුර්වල වර්ධනය, රළු ලොම් සහ පාචනය ඇතිවේ; සමහර පණුවන් නිසා සුදුමැලි විදුරුමස් (රක්තහීනතාවය) සහ හකු යට මෘදු ඉදිමීමක් ඇති විය හැක."),
+    ("KB-343", WORM, "treatment", "merck-worms",
+     "A vet can test the dung for worm eggs and advise which dewormer to give and when.",
+     "පශු වෛද්‍යවරයාට ගොම පරීක්ෂා කර පණු බිත්තර සොයා, කුමන පණු බෙහෙත කවදා දිය යුතුදැයි උපදෙස් දිය හැක."),
+    ("KB-344", WORM, "prevention", "merck-worms",
+     "Avoid overstocking pastures, keep calf areas clean, and ask your vet for a deworming plan for young stock.",
+     "තණබිම්වල සතුන් අධික ලෙස තැබීම වළක්වන්න, වසු පැටවුන් සිටින ස්ථාන පිරිසිදුව තබන්න, තරුණ සතුන් සඳහා පණු බෙහෙත් සැලැස්මක් පශු වෛද්‍යවරයාගෙන් ලබා ගන්න."),
+
+    # ---- Pinkeye ----
+    ("KB-351", EYE, "about", "merck-pinkeye",
+     "Pinkeye is a common, contagious eye infection in cattle. Flies, dust, strong sunlight and grass seeds in the eye increase the risk.",
+     "Pinkeye යනු ගවයන් අතර බහුලව ඇතිවන, බෝවන ඇසේ ආසාදනයකි. මැස්සන්, දූවිලි, තද හිරු එළිය සහ ඇසට වැටෙන තණ ඇට අවදානම වැඩි කරයි."),
+    ("KB-352", EYE, "sign", "merck-pinkeye",
+     "Signs are a watery, weeping eye, keeping the eye shut, and a white or bluish cloudy spot on the eye that can blind it.",
+     "ලක්ෂණ: ඇසින් කඳුළු ගැලීම, ඇස වසාගෙන සිටීම, සහ ඇස අන්ධ කළ හැකි සුදු හෝ නිල් පැහැති බොඳ ලපයක්."),
+    ("KB-353", EYE, "treatment", "merck-pinkeye",
+     "A vet treats pinkeye with eye medicine; starting early helps the eye heal. A temporary eye patch protects the eye from flies and sunlight.",
+     "පශු වෛද්‍යවරයා ඇසට බෙහෙත් දී Pinkeye ප්‍රතිකාර කරයි; ඉක්මනින් ආරම්භ කිරීම ඇස සුව වීමට උදව් වේ. තාවකාලික ඇස් ආවරණයක් මැස්සන්ගෙන් හා හිරු එළියෙන් ඇස ආරක්ෂා කරයි."),
+    ("KB-354", EYE, "prevention", "merck-pinkeye",
+     "Control flies, reduce dust, give shade, and keep animals with pinkeye apart from the herd.",
+     "මැස්සන් පාලනය කරන්න, දූවිලි අඩු කරන්න, සෙවණ ලබා දෙන්න, Pinkeye ඇති සතුන් රංචුවෙන් වෙන් කරන්න."),
+
+    # ---- Foot rot ----
+    ("KB-361", FOOT, "about", "merck-foot-rot",
+     "Foot rot is a bacterial infection of the skin between the claws that causes sudden lameness.",
+     "කුර කුණුවීම (Foot rot) යනු කුර අතර සමේ ඇතිවන බැක්ටීරියා ආසාදනයක් වන අතර එය හදිසියේ කොර ගැසීමට හේතු වේ."),
+    ("KB-362", FOOT, "sign", "merck-foot-rot",
+     "The foot swells above the hoof, the skin between the claws splits open, and there is a foul-smelling discharge.",
+     "කුරට ඉහළින් පාදය ඉදිමී, කුර අතර සම පැලී, දුගඳ හමන දියරයක් පිටවේ."),
+    ("KB-363", FOOT, "treatment", "merck-foot-rot",
+     "A vet treats foot rot with medicine; most animals improve within 2–3 days. If not, the vet should check the foot again.",
+     "පශු වෛද්‍යවරයා බෙහෙත් මගින් කුර කුණුවීම ප්‍රතිකාර කරයි; බොහෝ සතුන් දින 2–3ක් ඇතුළත සුවපත් වේ. එසේ නොවේ නම් පශු වෛද්‍යවරයා නැවත පාදය පරීක්ෂා කළ යුතුය."),
+    ("KB-364", FOOT, "prevention", "merck-foot-rot",
+     "Prevent foot injuries and keep yards, walkways and resting areas clean and dry; avoid wet, muddy ground.",
+     "පාදවලට තුවාල වීම වළක්වන්න; ගාල, ඇවිදින මාර්ග සහ විවේක ගන්නා ස්ථාන පිරිසිදුව හා වියළිව තබන්න; තෙත්, මඩ බිම් වළක්වන්න."),
+
+    # ---- Milk fever ----
+    ("KB-371", MF, "about", "merck-milk-fever",
+     "Milk fever is a lack of calcium in the blood. It usually happens within 2 days after calving, mostly in dairy cows.",
+     "කිරි උණ (Milk fever) යනු රුධිරයේ කැල්සියම් අඩුවීමයි. එය බොහෝවිට පැටවා දැමීමෙන් පසු දින 2ක් ඇතුළත, වැඩිපුරම කිරි එළදෙනුන්ට ඇතිවේ."),
+    ("KB-372", MF, "sign", "merck-milk-fever",
+     "The cow becomes weak and wobbly, then cannot get up; her ears and legs may feel cold.",
+     "එළදෙන දුර්වල වී, සැලි සැලී ඇවිද, පසුව නැගිටින්න බැරි වේ; ඇගේ කන් හා කකුල් සීතල විය හැක."),
+    ("KB-373", MF, "treatment", "merck-milk-fever",
+     "Milk fever is an emergency: call a vet at once. The vet gives calcium into the vein, and many cows get up soon after.",
+     "කිරි උණ හදිසි තත්ත්වයකි: වහාම පශු වෛද්‍යවරයාට කතා කරන්න. පශු වෛද්‍යවරයා නහරයට කැල්සියම් ලබා දෙන අතර බොහෝ එළදෙනුන් ඉක්මනින් නැගිටියි."),
+    ("KB-374", MF, "prevention", "merck-milk-fever",
+     "Ask your vet or feed adviser about the right diet for cows in the last weeks before calving; it helps prevent milk fever.",
+     "පැටවා දැමීමට පෙර අවසන් සති කිහිපයේ එළදෙනුන්ට සුදුසු ආහාර ගැන පශු වෛද්‍යවරයාගෙන් හෝ ආහාර උපදේශකගෙන් විමසන්න; එය කිරි උණ වැළැක්වීමට උදව් වේ."),
+
+    # ---- Feeding and milk yield ----
+    ("KB-381", FEED, "about", "merck-dairy-nutrition,merck-mastitis",
+     "Milk yield can drop because of illness (such as mastitis, fever or lameness), not enough feed, water or salt, or heat stress.",
+     "රෝග (Mastitis, උණ හෝ කොර ගැසීම වැනි), ප්‍රමාණවත් ආහාර, වතුර හෝ ලුණු නොමැතිකම, හෝ තාප ආතතිය නිසා කිරි ප්‍රමාණය අඩු විය හැක."),
+    ("KB-382", FEED, "care", "merck-dairy-nutrition",
+     "A milking cow needs a lot of water, and more as her milk yield rises, so give plenty of clean drinking water at all times.",
+     "කිරි දෙන එළදෙනකට වතුර බොහෝ අවශ්‍ය වන අතර කිරි ප්‍රමාණය වැඩි වන විට එය තවත් වැඩි වේ; එබැවින් සෑම විටම පිරිසිදු බීමට වතුර බහුලව දෙන්න."),
+    ("KB-383", FEED, "care", "merck-mastitis",
+     "If milk drops suddenly, check the udder and milk for signs of mastitis, and check the cow for fever, lameness or eating less.",
+     "කිරි හදිසියේ අඩු වුවහොත්, බුරුල්ල සහ කිරි Mastitis ලක්ෂණ සඳහා පරීක්ෂා කර, ගවයාට උණ, කොර ගැසීම හෝ අඩුවෙන් කෑම තිබේදැයි බලන්න."),
+    ("KB-384", FEED, "prevention", "merck-dairy-nutrition",
+     "Feed a balanced diet based on good-quality roughage (grass and fodder), give salt and minerals, and ask your livestock officer how much concentrate feed your cows need.",
+     "හොඳ තත්ත්වයේ තෘණ හා පශු ආහාර පදනම් කරගත් සමබර ආහාර දෙන්න, ලුණු හා ඛනිජ දෙන්න, ඔබේ ගවයන්ට කොපමණ සාන්ද්‍ර ආහාර අවශ්‍යදැයි ගොවි උපදේශකගෙන් විමසන්න."),
+
+    # ---- A sick cow whose signs do not point to one disease ----
+    ("KB-391", SICK, "sign", "merck-temperature",
+     "A healthy dairy cow's body temperature is about 38.0–39.3 °C (measured in the rectum); higher than this is a fever.",
+     "නිරෝගී කිරි එළදෙනකගේ ශරීර උෂ්ණත්වය (ගුද මාර්ගයෙන් මනින විට) 38.0–39.3 °C පමණ වේ; ඊට වඩා වැඩි නම් උණ ඇත."),
+    ("KB-392", SICK, "treatment", "merck-brd,merck-mastitis",
+     "Fever, not eating, weakness or lying down a lot can be caused by many illnesses, so a vet needs to examine the animal to find the cause.",
+     "උණ, ආහාර නොගැනීම, දුර්වලතාවය හෝ වැඩිපුර වැතිරී සිටීම බොහෝ රෝග නිසා ඇති විය හැකි බැවින්, හේතුව සොයා ගැනීමට පශු වෛද්‍යවරයා සතා පරීක්ෂා කළ යුතුය."),
+    ("KB-393", SICK, "care", "merck-calf-diarrhea",
+     "Keep the sick animal apart in a shaded, clean place with clean water and fresh feed, and watch how it eats, drinks, passes dung and urinates.",
+     "රෝගී සතා සෙවණ ඇති පිරිසිදු ස්ථානයක, පිරිසිදු වතුර හා නැවුම් ආහාර සමඟ වෙන්ව තබා, එය කන, බොන, ගොම දමන සහ මුත්‍රා කරන ආකාරය නිරීක්ෂණය කරන්න."),
+    ("KB-394", SICK, "care", "merck-mastitis",
+     "Do not give leftover or human medicines without a vet's advice; they can harm the cow and leave residues in milk and meat.",
+     "පශු වෛද්‍ය උපදෙස් නොමැතිව ඉතිරි වූ බෙහෙත් හෝ මිනිසුන්ගේ බෙහෙත් ගවයාට දෙන්න එපා; ඒවා ගවයාට හානි කළ හැකි අතර කිරි හා මස්වල අපද්‍රව්‍ය ඉතිරි කළ හැක."),
 ]
 
 

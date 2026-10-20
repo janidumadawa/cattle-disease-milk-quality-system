@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 import 'app_shell.dart';
@@ -19,9 +18,7 @@ class MedFarmApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: primaryGreen,
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: primaryGreen),
         appBarTheme: const AppBarTheme(
           backgroundColor: primaryGreen,
           foregroundColor: Colors.white,
