@@ -226,7 +226,7 @@ sealed class ChatEvent {
 
   factory ChatEvent.fromJson(Map<String, dynamic> json) =>
       switch (json['type']) {
-        'meta' => MetaEvent(AskMeta.fromJson(json)),
+        'meta' => MetaEvent(AskMeta.fromJson(json), raw: json),
         'token' => TokenEvent(json['text'] as String? ?? ''),
         'done' => DoneEvent(
           source: json['source'] as String? ?? '',
@@ -237,6 +237,7 @@ sealed class ChatEvent {
             json['checks'] as Map<String, dynamic>? ?? const {},
           ),
           truncated: json['truncated'] == true,
+          raw: json,
         ),
         'error' => ErrorEvent(json['message'] as String? ?? 'Unknown error'),
         final type => ErrorEvent('Unexpected message from server: $type'),
@@ -244,9 +245,12 @@ sealed class ChatEvent {
 }
 
 class MetaEvent extends ChatEvent {
-  const MetaEvent(this.meta);
+  const MetaEvent(this.meta, {this.raw = const {}});
 
   final AskMeta meta;
+
+  /// The message as received, kept for the saved chat history.
+  final Map<String, dynamic> raw;
 }
 
 class TokenEvent extends ChatEvent {
@@ -261,6 +265,7 @@ class DoneEvent extends ChatEvent {
     required this.card,
     required this.checks,
     required this.truncated,
+    this.raw = const {},
   });
 
   /// kb | guard | retrieval | chat | model
@@ -270,6 +275,9 @@ class DoneEvent extends ChatEvent {
 
   /// The model hit its token limit before finishing.
   final bool truncated;
+
+  /// The message as received, kept for the saved chat history.
+  final Map<String, dynamic> raw;
 }
 
 class ErrorEvent extends ChatEvent {

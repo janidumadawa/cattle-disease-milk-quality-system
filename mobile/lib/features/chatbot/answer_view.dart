@@ -18,14 +18,51 @@ class BotReply {
   /// The slower AI-model answer requested under an instant one.
   BotReply? modelReply;
 
+  /// The answer as saved in the chat history (see [BotReply.fromJson]).
+  Map<String, Object?> toJson() => {
+    'mode': mode.name,
+    if (_metaJson != null) 'meta': _metaJson,
+    'text': text,
+    if (_doneJson != null) 'done': _doneJson,
+    if (error != null) 'error': error,
+    if (modelReply != null) 'model': modelReply!.toJson(),
+  };
+
+  /// A finished answer from the saved chat history.
+  factory BotReply.fromJson(Map<String, dynamic> json) {
+    final reply = BotReply(
+      json['mode'] == AnswerMode.model.name
+          ? AnswerMode.model
+          : AnswerMode.fast,
+    );
+    for (final key in ['meta', 'done']) {
+      if (json[key] case final Map<String, dynamic> event) {
+        reply.apply(ChatEvent.fromJson(event));
+      }
+    }
+    reply
+      ..text = json['text'] as String? ?? ''
+      ..error = json['error'] as String?
+      ..finished = true;
+    if (json['model'] case final Map<String, dynamic> model) {
+      reply.modelReply = BotReply.fromJson(model);
+    }
+    return reply;
+  }
+
+  Map<String, dynamic>? _metaJson;
+  Map<String, dynamic>? _doneJson;
+
   void apply(ChatEvent event) {
     switch (event) {
-      case MetaEvent(:final meta):
+      case MetaEvent(:final meta, :final raw):
         this.meta = meta;
+        _metaJson = raw;
       case TokenEvent(:final text):
         this.text += text;
       case DoneEvent():
         done = event;
+        _doneJson = event.raw;
       case ErrorEvent(:final message):
         error = message;
     }

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'answer_view.dart';
 import 'chat_api.dart';
+import 'chat_history_api.dart';
 import 'chat_models.dart';
 
 // Dark chat palette.
@@ -48,13 +49,16 @@ const _suggestions = {
 /// Cattle health chatbot, backed by the MedFarm chat server
 /// (backend/models/chat_bot/app/server.py).
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({super.key, this.api, this.onBack});
+  const ChatScreen({super.key, this.api, this.history, this.onBack});
 
   /// The chat's dark background, for the app shell around it.
   static const backgroundColor = _background;
 
   /// Defaults to a [ChatApi] at [ChatApi.defaultBaseUrl].
   final ChatApi? api;
+
+  /// Where the conversation is saved; defaults to the backend database.
+  final ChatHistoryApi? history;
 
   /// Back arrow action; without it the arrow only shows when the route can pop.
   final VoidCallback? onBack;
@@ -64,10 +68,13 @@ class ChatScreen extends StatefulWidget {
 }
 
 class _Turn {
-  _Turn(this.question, this.reply);
+  _Turn(this.question, this.reply, {this.savedId});
 
   final String question;
   final BotReply reply;
+
+  /// Id of this turn in the saved chat history.
+  int? savedId;
 
   /// Lets the list scroll this question to the top.
   final key = GlobalKey();
@@ -75,6 +82,8 @@ class _Turn {
 
 class _ChatScreenState extends State<ChatScreen> {
   late final ChatApi _api = widget.api ?? ChatApi();
+  late final ChatHistoryApi _saved = widget.history ?? ChatHistoryApi();
+  String? _conversationId;
   final _turns = <_Turn>[];
   final _input = TextEditingController();
   final _scroll = ScrollController();
@@ -89,6 +98,55 @@ class _ChatScreenState extends State<ChatScreen> {
   void initState() {
     super.initState();
     _checkStatus();
+    _loadConversation();
+  }
+
+  /// Shows this device's earlier conversation, so the chat (and follow-ups
+  /// such as "how do I treat it?") continue after the app restarts.
+  Future<void> _loadConversation() async {
+    final id = await _saved.conversationId();
+    if (id == null) return;
+    _conversationId = id;
+    final saved = await _saved.load(id);
+    if (!mounted || saved.isEmpty || _turns.isNotEmpty) return;
+    setState(() {
+      _turns.addAll([
+        for (final turn in saved)
+          _Turn(turn.question, BotReply.fromJson(turn.reply), savedId: turn.id),
+      ]);
+      // Continue in the language the conversation was in.
+      final lang = _turns.last.reply.meta?.lang;
+      if (lang == 'en' || lang == 'si') _lang = lang!;
+    });
+    _scrollToEnd();
+  }
+
+  Future<void> _saveTurn(_Turn turn) async {
+    final id = _conversationId;
+    final meta = turn.reply.meta;
+    if (id == null || meta == null || turn.reply.error != null) return;
+    if (turn.savedId case final savedId?) {
+      await _saved.update(id, savedId, turn.reply.toJson());
+      return;
+    }
+    turn.savedId = await _saved.save(
+      id,
+      question: turn.question,
+      reply: turn.reply.toJson(),
+      lang: meta.lang,
+      topic: meta.topic,
+      sick: meta.sick,
+    );
+  }
+
+  Future<void> _newChat() async {
+    if (_busy) return;
+    final id = await _saved.startNewConversation();
+    if (!mounted) return;
+    setState(() {
+      _conversationId = id ?? _conversationId;
+      _turns.clear();
+    });
   }
 
   @override
@@ -111,6 +169,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final turn = _Turn(question, BotReply(AnswerMode.fast));
     setState(() => _turns.add(turn));
     await _stream(question, turn.reply, _historyBefore(turn), showFrom: turn);
+    await _saveTurn(turn);
   }
 
   Future<void> _askModel(_Turn turn) async {
@@ -118,6 +177,7 @@ class _ChatScreenState extends State<ChatScreen> {
     final reply = BotReply(AnswerMode.model);
     setState(() => turn.reply.modelReply = reply);
     await _stream(turn.question, reply, _historyBefore(turn));
+    if (reply.error == null) await _saveTurn(turn);
   }
 
   /// Questions suggested under the latest answer, minus ones already asked.
@@ -278,6 +338,11 @@ class _ChatScreenState extends State<ChatScreen> {
             },
           ),
           actions: [
+            IconButton(
+              tooltip: _lang == 'si' ? 'නව කතාබහක්' : 'New chat',
+              onPressed: _busy || _turns.isEmpty ? null : _newChat,
+              icon: const Icon(Icons.add_comment_outlined),
+            ),
             _LanguageToggle(
               lang: _lang,
               onChanged: (lang) => setState(() => _lang = lang),
