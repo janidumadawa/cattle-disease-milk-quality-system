@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MedFarm Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Sinhala:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f6f7f4; --panel: #ffffff; --ink: #1d2420; --muted: #66706a; --line: #e2e6e0;
+  --accent: #2f7d4f; --accent-soft: #e5f2ea; --warn: #9a6a00; --warn-soft: #fbf1d9;
+  --bad: #b3261e; --bad-soft: #fbe5e3; --chip: #eef1ec; --code: #f1f3ef;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121614; --panel: #1a201c; --ink: #e5ebe6; --muted: #98a39c; --line: #2b332e;
+    --accent: #5cbf85; --accent-soft: #1f3327; --warn: #e3b448; --warn-soft: #362d17;
+    --bad: #f08a80; --bad-soft: #3a2220; --chip: #252c27; --code: #161b18;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 15px/1.5 Inter, "Noto Sans Sinhala", system-ui, sans-serif; }
+header { display: flex; align-items: center; gap: 12px; padding: 14px 20px;
+  border-bottom: 1px solid var(--line); background: var(--panel); }
+header h1 { font-size: 17px; margin: 0; font-weight: 600; }
+header .sub { color: var(--muted); font-size: 13px; }
+.status { margin-left: auto; font-size: 13px; padding: 4px 10px; border-radius: 99px;
+  background: var(--chip); color: var(--muted); white-space: nowrap; }
+.status.ok { background: var(--accent-soft); color: var(--accent); }
+.status.bad { background: var(--bad-soft); color: var(--bad); }
+.notice { background: var(--warn-soft); color: var(--warn); font-size: 13px; padding: 8px 20px; }
+main { display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 20px;
+  max-width: 1200px; margin: 0 auto; padding: 20px; }
+@media (max-width: 900px) { main { grid-template-columns: 1fr; padding: 16px; } }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; }
+#chat { display: flex; flex-direction: column; min-height: 70vh; }
+#log { flex: 1; padding: 16px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+.empty { color: var(--muted); text-align: center; margin: auto; max-width: 420px; }
+.examples { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-top: 12px; }
+.examples button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: var(--panel);
+  color: var(--ink); border-radius: 99px; padding: 5px 12px; cursor: pointer; }
+.examples button:hover { border-color: var(--accent); }
+.q { align-self: flex-end; background: var(--accent); color: #fff; padding: 8px 14px;
+  border-radius: 14px 14px 4px 14px; max-width: 80%; }
+.a { border: 1px solid var(--line); border-radius: 4px 14px 14px 14px; padding: 12px 14px; max-width: 92%; }
+.a .text { white-space: pre-wrap; }
+.a .text.pending::after { content: "▍"; color: var(--accent); animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.cite { font-size: 12px; font-weight: 500; padding: 1px 6px; border-radius: 6px;
+  background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
+.cite.inv { background: var(--bad-soft); color: var(--bad); }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.badge { font-size: 12px; padding: 2px 8px; border-radius: 99px; background: var(--chip); color: var(--muted); }
+.badge.ok { background: var(--accent-soft); color: var(--accent); }
+.badge.warn { background: var(--warn-soft); color: var(--warn); }
+.badge.bad { background: var(--bad-soft); color: var(--bad); }
+details { margin-top: 8px; font-size: 13px; }
+summary { cursor: pointer; color: var(--muted); }
+.ev { margin: 6px 0; padding: 6px 8px; background: var(--code); border-radius: 6px; }
+.ev b { font-weight: 500; }
+.ev .score { float: right; color: var(--muted); font-size: 12px; }
+pre { white-space: pre-wrap; background: var(--code); padding: 8px; border-radius: 6px;
+  font-size: 12px; max-height: 260px; overflow: auto; }
+form { border-top: 1px solid var(--line); padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.row { display: flex; gap: 8px; }
+textarea { flex: 1; font: inherit; resize: none; border: 1px solid var(--line); border-radius: 10px;
+  padding: 10px 12px; background: var(--bg); color: var(--ink); min-height: 46px; }
+textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+button.send { font: inherit; font-weight: 500; background: var(--accent); color: #fff; border: 0;
+  border-radius: 10px; padding: 0 18px; cursor: pointer; }
+button.send:disabled { opacity: .5; cursor: default; }
+.opts { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--muted); align-items: center; }
+.opts select { font: inherit; background: var(--panel); color: var(--ink); border: 1px solid var(--line);
+  border-radius: 6px; padding: 2px 6px; }
+aside { display: flex; flex-direction: column; gap: 20px; }
+aside .panel { padding: 14px 16px; }
+aside h2 { font-size: 14px; margin: 0 0 10px; font-weight: 600; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
+.kv span:nth-child(odd) { color: var(--muted); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: 4px 0; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 500; }
+td.n, th.n { text-align: right; }
+.small { font-size: 12px; color: var(--muted); margin-top: 8px; }
+#kbq { width: 100%; font: inherit; font-size: 13px; padding: 6px 8px; border: 1px solid var(--line);
+  border-radius: 6px; background: var(--bg); color: var(--ink); margin-bottom: 8px; }
+#kblist { max-height: 340px; overflow-y: auto; font-size: 13px; }
+#kblist div { padding: 6px 0; border-bottom: 1px solid var(--line); }
+#kblist .id { color: var(--accent); font-weight: 500; }
+#kblist .t { color: var(--muted); font-size: 12px; }
+.dx { margin-bottom: 10px; padding: 8px 10px; border-radius: 8px; background: var(--accent-soft); font-size: 13px; }
+.dx b { color: var(--accent); font-size: 14px; }
+.dx .bar { height: 5px; border-radius: 3px; background: var(--line); margin: 5px 0 3px; overflow: hidden; }
+.dx .bar i { display: block; height: 100%; background: var(--accent); }
+.dx .alt { color: var(--muted); }
+.ai { margin-top: 10px; font: inherit; font-size: 13px; border: 1px solid var(--accent); color: var(--accent);
+  background: transparent; border-radius: 8px; padding: 4px 10px; cursor: pointer; }
+.ai:disabled { opacity: .5; cursor: default; }
+.a .head { font-weight: 600; }
+.a .intro { margin: 0 0 10px; }
+.a .ans { background: var(--accent-soft); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; }
+.a .ans .lbl, .urg b { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; color: var(--accent); }
+.a ul { margin: 4px 0; padding-left: 18px; }
+.a li { margin: 3px 0; }
+.urg { background: var(--bad-soft); color: var(--bad); border-radius: 8px; padding: 8px 12px; margin-bottom: 10px; }
+.urg b { color: var(--bad); }
+.sec { border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; margin: 6px 0; font-size: 14px; }
+.sec summary { cursor: pointer; color: var(--ink); font-weight: 600; }
+.sec .n { font-weight: 400; color: var(--muted); font-size: 12px; margin-left: 4px; }
+.a .closing { margin: 10px 0 0; color: var(--muted); }
+.a .urgent { color: var(--bad); }
+.ev .src { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.ev .src a { color: var(--accent); }
+.a .sub { font-size: 12px; color: var(--muted); margin-top: 10px; border-top: 1px dashed var(--line); padding-top: 8px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>MedFarm Assistant</h1>
+    <div class="sub">medfarm-llama · Llama 3.1 8B + QLoRA · grounded cattle-health Q&amp;A</div>
+  </div>
+  <div id="status" class="status">Checking…</div>
+</header>
+<div class="notice">Research prototype: not clinically approved. It answers only from 42 knowledge-base facts. For treatment or doses, contact a veterinarian.</div>
+
+<main>
+  <section id="chat" class="panel">
+    <div id="log">
+      <div class="empty" id="empty">
+        Ask about Foot-and-Mouth Disease, Lumpy Skin Disease, Mastitis, Ringworm or general hygiene, in English or Sinhala.
+        <div class="examples">
+          <button>ආයුබෝවන්</button>
+          <button>What causes foot and mouth disease?</button>
+          <button>Is lumpy skin disease dangerous to humans?</button>
+          <button>My cow's udder is swollen and hot</button>
+          <button>Udder is swollen and milk has clots</button>
+          <button>What dose of antibiotic should I inject for mastitis?</button>
+          <button>මගේ හරකාගේ කුරවල තුවාලයක්</button>
+          <button>හරකාගේ ඇඟ පුරා ගැටිති</button>
+          <button>How do I treat mastitis?</button>
+          <button>මගේ හරකාගේ කටෙන් ලේ එනවා</button>
+        </div>
+      </div>
+    </div>
+    <form id="form">
+      <div class="row">
+        <textarea id="q" rows="1" placeholder="Ask a question… (Enter to send)"></textarea>
+        <button class="send" id="send">Ask</button>
+      </div>
+      <div class="opts">
+        <label>Answer <select id="mode"><option value="fast">Fast (instant, KB text)</option><option value="model">AI model (slow, ~20–90s)</option></select></label>
+        <label>Style <select id="style"><option value="friendly">Friendly</option><option value="short">Short (KB only)</option></select></label>
+        <label>Language <select id="lang"><option value="auto">Auto</option><option value="en">English</option><option value="si">සිංහල</option></select></label>
+        <label>Stage <select id="stage"><option value="LM">Low–Moderate</option><option value="HI">High</option></select></label>
+        <label>Evidence <select id="k"><option>2</option><option selected>3</option><option>4</option></select></label>
+        <label title="Answer medicine/dose questions with the fixed refusal, without calling the model"><input type="checkbox" id="guard" checked> Dose safety filter</label>
+      </div>
+    </form>
+  </section>
+
+  <aside>
+    <div class="panel">
+      <h2>About the model</h2>
+      <div class="kv">
+        <span>Base</span><span>Llama 3.1 8B Instruct</span>
+        <span>Adapter</span><span>LoRA r16 / α32, all proj.</span>
+        <span>Runtime</span><span>GGUF Q4_K_M · Ollama</span>
+        <span>Data</span><span>280 train / 92 held-out</span>
+        <span>Final loss</span><span>0.027 (2 epochs)</span>
+      </div>
+      <h2 style="margin-top:14px">Held-out results (Q4_K_M)</h2>
+      <table>
+        <tr><th>Metric</th><th class="n">EN</th><th class="n">SI</th></tr>
+        <tr><td>Gold KB cited</td><td class="n">100%</td><td class="n">50%</td></tr>
+        <tr><td>chrF vs KB</td><td class="n">100</td><td class="n">91.0</td></tr>
+        <tr><td>Invented cites</td><td class="n">0</td><td class="n">0</td></tr>
+      </table>
+      <table style="margin-top:8px">
+        <tr><th>Behaviour</th><th class="n">Correct</th></tr>
+        <tr><td>Refuse dose questions</td><td class="n">100%</td></tr>
+        <tr><td>Abstain when off-topic</td><td class="n">62.5%</td></tr>
+      </table>
+      <div class="small">Small developer-written test set, so treat these as indicative only. Most Sinhala misses were answers cut off by the 160-token limit; this UI allows 512 tokens for Sinhala. Fast mode returns the matching KB sentence directly, as the MedFarm engine does for Sinhala.</div>
+    </div>
+    <div class="panel">
+      <h2>Knowledge base <span id="kbn" class="t" style="color:var(--muted);font-weight:400"></span></h2>
+      <input id="kbq" placeholder="Filter facts…">
+      <div id="kblist"></div>
+    </div>
+  </aside>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const log = $('#log'), q = $('#q'), send = $('#send');
+let KB = [], busy = false;
+
+function esc(s) { return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+async function checkStatus() {
+  const el = $('#status');
+  try {
+    const s = await (await fetch('/api/status')).json();
+    if (s.ollama && s.model) { el.className = 'status ok'; el.textContent = 'Model ready'; }
+    else if (s.ollama) { el.className = 'status bad'; el.textContent = `Run: ollama create ${s.name} -f Modelfile`; }
+    else { el.className = 'status bad'; el.textContent = 'Ollama not running'; }
+  } catch { el.className = 'status bad'; el.textContent = 'Server offline'; }
+}
+
+async function loadKB() {
+  KB = await (await fetch('/api/kb')).json();
+  $('#kbn').textContent = `(${KB.length} facts)`;
+  renderKB('');
+}
+function renderKB(f) {
+  f = f.toLowerCase();
+  $('#kblist').innerHTML = KB.filter(k => !f || [k.id, k.topic, k.en, k.si].join(' ').toLowerCase().includes(f))
+    .map(k => `<div><span class="id">${k.id}</span> <span class="t">${esc(k.topic)}${k.kind && k.kind !== 'fact' ? ' · ' + esc(k.kind) : ''}</span><br>${esc(k.en || '')}<br><span class="t">${esc(k.si || '')}</span></div>`).join('');
+}
+$('#kbq').oninput = e => renderKB(e.target.value);
+
+// Turn [KB-xxx-LM] into chips; red if not in the retrieved evidence.
+// Section headings ("Treatment (by a vet):") are lines that end with ":" and are not bullets.
+const URGENT_HEADS = ['Urgent:', 'හදිසි අවධානයට:'];
+function renderAnswer(text, evIds) {
+  let urgent = false;
+  return text.split('\n').map(line => {
+    let h = esc(line).replace(/\[(KB-\d{3}-(?:LM|HI))\]/g, (m, id) =>
+      `<span class="cite ${evIds.includes(id) ? '' : 'inv'}">${id}</span>`);
+    if (URGENT_HEADS.includes(line.trim())) { urgent = true; return `<span class="head urgent">⚠ ${h}</span>`; }
+    if (!line.trim()) urgent = false;
+    if (line.trim().endsWith(':') && !line.trim().startsWith('•')) return `<span class="head">${h}</span>`;
+    return urgent ? `<span class="urgent">${h}</span>` : h;
+  }).join('\n');
+}
+
+function badges(done, lang) {
+  const c = done.checks, b = [];
+  const label = {answer: 'Answered', abstain: 'Not in knowledge base', refuse: 'Refused (medicine/dose)', chat: 'Chat'};
+  const source = {kb: 'Instant · KB text', guard: 'Instant · safety filter', retrieval: 'Instant · no matching fact', model: 'AI model', chat: 'Instant'};
+  b.push([c.behaviour === 'answer' || c.behaviour === 'chat' ? 'ok' : 'warn', label[c.behaviour]]);
+  b.push(['', source[done.source]]);
+  if (c.behaviour === 'answer') b.push(c.valid_cites.length ? ['ok', `Cited ${c.valid_cites.length}`] : ['bad', 'No citation']);
+  if (c.invented_cites.length) b.push(['bad', `Invented cite: ${c.invented_cites.join(', ')}`]);
+  b.push(c.lang_ok ? ['ok', lang === 'si' ? 'Sinhala ✓' : 'English ✓'] : ['bad', 'Wrong language']);
+  if (c.dose_leak) b.push(['bad', 'Possible dose in answer']);
+  if (done.truncated) b.push(['warn', 'Cut off at token limit']);
+  const s = done.stats;
+  if (s && s.eval_count) {
+    const tps = s.eval_count / (s.eval_duration / 1e9);
+    b.push(['', `${(s.total_duration / 1e9).toFixed(1)}s · ${tps.toFixed(1)} tok/s`]);
+  }
+  return b.map(([k, t]) => `<span class="badge ${k}">${esc(t)}</span>`).join('');
+}
+
+const DX_TEXT = {
+  en: {match: 'Signs match:', strong: 'strong match', likely: 'likely', possible: 'possible',
+       also: 'Also consider:', note: 'Based on KB facts only; a vet must confirm.'},
+  si: {match: 'ලක්ෂණ ගැළපෙන රෝගය:', strong: 'ප්‍රබල ගැළපීමක්', likely: 'ගැළපිය හැක', possible: 'විය හැක',
+       also: 'මේවාත් සලකා බලන්න:', note: 'දැනුම් පදනමේ තොරතුරු මත පමණි; පශු වෛද්‍යවරයා තහවුරු කළ යුතුය.'},
+};
+function diagnosisHTML(meta) {
+  const d = meta.diseases;
+  if (!d || !d.length) return '';
+  const t = DX_TEXT[meta.lang] || DX_TEXT.en, name = x => esc(x.label || x.disease);
+  const top = d[0], alt = d.slice(1).filter(x => x.share >= 0.15);
+  const conf = top.share >= 0.6 ? t.strong : top.share >= 0.4 ? t.likely : t.possible;
+  return `<div class="dx">${t.match} <b>${name(top)}</b> <span class="alt">(${conf})</span>` +
+    `<div class="bar"><i style="width:${Math.round(top.share * 100)}%"></i></div>` +
+    (meta.lang === 'en' && meta.symptoms.length ? `<span class="alt">Recognised: ${esc(meta.symptoms.join(', '))}. </span>` : '') +
+    (alt.length ? `<span class="alt">${t.also} ${alt.map(name).join(', ')}. </span>` : '') +
+    `<span class="alt">${t.note}</span></div>`;
+}
+
+// POST /api/ask and stream the NDJSON reply into textEl / badgeEl.
+const ICONS = {about: '🦠', signs: '🔍', treatment: '💊', care: '🏠', prevention: '🛡️'};
+function cites(text, id, evIds) {
+  return `${esc(text)} <span class="cite ${evIds.includes(id) ? '' : 'inv'}">${id}</span>`;
+}
+function urgentHTML(title, rows, evIds) {
+  if (!rows || !rows.length) return '';
+  return `<div class="urg"><b>⚠ ${esc(title)}</b><ul>${rows.map(r => `<li>${cites(r.text, r.id, evIds)}</li>`).join('')}</ul></div>`;
+}
+// Topic card: intro, highlighted answer, collapsible sections, closing.
+function cardHTML(c, evIds, withUrgent) {
+  const list = rows => `<ul>${rows.map(r => `<li>${cites(r.text, r.id, evIds)}</li>`).join('')}</ul>`;
+  return (withUrgent ? urgentHTML(c.urgent_title, c.urgent, evIds) : '') +
+    (c.intro ? `<p class="intro">${esc(c.intro)}</p>` : '') +
+    (c.answer.length ? `<div class="ans"><div class="lbl">${esc(c.answer_title)}</div>${list(c.answer)}</div>` : '') +
+    c.sections.map(s => `<details class="sec"${s.open ? ' open' : ''}><summary>${ICONS[s.key] || ''} ${esc(s.title)} <span class="n">${s.items.length}</span></summary>${list(s.items)}</details>`).join('') +
+    `<p class="closing">${esc(c.closing)}</p>`;
+}
+
+// POST /api/ask and stream the NDJSON reply into the slots inside root:
+// .urg-slot (warnings, shown at once), .text (streamed answer), .cardw (topic card), .badges.
+async function stream(question, mode, root, onMeta, withCard = true) {
+  const textEl = root.querySelector('.text'), badgeEl = root.querySelector('.badges');
+  const urgEl = root.querySelector('.urg-slot'), cardEl = root.querySelector('.cardw');
+  let text = '', evIds = [], lang = 'en', tick;
+  const started = Date.now();
+  textEl.classList.add('pending');
+  textEl.textContent = mode === 'model' ? 'Loading…' : 'Searching…';
+  try {
+    const res = await fetch('/api/ask', { method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ question, mode, style: $('#style').value, lang: $('#lang').value, stage: $('#stage').value,
+        k: +$('#k').value, guard: $('#guard').checked }) });
+    const reader = res.body.getReader(), dec = new TextDecoder();
+    let buf = '';
+    if (mode === 'model') tick = setInterval(() => { if (!text) textEl.textContent = `AI model is reading the evidence… ${Math.round((Date.now() - started) / 1000)}s`; }, 1000);
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i;
+      while ((i = buf.indexOf('\n')) >= 0) {
+        const msg = JSON.parse(buf.slice(0, i)); buf = buf.slice(i + 1);
+        if (msg.type === 'meta') {
+          evIds = msg.evidence.map(e => e.id); lang = msg.lang; onMeta && onMeta(msg);
+          // Warnings must not wait for a slow model answer.
+          if (mode === 'model' && withCard && urgEl) urgEl.innerHTML = urgentHTML(msg.urgent_title, msg.urgent, evIds);
+        }
+        else if (msg.type === 'token') { text += msg.text; textEl.innerHTML = renderAnswer(text, evIds); log.scrollTop = log.scrollHeight; }
+        else if (msg.type === 'done') {
+          textEl.classList.remove('pending');
+          badgeEl.innerHTML = badges(msg, lang);
+          if (msg.card && withCard) {
+            if (mode === 'model') cardEl.innerHTML = cardHTML(msg.card, evIds, false);
+            else textEl.innerHTML = cardHTML(msg.card, evIds, true);
+          }
+        }
+        else if (msg.type === 'error') {
+          textEl.classList.remove('pending');
+          textEl.innerHTML = `<span style="color:var(--bad)">${esc(msg.message)}</span>`;
+          checkStatus();
+        }
+      }
+    }
+  } catch (e) {
+    textEl.classList.remove('pending');
+    textEl.innerHTML = `<span style="color:var(--bad)">Request failed: ${esc(String(e))}</span>`;
+  }
+  clearInterval(tick);
+}
+
+async function ask(question) {
+  if (busy || !question.trim()) return;
+  busy = true; send.disabled = true;
+  $('#empty')?.remove();
+  const mode = $('#mode').value;
+  log.insertAdjacentHTML('beforeend', `<div class="q">${esc(question)}</div>`);
+  const card = document.createElement('div');
+  card.className = 'a';
+  card.innerHTML = `<div class="dxw"></div><div class="urg-slot"></div><div class="text"></div><div class="cardw"></div><div class="badges"></div><div class="aiw"></div><div class="extra"></div>`;
+  log.appendChild(card); log.scrollTop = log.scrollHeight;
+  let meta;
+  await stream(question, mode, card, m => {
+    meta = m;
+    card.querySelector('.dxw').innerHTML = diagnosisHTML(m);
+    card.querySelector('.extra').innerHTML =
+      `<details><summary>Evidence (${m.evidence.length}) · question coverage ${Math.round(m.coverage * 100)}%</summary>` +
+      m.evidence.map(e => `<div class="ev"><span class="score">${typeof e.score === 'number' ? 'score ' + e.score : esc(e.score)}</span><b>[${e.id}]</b> ${esc(e.text)}` +
+        (e.sources && e.sources.length ? `<div class="src">Source: ${e.sources.map(u => `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(new URL(u).hostname.replace('www.', ''))}</a>`).join(', ')}</div>` : '') +
+        `</div>`).join('') +
+      `</details><details><summary>Prompt for the AI model</summary><pre>${esc(m.prompt)}</pre></details>`;
+  });
+  // Offer the slower generated answer under an instant one (just its sentence:
+  // the topic sections are already shown above).
+  if (mode === 'fast' && meta && meta.confident) {
+    const aiw = card.querySelector('.aiw');
+    aiw.innerHTML = `<button class="ai">Ask the AI model (medfarm-llama)</button>`;
+    aiw.firstChild.onclick = async () => {
+      if (busy) return;
+      busy = true; send.disabled = true;
+      aiw.innerHTML = `<div class="sub"><b>AI model answer</b><div class="text"></div><div class="badges"></div></div>`;
+      await stream(question, 'model', aiw.querySelector('.sub'), null, false);
+      busy = false; send.disabled = false;
+    };
+  }
+  busy = false; send.disabled = false; q.focus();
+}
+
+$('#form').onsubmit = e => { e.preventDefault(); const v = q.value; q.value = ''; ask(v); };
+q.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $('#form').requestSubmit(); } });
+document.querySelectorAll('.examples button').forEach(b => b.onclick = () => ask(b.textContent));
+
+checkStatus(); loadKB(); setInterval(checkStatus, 15000);
+</script>
+</body>
+</html>

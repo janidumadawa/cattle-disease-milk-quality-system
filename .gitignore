@@ -32,3 +32,9 @@ Thumbs.db
 # Logs and generated outputs
 *.log
 logs/
+
+
+# Model files
+*.gguf
+*.safetensors
+backend/models/chat_bot/hf_lora_adapter/tokenizer.json
