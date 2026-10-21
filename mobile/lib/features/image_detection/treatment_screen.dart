@@ -100,7 +100,24 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
                   () => _done.contains(id) ? _done.remove(id) : _done.add(id),
                 ),
               ),
-              _ => const Center(child: CircularProgressIndicator()),
+              _ => Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 32),
+                      child: Text(
+                        _lang == 'si'
+                            ? 'AI මාදිලිය ප්‍රතිකාර මඟපෙන්වීම ලියමින් සිටී. මෙයට මිනිත්තු කිහිපයක් ගත විය හැක.'
+                            : 'The AI model is writing the treatment guide. This can take a few minutes.',
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             },
             bottomNavigationBar: guide == null
                 ? null

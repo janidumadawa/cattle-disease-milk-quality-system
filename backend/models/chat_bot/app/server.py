@@ -545,6 +545,96 @@ def ollama_get(path, timeout=3):
         return json.loads(r.read())
 
 
+def generate(prompt, num_predict, on_token=None):
+    """One model answer, streamed to on_token if given; returns (text, stats)."""
+    body = json.dumps({"model": MODEL, "prompt": prompt, "stream": True,
+                       "keep_alive": KEEP_ALIVE,
+                       "options": dict(MODEL_OPTIONS, num_predict=num_predict)}).encode()
+    text, stats = "", {}
+    r = urllib.request.urlopen(urllib.request.Request(
+        OLLAMA + "/api/generate", data=body,
+        headers={"Content-Type": "application/json"}), timeout=900)
+    for line in r:
+        chunk = json.loads(line)
+        if chunk.get("error"):
+            raise RuntimeError(chunk["error"])
+        if chunk.get("response"):
+            text += chunk["response"]
+            if on_token:
+                on_token(chunk["response"])
+        if chunk.get("done"):
+            stats = {k: chunk.get(k) for k in
+                     ("done_reason", "eval_count", "eval_duration", "load_duration",
+                      "prompt_eval_count", "prompt_eval_duration", "total_duration")}
+    return text, stats
+
+
+# Written treatment guides by (topic, stage, lang): the model is slow on CPU and
+# answers the same facts the same way (temperature 0.1).
+_GUIDE_CACHE = {}
+_GUIDE_LOCK = threading.Lock()
+
+
+def model_guide(plan, lang):
+    """The treatment guide with every item written by the model from its KB fact (one
+    call per fact: given several, the model answers from one). An item keeps its KB
+    text if the model cites another fact, leaks a dose, or Ollama fails."""
+    tag = "HI" if plan["stage"] == "High" else "LM"
+    key = (plan["topic"], plan["stage"], lang)
+    with _GUIDE_LOCK:  # one guide at a time; a second request waits for the cache
+        cached = _GUIDE_CACHE.get(key)
+        if cached is None:
+            written, total, failed = 0, 0, False
+            for section in plan["sections"]:
+                ask = SECTION_QUESTION[lang].format(d=plan["disease"],
+                                                    part=section["title"].lower())
+                for n, item in enumerate(section["items"]):
+                    total += 1
+                    fact = KB_BY_ID[item["id"].rsplit("-", 1)[0]]
+                    try:
+                        text, _ = generate(build_prompt(ask, lang, [(fact, 0)], tag),
+                                           NUM_PREDICT[lang])
+                    except (urllib.error.URLError, RuntimeError, ConnectionRefusedError) as e:
+                        print(f"[medfarm] treatment guide: Ollama failed ({e}); KB text kept")
+                        failed = True
+                        break
+                    rows = cited_items(text, [item["id"]])
+                    if rows:
+                        section["items"][n] = {"id": item["id"],
+                                               "text": " ".join(r["text"] for r in rows)}
+                        written += 1
+                    else:
+                        print(f"[medfarm] treatment guide: KB text kept for {item['id']}: "
+                              f"{text[:80]!r}")
+                if failed:
+                    break
+            cached = (plan["sections"], written, total)
+            if not failed:  # try the model again next time
+                _GUIDE_CACHE[key] = cached
+        sections, written, total = cached
+    return dict(plan, sections=sections,
+                source="model" if written == total else "partly model" if written else "kb")
+
+
+def cited_items(text, ids):
+    """"Fact one [KB-1-LM] Fact two [KB-2-LM]" -> one item per cited sentence, or
+    None if the text cites outside ids, cites nothing, or names a dose."""
+    if DOSE.search(text):
+        return None
+    items, last = [], 0
+    for m in CITE.finditer(text):
+        if m.group(1) not in ids:
+            return None
+        sentence = text[last:m.start()].strip(" \n.;")
+        if sentence:
+            items.append({"id": m.group(1), "text": sentence + "."})
+        last = m.end()
+    tail = text[last:].strip(" \n.;")
+    if items and tail:  # an uncited closing remark belongs to the last fact
+        items[-1]["text"] += " " + tail + "."
+    return items or None
+
+
 def status():
     try:
         tags = ollama_get("/api/tags")
@@ -598,8 +688,10 @@ class Handler(BaseHTTPRequestHandler):
             plan = treatment.guide(KB_BY_ID, disease, lang, stage)
             if plan is None:
                 self.send_json({"error": f"no treatment guide for {disease!r}"}, 404)
+            elif query.get("source") == ["kb"]:
+                self.send_json(dict(plan, source="kb"))
             else:
-                self.send_json(plan)
+                self.send_json(model_guide(plan, lang))
         else:
             self.send_json({"error": "not found"}, 404)
 
@@ -845,28 +937,6 @@ class Handler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             return  # browser closed / stopped
 
-    def generate(self, prompt, num_predict, emit):
-        """Stream one model answer as token events; returns (text, stats)."""
-        body = json.dumps({"model": MODEL, "prompt": prompt, "stream": True,
-                           "keep_alive": KEEP_ALIVE,
-                           "options": dict(MODEL_OPTIONS, num_predict=num_predict)}).encode()
-        text, stats = "", {}
-        r = urllib.request.urlopen(urllib.request.Request(
-            OLLAMA + "/api/generate", data=body,
-            headers={"Content-Type": "application/json"}), timeout=900)
-        for line in r:
-            chunk = json.loads(line)
-            if chunk.get("error"):
-                raise RuntimeError(chunk["error"])
-            if chunk.get("response"):
-                text += chunk["response"]
-                emit({"type": "token", "text": chunk["response"]})
-            if chunk.get("done"):
-                stats = {k: chunk.get(k) for k in
-                         ("done_reason", "eval_count", "eval_duration", "load_duration",
-                          "prompt_eval_count", "prompt_eval_duration", "total_duration")}
-        return text, stats
-
     def stream_model(self, prompt, lang, ev_ids, emit, make_card=None):
         self.stream_parts([(None, prompt, [])], lang, ev_ids, emit, make_card)
 
@@ -884,8 +954,9 @@ class Handler(BaseHTTPRequestHandler):
                     text += "\n"
                     emit({"type": "token", "text": "\n"})
                 trained = prompt.startswith(PROMPT_HEAD[:40])
-                part, part_stats = self.generate(
-                    prompt, NUM_PREDICT[lang] if trained else GREET_NUM_PREDICT, emit)
+                part, part_stats = generate(
+                    prompt, NUM_PREDICT[lang] if trained else GREET_NUM_PREDICT,
+                    lambda t: emit({"type": "token", "text": t}))
                 text += part
                 # Times and token counts add up over the parts; the last part says how it ended.
                 stats = {k: (v + (stats.get(k) or 0) if isinstance(v, int) else v)

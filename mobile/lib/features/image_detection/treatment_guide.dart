@@ -185,7 +185,8 @@ class TreatmentApi {
           Uri.parse('$baseUrl/api/treatment')
               .replace(queryParameters: {'disease': classId, 'lang': lang}),
         )
-        .timeout(const Duration(seconds: 10));
+        // The local model writes each section on first load (minutes in Sinhala on CPU).
+        .timeout(const Duration(minutes: 10));
     if (response.statusCode != 200) {
       throw Exception('No treatment guide (HTTP ${response.statusCode}).');
     }
