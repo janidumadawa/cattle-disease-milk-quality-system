@@ -53,11 +53,24 @@ PROMPT_HEAD = (
     "times that are not in the evidence. If the evidence does not answer the question, say so."
     "\n\nEvidence:\n{evidence}\n\nQuestion: {question}\nAnswer:"
 )
+# Detailed chat answers (the app). The adapter answers in 1-3 sentences whatever it
+# is told, and long free text drifts (invented facts, Sinhala loops), so a detailed
+# answer asks the trained prompt once per section of the topic, in the trained
+# question wording.
+GREET_PROMPT = (
+    "A dairy farmer says to you: \"{question}\"\nYou are MedFarm, a friendly cattle-health "
+    "assistant. Reply warmly in {lang} in 1-2 sentences and invite them to ask about their "
+    "cattle.")
+SECTION_QUESTION = {"en": "What should I know about {part} in {d}?",
+                    "si": "{d} වල {part} ගැන කියන්න පුළුවන්ද?"}
+DETAIL_SECTIONS = ["signs", "care", "treatment", "prevention"]
+SECTION_FACTS = {"en": 3, "si": 2}  # Sinhala costs ~4x the tokens per fact on CPU
 # Llama 3 needs several tokens per Sinhala character; the Modelfile's 160 cut off
 # 10/26 Sinhala answers in ollama_q4km_eval.csv before the [KB-ID].
 NUM_PREDICT = {"en": 160, "si": 512}
+GREET_NUM_PREDICT = 80
 # Same options for preload and requests, otherwise Ollama reloads the model.
-MODEL_OPTIONS = {"temperature": 0.1, "num_ctx": 2048}
+MODEL_OPTIONS = {"temperature": 0.1, "num_ctx": 4096}
 KEEP_ALIVE = "2h"
 
 TOPIC_FIX = {  # facts whose English question never appears in the dataset
@@ -421,7 +434,8 @@ def diagnose(scores):
     return [{"disease": t, "share": round(s / total, 2), "score": round(s, 1)} for s, t in ranked[:3] if s > 0]
 
 
-TOPICS = {f["topic"] for f in KB} - {"General cattle health"}
+KB_TOPICS = {f["topic"] for f in KB}
+TOPICS = KB_TOPICS - {"General cattle health"}
 
 
 def previous_turn(history):
@@ -476,6 +490,31 @@ def build_prompt(question, lang, evidence, stage):
     lines = "\n".join(f"[{f['id']}-{stage}] {f[lang] or f['en']}" for f, _ in evidence)
     return PROMPT_HEAD.format(lang="Sinhala" if lang == "si" else "English",
                               evidence=lines, question=question)
+
+
+def detail_parts(question, lang, stage, topic, evidence, want):
+    """[(heading, prompt, facts)] answered one after another as one detailed reply:
+    the direct answer, then each section of the topic it did not cover (the ones
+    the farmer asked about first). None when the topic has no sections."""
+    if topic not in KB_TOPICS:
+        return None
+    n = SECTION_FACTS[lang]
+    first = [f for f, _ in evidence if f["topic"] == topic and f["kind"] != "urgent"][:n]
+    parts = [(None, build_prompt(question, lang, [(f, 0) for f in first], stage), first)] \
+        if first else []
+    used = {f["id"] for f in first}
+    name = friendly.disease_name(topic, lang)
+    wanted = [k for k, asked in (("prevention", want["prevent"]), ("care", want["treat"]),
+                                 ("treatment", want["treat"]), ("signs", want["signs"])) if asked]
+    for key in wanted + [k for k in DETAIL_SECTIONS if k not in wanted]:
+        facts = [f for f in friendly.section_entries(KB, topic, key) if f["id"] not in used][:n]
+        if not facts:
+            continue
+        used.update(f["id"] for f in facts)
+        title = friendly.TITLES[lang][key]
+        ask = SECTION_QUESTION[lang].format(d=name, part=title.lower())
+        parts.append((title, build_prompt(ask, lang, [(f, 0) for f in facts], stage), facts))
+    return parts or None
 
 
 def check_output(text, lang, evidence_ids, behaviour=None):
@@ -711,6 +750,22 @@ class Handler(BaseHTTPRequestHandler):
                 friendly.add_contacts(card, lang, [vets.contact(here, lang)])
             elif urgent or topic == care_kb.EM:
                 friendly.add_contacts(card, lang, vets.all_contacts(lang))
+        parts = None
+        # Model mode: the answer is only the model's own words, except when the farmer
+        # asks for a vet: then the vet office contacts on file.
+        if use_model and not vet_turn:
+            card = None
+            if friendly_style and chat:
+                name = "Sinhala" if lang == "si" else "English"
+                parts = [(None, GREET_PROMPT.format(question=question, lang=name), [])]
+            elif friendly_style and not guarded and found["confident"]:
+                parts = detail_parts(ask, lang, stage, topic, found["evidence"], want)
+            if parts:
+                evidence = [(f, 0.0) for _, _, facts in parts for f in facts]
+                ev_ids = [f"{f['id']}-{stage}" for f, _ in evidence]
+                prompt = "\n\n---\n\n".join(p for _, p, _ in parts)
+            else:  # dose questions and unmatched questions: the trained refusal/abstain
+                parts = [(None, prompt, [])]
         # Next questions to tap; greetings and "I don't know" offer starter questions.
         if vet_turn:
             suggest = vets.town_names(lang) if topic == vets.TOPIC else []
@@ -750,6 +805,10 @@ class Handler(BaseHTTPRequestHandler):
               "evidence": [ev_row(f, s) for f, s in evidence] + [ev_row(f, f["kind"]) for f in extra]})
 
         try:
+            if use_model and not vet_turn:
+                # No fixed KB text: greetings, dose questions and unmatched questions all
+                # go to the model, which was trained to refuse and abstain itself.
+                return self.stream_parts(parts, lang, ev_ids, emit)
             if vet_turn:
                 return finish(friendly.card_text(card), "vet", "answer", card)
             # Hard guard: dose/medicine questions get the fixed refusal.
@@ -786,26 +845,51 @@ class Handler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             return  # browser closed / stopped
 
-    def stream_model(self, prompt, lang, ev_ids, emit, make_card=None):
+    def generate(self, prompt, num_predict, emit):
+        """Stream one model answer as token events; returns (text, stats)."""
         body = json.dumps({"model": MODEL, "prompt": prompt, "stream": True,
                            "keep_alive": KEEP_ALIVE,
-                           "options": dict(MODEL_OPTIONS, num_predict=NUM_PREDICT[lang])}).encode()
+                           "options": dict(MODEL_OPTIONS, num_predict=num_predict)}).encode()
+        text, stats = "", {}
+        r = urllib.request.urlopen(urllib.request.Request(
+            OLLAMA + "/api/generate", data=body,
+            headers={"Content-Type": "application/json"}), timeout=900)
+        for line in r:
+            chunk = json.loads(line)
+            if chunk.get("error"):
+                raise RuntimeError(chunk["error"])
+            if chunk.get("response"):
+                text += chunk["response"]
+                emit({"type": "token", "text": chunk["response"]})
+            if chunk.get("done"):
+                stats = {k: chunk.get(k) for k in
+                         ("done_reason", "eval_count", "eval_duration", "load_duration",
+                          "prompt_eval_count", "prompt_eval_duration", "total_duration")}
+        return text, stats
+
+    def stream_model(self, prompt, lang, ev_ids, emit, make_card=None):
+        self.stream_parts([(None, prompt, [])], lang, ev_ids, emit, make_card)
+
+    def stream_parts(self, parts, lang, ev_ids, emit, make_card=None):
+        """parts: [(heading or None, prompt, facts)], answered one after another as one
+        reply."""
         text, stats = "", {}
         try:
-            r = urllib.request.urlopen(urllib.request.Request(
-                OLLAMA + "/api/generate", data=body,
-                headers={"Content-Type": "application/json"}), timeout=900)
-            for line in r:
-                chunk = json.loads(line)
-                if chunk.get("error"):
-                    raise RuntimeError(chunk["error"])
-                if chunk.get("response"):
-                    text += chunk["response"]
-                    emit({"type": "token", "text": chunk["response"]})
-                if chunk.get("done"):
-                    stats = {k: chunk.get(k) for k in
-                             ("done_reason", "eval_count", "eval_duration", "load_duration",
-                              "prompt_eval_count", "prompt_eval_duration", "total_duration")}
+            for heading, prompt, _ in parts:
+                if heading:
+                    head = f"\n\n**{heading}**\n" if text else f"**{heading}**\n"
+                    text += head
+                    emit({"type": "token", "text": head})
+                elif text:
+                    text += "\n"
+                    emit({"type": "token", "text": "\n"})
+                trained = prompt.startswith(PROMPT_HEAD[:40])
+                part, part_stats = self.generate(
+                    prompt, NUM_PREDICT[lang] if trained else GREET_NUM_PREDICT, emit)
+                text += part
+                # Times and token counts add up over the parts; the last part says how it ended.
+                stats = {k: (v + (stats.get(k) or 0) if isinstance(v, int) else v)
+                         for k, v in part_stats.items()}
         except (urllib.error.URLError, RuntimeError, ConnectionRefusedError) as e:
             emit({"type": "error", "message": f"Ollama error: {e}. Is Ollama running and "
                                               f"was '{MODEL}' created? (see start.bat)"})

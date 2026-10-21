@@ -187,7 +187,7 @@ class CitedText extends StatelessWidget {
     final spans = <InlineSpan>[];
     var last = 0;
     for (final match in _citation.allMatches(text)) {
-      spans.add(TextSpan(text: text.substring(last, match.start)));
+      spans.addAll(_withBold(text.substring(last, match.start)));
       final id = match.group(1)!;
       spans.add(
         WidgetSpan(
@@ -197,8 +197,23 @@ class CitedText extends StatelessWidget {
       );
       last = match.end;
     }
-    spans.add(TextSpan(text: text.substring(last)));
+    spans.addAll(_withBold(text.substring(last)));
     return Text.rich(TextSpan(children: spans), style: style);
+  }
+
+  /// `**Section heading**` from the detailed model answer, drawn in bold.
+  static List<TextSpan> _withBold(String text) {
+    final parts = text.split('**');
+    return [
+      for (var i = 0; i < parts.length; i++)
+        if (parts[i].isNotEmpty)
+          TextSpan(
+            text: parts[i],
+            style: i.isOdd
+                ? const TextStyle(fontWeight: FontWeight.bold)
+                : null,
+          ),
+    ];
   }
 }
 

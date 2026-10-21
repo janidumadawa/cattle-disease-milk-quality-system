@@ -180,7 +180,8 @@ class _ChatScreenState extends State<ChatScreen> {
     question = question.trim();
     if (_busy || question.isEmpty) return;
     _input.clear();
-    final turn = _Turn(question, BotReply(AnswerMode.fast));
+    // Every answer comes from the local Ollama model, never fixed KB text.
+    final turn = _Turn(question, BotReply(AnswerMode.model));
     setState(() => _turns.add(turn));
     await _stream(question, turn.reply, _historyBefore(turn), showFrom: turn);
     await _saveTurn(turn);
