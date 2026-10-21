@@ -32,3 +32,6 @@ Thumbs.db
 # Logs and generated outputs
 *.log
 logs/
+
+# Large model files (4.9 GB chatbot model: share outside git)
+*.gguf
