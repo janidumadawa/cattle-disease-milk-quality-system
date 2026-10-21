@@ -126,6 +126,7 @@ void main() {
         'question': 'my cow has a swollen udder',
         'topic': 'Mastitis',
         'sick': true,
+        'shown': <String>[],
       },
     ]);
     final post = saved.lastWhere((r) => r.method == 'POST');

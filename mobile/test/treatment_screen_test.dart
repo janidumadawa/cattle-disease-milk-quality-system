@@ -158,7 +158,7 @@ void main() {
     expect(find.text('See treatment'), findsOneWidget);
   });
 
-  testWidgets('switching to Sinhala loads again and types the Sinhala guide', (
+  testWidgets('switching to Sinhala loads again and shows it without typing', (
     tester,
   ) async {
     const siSevere = 'උග්‍ර අවස්ථාව: අදම ඔබේ පශු වෛද්‍යවරයාට කතා කරන්න.';
@@ -186,37 +186,27 @@ void main() {
 
     await tester.tap(find.text('සි'));
     await tester.pump();
-    // The English guide goes; the Sinhala one loads and types out.
+    // The English guide goes; the Sinhala one loads and shows at once.
     expect(find.text('ප්‍රතිකාර මඟපෙන්වීම පූරණය වෙමින්...'), findsOneWidget);
     expect(
       find.text('Severe stage: please call your vet today.'),
       findsNothing,
     );
     await tester.pump();
-    await tester.pump(const Duration(seconds: 3));
-    expect(find.textContaining('▍'), findsOneWidget);
-    expect(find.text(siSevere), findsNothing);
-    await tester.pump(const Duration(minutes: 2));
-    await tester.pumpAndSettle();
+    await tester.pump();
     expect(find.text(siSevere), findsOneWidget);
     expect(find.textContaining('▍'), findsNothing);
 
-    // And back to English: it types out again too.
+    // And back to English: also shown at once.
     await tester.tap(find.text('EN'));
     await tester.pump();
     expect(find.text('Loading the treatment guide...'), findsOneWidget);
     await tester.pump();
-    await tester.pump(const Duration(seconds: 3));
-    expect(find.textContaining('▍'), findsOneWidget);
-    expect(
-      find.text('Severe stage: please call your vet today.'),
-      findsNothing,
-    );
-    await tester.pump(const Duration(minutes: 2));
-    await tester.pumpAndSettle();
+    await tester.pump();
     expect(
       find.text('Severe stage: please call your vet today.'),
       findsOneWidget,
     );
+    expect(find.textContaining('▍'), findsNothing);
   });
 }

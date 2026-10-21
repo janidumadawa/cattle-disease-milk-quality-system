@@ -185,16 +185,25 @@ class AskMeta {
 /// An earlier question and the topic it was answered with, so the server can
 /// answer follow-ups such as "how do I treat it?".
 class ChatTurn {
-  const ChatTurn({required this.question, this.topic, this.sick = false});
+  const ChatTurn({
+    required this.question,
+    this.topic,
+    this.sick = false,
+    this.shown = const [],
+  });
 
   final String question;
   final String? topic;
   final bool sick;
 
+  /// KB citations that answer showed, so the server does not repeat them.
+  final List<String> shown;
+
   Map<String, Object?> toJson() => {
     'question': question,
     'topic': topic,
     'sick': sick,
+    'shown': shown,
   };
 }
 

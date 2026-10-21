@@ -7,6 +7,7 @@ doses are ever added.
 """
 import random
 import re
+from typing import Any
 
 import care_kb
 
@@ -26,6 +27,7 @@ DISEASE = {
         care_kb.MF: "milk fever (low calcium after calving)",
         care_kb.FEED: "feeding and milk yield",
         care_kb.SICK: "a sick cow",
+        care_kb.EM: "an emergency (bleeding or sudden death)",
     },
     "si": {
         "Foot-and-Mouth Disease": "මුඛ හා පාද රෝගය (FMD)",
@@ -42,6 +44,7 @@ DISEASE = {
         care_kb.MF: "කිරි උණ (Milk fever)",
         care_kb.FEED: "ආහාර සහ කිරි නිෂ්පාදනය",
         care_kb.SICK: "අසනීප ගවයෙක්",
+        care_kb.EM: "හදිසි අවස්ථාවක් (ලේ ඒම හෝ හදිසි මරණය)",
     },
 }
 
@@ -52,7 +55,8 @@ SIGN_WORDS = {"blisters", "hooves", "mouth", "nodules", "fever", "udder", "milk"
               "appetite", "lameness", "foul-smelling", "cloudy", "diarrhoea", "bloat",
               "cough", "urine", "pale", "weight", "calving", "weakness", "watery"}
 
-TEXT = {
+# A text is one string, or a list of wordings to pick from (VARIANTS below).
+TEXT: dict[str, dict[str, Any]] = {
     "en": {
         "sick_open": "I'm sorry to hear about your cow. From what you describe, this may be {d}.",
         "info_open": "Good question! Here's what I know about {d}:",
@@ -163,6 +167,15 @@ def refers_back(question):
     return bool(REFERS.search(question))
 
 
+# "Tell me more", "තව දෙන්න": more about the previous answer's topic.
+MORE = re.compile(r"\bmore\b|\bgo on\b|\bcontinue\b|(?<![඀-෿])තව(?![඀-෿])|තවත්|"
+                  r"වැඩිපුර|වැඩි විස්තර|ඉතුරු", re.I)
+
+
+def asks_more(question):
+    return bool(MORE.search(question))
+
+
 # A statement about the farmer's own animal ("my cow has mastitis"), not a question.
 MY_ANIMAL = re.compile(r"\b(my|our)\b.{0,25}\b(cows?|cattle|calf|calves|heifers?|bulls?|herd|animals?)\b|"
                        r"මගේ|මගෙ|අපේ|අපෙ", re.I)
@@ -172,6 +185,29 @@ QUESTION = re.compile(r"\?|^\s*(what|how|is|are|can|does|do|why|when|which|shoul
 
 def about_my_animal(question):
     return bool(MY_ANIMAL.search(question)) and not QUESTION.search(question)
+
+
+# The KB is about cattle only: a question about another animal ("මගේ බල්ලාගේ තන
+# ඉදිමිලා") must not get a cattle answer. "A dog bit my cow" names a cow, so it stays.
+OTHER_ANIMAL = re.compile(
+    r"\b(dogs?|pupp(y|ies)|cats?|kittens?|goats?|pigs?|piglets?|swine|sheep|lambs?|"
+    r"chickens?|hens?|poultry|birds?|ducks?|horses?|donkeys?|rabbits?)\b|"
+    r"බල්ල|බැල්ල|පූසා|පූසු|පූසන්|බළල|(?<!" + SI + r")එළු|ඌරා|ඌරු|ඌරන්|බැටළු|කුකුළ|කිකිළ|"
+    r"තාරා|අශ්ව|බූරු|හාවා|හාවු", re.I)
+CATTLE = re.compile(
+    r"\b(cows?|cattle|calf|calves|bulls?|heifers?|oxen|ox|steers?|herd|dairy)\b|"
+    r"හරක|ගව|එළදෙන|එළ ?දෙනු|වස්ස|ගොන|බාන|මී හරක|කිරි දෙන", re.I)
+NOT_CATTLE = {
+    "en": "Sorry, I can only help with cattle (cows, calves and bulls). For other animals, "
+          "please contact your vet or the government veterinary office.",
+    "si": "සමාවෙන්න, මට උදව් කරන්න පුළුවන් ගවයන් (එළදෙනුන්, වස්සන් සහ ගොනුන්) ගැන පමණයි. "
+          "වෙනත් සතුන් සඳහා කරුණාකර ඔබේ පශු වෛද්‍යවරයාට හෝ රජයේ පශු වෛද්‍ය කාර්යාලයට කතා කරන්න.",
+}
+
+
+def other_animal(question):
+    """The question is about an animal other than cattle."""
+    return bool(OTHER_ANIMAL.search(question)) and not CATTLE.search(question)
 
 
 def named_disease(question):
@@ -189,14 +225,19 @@ def intents(question):
             "signs": bool(SIGNS_Q.search(question))}
 
 
-MILK_BLOOD = re.compile(r"milk.{0,20}blood|blood.{0,15}milk|bloody milk|කිරි.{0,6}ලේ|ලේ.{0,6}කිරි", re.I)
-BODY_OPENING = re.compile(r"mouth|nose|nostril|anus|කට|නාස|ගුද", re.I)
+# Where blood comes from. Blood from a wound, the hoof, the skin, the milk, dung or
+# urine is a sign of that disease (foot rot, LSD, mastitis, scours, tick fever), not
+# the bleeding from body openings that KB-241 warns about.
+BLEED_PLACE = re.compile(
+    r"wound|cut|hoof|hooves|foot|feet|leg|skin|lump|nodule|udder|teat|milk|dung|stool|faec|"
+    r"feces|urine|horn|tail|sore|"
+    r"තුවාල|කුර|කකුල|පාද|සමේ|සමෙන්|හම|ගැටිති|ගෙඩි|තන|බුරුල්|කිරි|ගොම|මුත්‍ර|අං|වලිග|කැපිල", re.I)
+BODY_OPENING = re.compile(r"mouth|nose|nostril|anus|කට|නාස|නහය|ගුද", re.I)
 
 
 def urgent_ids(question):
     ids = [i for rx, i in URGENT if rx.search(question)]
-    # Blood in the milk is a mastitis sign, not bleeding from a body opening.
-    if "KB-241" in ids and MILK_BLOOD.search(question) and not BODY_OPENING.search(question):
+    if "KB-241" in ids and BLEED_PLACE.search(question) and not BODY_OPENING.search(question):
         ids.remove("KB-241")
     return ids
 
@@ -543,6 +584,85 @@ def suggestions(topic, lang, card, want, question, limit=3):
     }
     picked = [t[k] for k in keys if not skip.get(k)][:limit]
     return picked if topic == care_kb.FEED else picked + vet_chip(lang, card)
+
+
+# Questions back to the farmer under a model answer, so the chat goes on like a vet's
+# questions: their reply ("yes, the milk has clots") is answered from the KB in turn.
+# (words that mean the farmer already said it, English, Sinhala)
+ASK_BACK = {
+    care_kb.FMD: [
+        (r"blister|mouth|කට|බිබිලි", "Does she have blisters in the mouth or drool a lot?",
+         "ගවයාගේ කටේ බිබිලි හෝ කෙළ ගැලීමක් තියෙනවද?"),
+        (r"lame|hoof|feet|foot|කකුල|කුර|කොර", "Is she limping, or are there sores between the hooves?",
+         "ගවයා කොර ගහනවද, නැත්නම් කුර අතර තුවාල තියෙනවද?"),
+        (r"other|herd|රංචු|අනිත්", "Do other cattle in the herd have the same signs?",
+         "රංචුවේ අනිත් ගවයන්ටත් මේ ලක්ෂණ තියෙනවද?")],
+    care_kb.LSD: [
+        (r"lump|nodule|ගැටිති|ගෙඩි", "Are there round lumps on the skin? How many?",
+         "සමේ රවුම් ගැටිති තියෙනවද? කීයක් විතර තියෙනවද?"),
+        (r"fever|hot|උණ|රස්නෙ", "Does she have a fever or eat less than usual?",
+         "ගවයාට උණ හෝ කෑම අඩුවීමක් තියෙනවද?"),
+        (r"fly|mosquito|මැස්ස|මදුරු", "Are there many flies or mosquitoes around the shed?",
+         "ගාල වටේ මැස්සන් හෝ මදුරුවන් ගොඩක් ඉන්නවද?")],
+    care_kb.MAS: [
+        (r"milk|clot|කිරි|කැටි", "Has her milk changed: clots, watery milk or blood?",
+         "ගවයාගේ කිරිවල කැටි, වතුර වගේ වීම හෝ ලේ වගේ වෙනසක් තියෙනවද?"),
+        (r"udder|teat|swell|hot|තන|බුරුල්|ඉදිම", "Is one quarter of the udder swollen, hot or painful?",
+         "බුරුල්ලේ එක කොටසක් ඉදිමිලා, රස්නෙයි හෝ රිදෙනවද?"),
+        (r"fever|eat|උණ|කන්නේ|කෑම", "Does she have a fever or eat less than usual?",
+         "ගවයාට උණ හෝ කෑම අඩුවීමක් තියෙනවද?")],
+    care_kb.RW: [
+        (r"patch|hair|ලප|රෝම|කැළැල", "Are there round, grey, hairless patches? Where on the body?",
+         "රෝම නැති රවුම් අළු පාට ලප තියෙනවද? ඇඟේ කොතැනද?"),
+        (r"calf|calves|young|වස්ස|පැටව", "Are the affected animals mostly calves?",
+         "මේක වැඩිපුර වස්සන්ටද තියෙන්නේ?")],
+    care_kb.DIA: [
+        (r"blood|ලේ", "Is there blood in the dung?", "ගොමවල ලේ තියෙනවද?"),
+        (r"drink|water|weak|බොන|වතුර|දුර්වල", "Is the calf still drinking and standing?",
+         "වස්සා තවම බොනවද, නැගිටිනවද?"),
+        (r"day|දවස", "How many days has the diarrhoea lasted?", "බඩ යන්න පටන් ගත්තේ දවස් කීයකට කලින්ද?")],
+    care_kb.BLO: [
+        (r"left|වම", "Is the left side of the belly blown up?", "බඩේ වම් පැත්ත පිම්බිලාද?"),
+        (r"breath|හුස්ම", "Is she struggling to breathe?", "ගවයාට හුස්ම ගන්න අමාරුද?"),
+        (r"feed|grass|ate|කෑම|තණකොළ", "Did she eat a lot of fresh green grass or legumes?",
+         "ගවයා අලුත් තණකොළ හෝ රනිල ශාක ගොඩක් කෑවද?")],
+    care_kb.PNE: [
+        (r"cough|කැස්ස|කහින", "Is she coughing?", "ගවයා කහිනවද?"),
+        (r"nose|nasal|නාස|සෙම", "Is there discharge from the nose?", "නාසයෙන් සෙම ගලනවද?"),
+        (r"fever|උණ|රස්නෙ", "Does she have a fever?", "ගවයාට උණ තියෙනවද?")],
+    care_kb.TICK: [
+        (r"tick|කිනිතුල්", "Do you see many ticks on her?", "ගවයාගේ ඇඟේ කිනිතුල්ලන් ගොඩක් ඉන්නවද?"),
+        (r"urine|red|මුත්‍ර|රතු", "Is her urine red or dark?", "මුත්‍රා රතු හෝ තද පාටද?"),
+        (r"fever|උණ", "Does she have a high fever?", "ගවයාට උණ වැඩිද?")],
+    care_kb.WORM: [
+        (r"thin|weight|කෙට්ටු|බර", "Is she getting thinner even though she eats?",
+         "කෑවත් ගවයා කෙට්ටු වෙනවද?"),
+        (r"deworm|පණු", "When was she last dewormed?", "අන්තිමට පණු බෙහෙත් දුන්නේ කවදද?")],
+    care_kb.EYE: [
+        (r"tear|කඳුළු", "Are her eyes watering?", "ඇස්වලින් කඳුළු ගලනවද?"),
+        (r"cloud|white|සුදු|බොඳ", "Is the eye cloudy or white?", "ඇස සුදු පාට හෝ බොඳ වෙලාද?")],
+    care_kb.FOOT: [
+        (r"smell|ගඳ", "Is there a bad smell from between the hooves?", "කුර අතරින් නරක ගඳක් එනවද?"),
+        (r"swell|ඉදිම", "Is the foot swollen above the hoof?", "කුරට උඩින් කකුල ඉදිමිලාද?")],
+    care_kb.MF: [
+        (r"calv|පැටව", "When did she calve?", "ගවයා පැටවා දැම්මේ කවදද?"),
+        (r"ear|cold|කන්|සීතල", "Are her ears and legs cold?", "ගවයාගේ කන් හා කකුල් සීතලද?")],
+    care_kb.SICK: [
+        (r"udder|milk|තන|කිරි", "Is there any change in the udder or milk?",
+         "බුරුල්ලේ හෝ කිරිවල වෙනසක් තියෙනවද?"),
+        (r"mouth|feet|කට|කකුල|කුර", "Any blisters in the mouth or sores on the feet?",
+         "කටේ බිබිලි හෝ කකුල්වල තුවාල තියෙනවද?"),
+        (r"dung|breath|cough|ගොම|හුස්ම|කහින", "Is the dung loose, or is she coughing or breathing fast?",
+         "ගොම දියරද, නැත්නම් කහිනවද හෝ ඉක්මනින් හුස්ම ගන්නවද?")],
+}
+ASK_HEAD = {"en": "To help more, tell me:", "si": "තව උදව් කරන්න, මට කියන්න:"}
+
+
+def ask_back(topic, lang, question, limit=2):
+    """Questions back to the farmer, leaving out what they already said."""
+    picks = [q for rx, en, si in ASK_BACK.get(topic, []) if not re.search(rx, question, re.I)
+             for q in [si if lang == "si" else en]][:limit]
+    return f"\n\n**{ASK_HEAD[lang]}**\n" + "\n".join(f"• {q}" for q in picks) if picks else ""
 
 
 def vet_chip(lang, card):

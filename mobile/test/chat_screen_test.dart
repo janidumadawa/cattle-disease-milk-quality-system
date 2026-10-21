@@ -161,6 +161,7 @@ void main() {
         'question': 'my cow has blisters',
         'topic': 'Foot-and-Mouth Disease',
         'sick': true,
+        'shown': ['KB-007-LM', 'KB-202-LM'],
       },
     ]);
   });

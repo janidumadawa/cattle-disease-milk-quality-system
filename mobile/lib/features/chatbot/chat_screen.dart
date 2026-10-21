@@ -216,6 +216,7 @@ class _ChatScreenState extends State<ChatScreen> {
           question: earlier.question,
           topic: meta.topic,
           sick: meta.sick,
+          shown: meta.evidenceIds,
         ),
   ];
 

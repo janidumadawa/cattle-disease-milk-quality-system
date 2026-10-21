@@ -63,7 +63,6 @@ GREET_PROMPT = (
     "cattle.")
 SECTION_QUESTION = {"en": "What should I know about {part} in {d}?",
                     "si": "{d} වල {part} ගැන කියන්න පුළුවන්ද?"}
-DETAIL_SECTIONS = ["signs", "care", "treatment", "prevention"]
 SECTION_FACTS = {"en": 3, "si": 2}  # Sinhala costs ~4x the tokens per fact on CPU
 # Llama 3 needs several tokens per Sinhala character; the Modelfile's 160 cut off
 # 10/26 Sinhala answers in ollama_q4km_eval.csv before the [KB-ID].
@@ -105,7 +104,8 @@ def normalise_topic(t):
 
 
 def load_kb():
-    facts = defaultdict(lambda: {"en": None, "si": None, "topic": None, "aspect": None})
+    facts: defaultdict[str, dict[str, str | None]] = defaultdict(
+        lambda: {"en": None, "si": None, "topic": None, "aspect": None})
     for line in open(DATASET, encoding="utf-8"):
         row = json.loads(line)
         evidence = row["prompt"].split("Evidence:\n", 1)[1].split("\n\nQuestion:")[0]
@@ -146,7 +146,10 @@ SYMPTOMS = [
      "foul-smelling claws splits foot rot දුගඳ කුර", (care_kb.FOOT,)),
     # --- skin lumps (LSD) ---
     (r"lump|bump|nodule|knot|ගැටිති|ගැට|ගෙඩි|කුරුලෑ", "nodules lumpy skin ගැටිති සමේ", (LSD,)),
-    (r"fever|hot body|temperature|උණ|රස්නෙ", "fever උණ", ()),
+    # Where a sign is ("හමේ ගැටිති"): explained by the skin facts, no disease of its own.
+    (r"\bskin\b|(?<![඀-෿])(හම|සම)(ේ|ෙ|ෙන්|ින්|)(?![඀-෿])", "skin සමේ", ()),
+    # "උන" alone is the common misspelling of "උණ" (not "උන්" / "උනා").
+    (r"fever|hot body|temperature|උණ|(?<![඀-෿])උන(?![඀-෿])|රස්නෙ", "fever උණ", ()),
     (r"\btears?\b|watery eye|කඳුළු", "tears watery eyes කඳුළු ඇස්වලින්", (LSD, care_kb.EYE)),
     # Discharge, not just "nose": "blood from the nose" is an emergency, not this sign.
     (r"nasal|snot|runny nose|nose.{0,15}(discharge|running|runs|mucus|dripping)|discharge.{0,15}nose|"
@@ -206,8 +209,8 @@ SYMPTOMS = [
     (r"\bhumans?\b|people|person|family|children|catch|\bget\b.*\bfrom\b|spread to|zoonotic|"
      r"මිනිස්|ළමයි|පවුලේ|මටත්|බෝවෙනවද|බෝවේද|බෝවන|බෝවෙයිද", "humans people spread contact මිනිසුන්ට", ()),
     (r"\bbody\b|all over|ඇඟ|ශරීර|සිරුර", "body සිරුරේ", ()),
-    (r"not eating|off feed|appetite|won'?t eat|eat(s|ing)? less|stopped eating|කන්නේ නැ|කෑම අඩු|"
-     r"කන්න අකමැති|අරුචි", "appetite eat less ආහාර අරුචිය අඩුවෙන් කන්නත්", ()),
+    (r"not eating|off feed|appetite|won'?t eat|eat(s|ing)? less|stopped eating|කන්නේ නැ|කන්නෑ|"
+     r"කෑම.{0,15}අඩු|අඩුවෙන් කන|කනවා අඩු|කන්න අකමැති|අරුචි", "appetite eat less ආහාර අරුචිය අඩුවෙන් කන්නත්", ()),
     (r"weak|dull|lethargic|තෙහෙට්ටු|දුර්වල|අලස", "weakness dullness දුර්වලතාවය", ()),
     (r"\bfl(y|ies)\b|mosquito|මැස්ස|මදුරු", "flies mosquitoes මැස්සන් මදුරුවන්", (LSD, care_kb.EYE)),
 ]
@@ -233,6 +236,9 @@ TOPIC_ALIASES = {
 # Topic names contain symptom words ("foot-and-MOUTH"); hide them from SYMPTOMS.
 DISEASE_NAMES = re.compile(r"foot[- ]and[- ]mouth|මුඛ හා පාද|lumpy skin|ring ?worm|milk fever|කිරි උණ|"
                            r"pink ?eye|foot ?rot|tick fever", re.I)
+# Bleeding from a body opening is an emergency (KB-241), not a mouth or nose sign.
+BLEEDING = re.compile(r"(blood|bleed\w*) (from|out of) (the |its |her |his )?(mouth|nose)|"
+                      r"(mouth|nose) (is )?bleed\w*|(කටින්|කටෙන්|කටේ|නාසයෙන්|නහයෙන්)\s*ලේ", re.I)
 STAGE_SUFFIX = re.compile(r"\((?:low.moderate|high) stage\)", re.I)
 # Sinhala words for "my / cow / how / what / is there" etc.
 SI_STOP_PREFIX = ("හරක", "ගවය", "ගවයෙ", "එළදෙන", "මගේ", "මගෙ", "මම", "මට", "කොහොම", "මොක",
@@ -242,7 +248,7 @@ SI_STOP_PREFIX = ("හරක", "ගවය", "ගවයෙ", "එළදෙන", "
 # Everyday Sinhala filler words ("වෙලා", "එනවා", "වගේ" ...): not symptoms themselves.
 SI_STOP = {"වෙලා", "වුණා", "වෙනවා", "එනවා", "යනවා", "වගේ", "නැති", "නෑ", "නැහැ", "ඇති",
            "කරලා", "දෙනවා", "ගහනවා", "හරි", "ගොඩක්", "ටිකක්", "දැන්", "වටේ", "වටා", "පාට",
-           "වෙලාද", "එනවද", "යනවද", "තමයි", "ඔක්කොම", "තැන්", "තැනක", "ඉඳන්", "වලින්",
+           "වෙලාද", "එනවද", "යනවද", "තමයි", "ඔක්කොම", "තැන්", "තැනක", "ඉඳන්", "වලින්", "වගේත්",
            "මොනවද", "මොනවා", "කන්න", "දෙන්න", "ඉන්නවා", "ඉන්නව", "ඉන්නේ", "ඉන්න"}
 TOKEN_RE = re.compile(r"[a-z0-9]+|[඀-෿‍]+")
 
@@ -252,14 +258,20 @@ def clean_question(question):
 
 
 def hide_disease_names(question):
-    """Blank out disease names (same length, so match offsets stay valid)."""
-    return DISEASE_NAMES.sub(lambda m: " " * len(m.group()), question)
+    """Blank out disease names and bleeding (same length, so match offsets stay valid)."""
+    def blank(m):
+        return " " * len(m.group())
+    return BLEEDING.sub(blank, DISEASE_NAMES.sub(blank, question))
 
 
 def symptom_terms(question):
     """(KB wording, topics the sign points to) for each sign in the question."""
     q = hide_disease_names(question)
-    return [(exp, topics) for rx, exp, topics in SYMPTOM_RE if rx.search(q)]
+    found = [(exp, topics) for rx, exp, topics in SYMPTOM_RE if rx.search(q)]
+    # "කෑම අඩුයි" (eats less) is a sign, not a feeding question.
+    if any(exp.startswith("appetite") for exp, _ in found):
+        found = [(exp, topics) for exp, topics in found if not exp.startswith("feed")]
+    return found
 
 
 def _keep(t):
@@ -469,7 +481,8 @@ def followup_kind(question, found, last, lang):
     if friendly.is_sick_case(found["symptoms"]) and last.get("sick"):
         return "signs"
     want = friendly.intents(question)
-    if friendly.refers_back(question) or want["treat"] or want["prevent"] or want["signs"]:
+    if (friendly.refers_back(question) or friendly.asks_more(question)
+            or want["treat"] or want["prevent"] or want["signs"]):
         return "topic"
     if not has_own_topic(found):
         # "Is the milk safe to drink?" after a mastitis answer: keep the earlier
@@ -492,21 +505,42 @@ def build_prompt(question, lang, evidence, stage):
                               evidence=lines, question=question)
 
 
-def detail_parts(question, lang, stage, topic, evidence, want):
-    """[(heading, prompt, facts)] answered one after another as one detailed reply:
-    the direct answer, then each section of the topic it did not cover (the ones
-    the farmer asked about first). None when the topic has no sections."""
+def detail_parts(question, lang, stage, topic, evidence, want, urgent=(), sick=False, seen=()):
+    """[(heading, prompt, facts)] answered one after another as one reply: the direct
+    answer, then only the sections the farmer asked about (treatment and home care,
+    prevention, signs). Without one, a sick cow gets just the signs that match (the
+    questions back ask for more), other questions the signs to look for; emergencies
+    and general sick-cow advice what to do now. seen: KB ids this chat already showed,
+    never repeated. None when the topic has no sections."""
     if topic not in KB_TOPICS:
         return None
     n = SECTION_FACTS[lang]
-    first = [f for f, _ in evidence if f["topic"] == topic and f["kind"] != "urgent"][:n]
-    parts = [(None, build_prompt(question, lang, [(f, 0) for f in first], stage), first)] \
+    # Warning signs the farmer describes ("blood from the mouth") come first. For a
+    # sick cow the direct answer is the signs that match; for "how is it treated?"
+    # the treatment facts, not what the disease is.
+    if want["treat"] or want["prevent"]:
+        kinds = ({"treatment", "care"} if want["treat"] else set()) | \
+                ({"prevention"} if want["prevent"] else set())
+    else:
+        kinds = {"fact", "sign"} if sick else {"about", "fact", "sign", "care", "treatment",
+                                               "prevention"}
+    first = ([KB_BY_ID[i] for i in urgent if i not in seen]
+             + [f for f, _ in evidence if f["topic"] == topic and f["id"] not in seen
+                and f["kind"] in kinds])[:n]
+    parts: list[tuple[str | None, str, list]] = \
+        [(None, build_prompt(question, lang, [(f, 0) for f in first], stage), first)] \
         if first else []
-    used = {f["id"] for f in first}
+    used = set(seen) | {f["id"] for f in first}
     name = friendly.disease_name(topic, lang)
     wanted = [k for k, asked in (("prevention", want["prevent"]), ("care", want["treat"]),
                                  ("treatment", want["treat"]), ("signs", want["signs"])) if asked]
-    for key in wanted + [k for k in DETAIL_SECTIONS if k not in wanted]:
+    # Home care only when treatment is asked, for every disease; emergencies and
+    # general sick-cow advice have no disease to name, so what to do now is the answer.
+    if not wanted and topic in care_kb.NOT_DISEASES:
+        wanted = ["care"]
+    elif not wanted and not sick:
+        wanted = ["signs"]
+    for key in wanted:
         facts = [f for f in friendly.section_entries(KB, topic, key) if f["id"] not in used][:n]
         if not facts:
             continue
@@ -579,8 +613,8 @@ def status():
 
 
 class Handler(BaseHTTPRequestHandler):
-    def log_message(self, fmt, *args):
-        sys.stderr.write("[medfarm] " + fmt % args + "\n")
+    def log_message(self, format, *args):
+        sys.stderr.write("[medfarm] " + format % args + "\n")
 
     def end_headers(self):
         # The Flutter web app (flutter run -d chrome) is served from another origin.
@@ -641,6 +675,8 @@ class Handler(BaseHTTPRequestHandler):
         lang = req.get("lang") if req.get("lang") in ("en", "si") else detect_lang(question)
         k = max(1, min(5, int(req.get("k", 3))))
         use_model = req.get("mode") == "model"
+        if friendly.other_animal(question):
+            return self.not_cattle(lang, stage)
 
         if use_model and lang == "si":
             k = min(k, 2)  # Sinhala costs ~4x the tokens per fact on CPU
@@ -649,9 +685,9 @@ class Handler(BaseHTTPRequestHandler):
         last = previous_turn(req.get("history"))
         follow = followup_kind(question, found, last, lang)
         ask = question  # the question as understood, with its chat context
-        if follow == "signs":
+        if last and follow == "signs":
             ask = f"{last['question']}. {question}"
-        elif follow == "topic":
+        elif last and follow == "topic":
             ask = f"{question} ({last['topic']})"
         if follow:
             found = retrieve(ask, 10)
@@ -675,7 +711,9 @@ class Handler(BaseHTTPRequestHandler):
         if chat:
             found["confident"], topics = False, []
         want = friendly.intents(question)
-        urgent = friendly.urgent_ids(question) if friendly_style and not chat else []
+        # More signs of the same cow keep the earlier warning ("bleeding ... also a fever").
+        urgent = (friendly.urgent_ids(ask if follow == "signs" else question)
+                  if friendly_style and not chat else [])
         # Finding a vet. The town comes from this message or an earlier one in the chat.
         history = req.get("history") if isinstance(req.get("history"), list) else []
         here = vets.find_office(question) or next(
@@ -691,7 +729,7 @@ class Handler(BaseHTTPRequestHandler):
                     and (vets.wants_vet(question) or vets.only_place(question) or asked_where))
         # Name a topic only on a clear match (or when the farmer names it).
         named = None if chat else friendly.named_disease(ask)
-        if follow == "topic":
+        if last and follow == "topic":
             named, topics = last["topic"], []  # "how do I treat it?": the earlier topic
         owned = (named is not None and not (want["treat"] or want["prevent"])
                  and not friendly.is_sick_case(found["symptoms"])
@@ -715,6 +753,11 @@ class Handler(BaseHTTPRequestHandler):
             # when a described sign points to it, else give general sick-cow advice.
             match = next((d for d in topics if d["disease"] in sign_topics), None)
             topic = match["disease"] if match else care_kb.SICK
+        if urgent and topic not in sign_topics:
+            # A warning beside clear signs of a disease ("bleeding lumps on the skin"):
+            # that disease's guide, with the warning on top.
+            topic = next((d["disease"] for d in diagnose(found["scores"])
+                          if d["disease"] in sign_topics), topic)
         if urgent and (topic is None or topic != named) and topic not in sign_topics:
             # A warning sign without signs of a known disease: never a guide to a
             # disease that merely shares words ("cannot stand" is in a diarrhoea
@@ -749,7 +792,7 @@ class Handler(BaseHTTPRequestHandler):
         has_answer = bool((found["confident"] and (topic or facts)) or urgent or named)
 
         # Friendly answers are topic cards; their extra KB entries join the evidence list.
-        card = None
+        card, card_ids = None, []
         if vet_turn:
             t = friendly.VET_TEXT[lang]
             if here:
@@ -778,6 +821,8 @@ class Handler(BaseHTTPRequestHandler):
             elif urgent or topic == care_kb.EM:
                 friendly.add_contacts(card, lang, vets.all_contacts(lang))
         parts = None
+        # The answer has a topic in both modes, so follow-ups keep it in the chat history.
+        answered = card is not None
         # Model mode: the answer is only the model's own words, except when the farmer
         # asks for a vet: then the vet office contacts on file.
         if use_model and not vet_turn:
@@ -785,17 +830,39 @@ class Handler(BaseHTTPRequestHandler):
             if friendly_style and chat:
                 name = "Sinhala" if lang == "si" else "English"
                 parts = [(None, GREET_PROMPT.format(question=question, lang=name), [])]
-            elif friendly_style and not guarded and found["confident"]:
-                parts = detail_parts(ask, lang, stage, topic, found["evidence"], want)
+            elif friendly_style and not guarded and (found["confident"] or has_answer):
+                # The same topic and warnings as the KB answer, so the model never gets
+                # facts about a disease that merely shares a word with the question.
+                # KB entries earlier answers of this chat showed (sent back by the client).
+                seen = {str(i).rsplit("-", 1)[0] for h in history[-4:] if isinstance(h, dict)
+                        for i in (h.get("shown") if isinstance(h.get("shown"), list) else [])}
+                parts = detail_parts(ask, lang, stage, topic, found["evidence"], want, urgent,
+                                     sick, seen)
             if parts:
                 evidence = [(f, 0.0) for _, _, facts in parts for f in facts]
                 ev_ids = [f"{f['id']}-{stage}" for f, _ in evidence]
                 prompt = "\n\n---\n\n".join(p for _, p, _ in parts)
-            else:  # dose questions and unmatched questions: the trained refusal/abstain
+            elif not guarded and not found["confident"] and found["coverage"] == 0:
+                # Nothing in the KB matches: the model given unrelated facts invents
+                # an answer, so abstain as the KB mode does.
+                parts = []
+            else:  # dose questions and weak matches: the trained refusal/abstain
                 parts = [(None, prompt, [])]
+        # Model answers on a topic end with questions back to the farmer, leaving out
+        # signs they already told us in this chat.
+        said = " ".join([ask] + [str(h.get("question") or "") for h in history[-4:]
+                                 if isinstance(h, dict)])
+        ask_back = (friendly.ask_back(topic, lang, said)
+                    if use_model and friendly_style and parts and answered else "")
         # Next questions to tap; greetings and "I don't know" offer starter questions.
         if vet_turn:
             suggest = vets.town_names(lang) if topic == vets.TOPIC else []
+        elif use_model and parts and answered:
+            # The sections the model answered stand in for the card's open sections.
+            keys = {v: k for k, v in friendly.TITLES[lang].items()}
+            shown = {"sections": [{"key": keys.get(h or ""), "open": True} for h, _, _ in parts]}
+            suggest = (friendly.suggestions(topic, lang, shown, want, question)
+                       if friendly_style else [])
         else:
             suggest = (friendly.suggestions(topic if card else None, lang, card, want, question)
                        if friendly_style else [])
@@ -825,7 +892,9 @@ class Handler(BaseHTTPRequestHandler):
               "confident": found["confident"], "coverage": found["coverage"],
               "symptoms": found["symptoms"],
               # For the client's chat history (follow-up questions).
-              "topic": topic if card else None, "sick": bool(sick and card), "followup": follow,
+              # A warning sign counts as a sick cow, so her next signs join it.
+              "topic": topic if answered else None, "sick": bool((sick or urgent) and answered),
+              "followup": follow,
               "suggestions": suggest,
               "diseases": [dict(d, label=friendly.disease_name(d["disease"], lang)) for d in diseases],
               "urgent": card["urgent"] if card else [], "urgent_title": card["urgent_title"] if card else "",
@@ -833,9 +902,12 @@ class Handler(BaseHTTPRequestHandler):
 
         try:
             if use_model and not vet_turn:
-                # No fixed KB text: greetings, dose questions and unmatched questions all
-                # go to the model, which was trained to refuse and abstain itself.
-                return self.stream_parts(parts, lang, ev_ids, emit)
+                if not parts:
+                    return finish(friendly.abstain(lang) if friendly_style else ABSTAIN[lang],
+                                  "retrieval", "abstain")
+                # No fixed KB text: greetings, dose questions and weak matches go to the
+                # model, which was trained to refuse and abstain itself.
+                return self.stream_parts(parts, lang, ev_ids, emit, closing=ask_back)
             if vet_turn:
                 return finish(friendly.card_text(card), "vet", "answer", card)
             # Hard guard: dose/medicine questions get the fixed refusal.
@@ -860,24 +932,41 @@ class Handler(BaseHTTPRequestHandler):
                     return finish(friendly.abstain(lang), "retrieval", "abstain")
                 return finish(extractive_answer(evidence, lang, stage), "kb")
 
-            make_card = None
-            if friendly_style:
-                def make_card(model_text):
-                    # The model's sentence is the answer; the card adds the topic sections
-                    # (urgent warnings were already shown from the meta message).
-                    cited = {c.rsplit("-", 1)[0] for c in CITE.findall(model_text)}
-                    return friendly.card(KB, lang, stage, topic=topic, sick=sick, want=want,
-                                         intro="", skip=cited)[0]
-            self.stream_model(prompt, lang, ev_ids, emit, make_card)
+            def make_card(model_text):
+                # The model's sentence is the answer; the card adds the topic sections
+                # (urgent warnings were already shown from the meta message).
+                cited = {c.rsplit("-", 1)[0] for c in CITE.findall(model_text)}
+                return friendly.card(KB, lang, stage, topic=topic, sick=sick, want=want,
+                                     intro="", skip=cited)[0]
+            self.stream_model(prompt, lang, ev_ids, emit, make_card if friendly_style else None)
         except (BrokenPipeError, ConnectionResetError):
             return  # browser closed / stopped
+
+    def not_cattle(self, lang, stage):
+        """A dog, goat, chicken ...: no cattle facts, just where to get help."""
+        text = friendly.NOT_CATTLE[lang]
+        lines = [{"type": "meta", "lang": lang, "stage": stage, "prompt": "", "confident": False,
+                  "coverage": 0.0, "symptoms": [], "topic": None, "sick": False,
+                  "followup": None, "suggestions": friendly.SUGGEST[lang]["start"],
+                  "diseases": [], "urgent": [], "urgent_title": "", "evidence": []},
+                 {"type": "token", "text": text},
+                 {"type": "done", "source": "retrieval", "card": None,
+                  "checks": check_output(text, lang, [], "abstain")}]
+        self.send_response(200)
+        self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
+        self.send_header("Cache-Control", "no-cache")
+        self.end_headers()
+        try:
+            self.wfile.write("".join(json.dumps(m, ensure_ascii=False) + "\n" for m in lines).encode())
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
     def stream_model(self, prompt, lang, ev_ids, emit, make_card=None):
         self.stream_parts([(None, prompt, [])], lang, ev_ids, emit, make_card)
 
-    def stream_parts(self, parts, lang, ev_ids, emit, make_card=None):
+    def stream_parts(self, parts, lang, ev_ids, emit, make_card=None, closing=""):
         """parts: [(heading or None, prompt, facts)], answered one after another as one
-        reply."""
+        reply. closing: fixed text after an answer (questions back to the farmer)."""
         text, stats = "", {}
         try:
             for heading, prompt, _ in parts:
@@ -902,6 +991,8 @@ class Handler(BaseHTTPRequestHandler):
             return
         # Checks cover the model's own words; the topic card is rendered under them.
         checks = check_output(text, lang, ev_ids)
+        if closing and checks["behaviour"] == "answer":
+            emit({"type": "token", "text": closing})
         card = make_card(text) if make_card and checks["behaviour"] == "answer" else None
         emit({"type": "done", "source": "model", "stats": stats, "card": card,
               "truncated": stats.get("done_reason") == "length", "checks": checks})

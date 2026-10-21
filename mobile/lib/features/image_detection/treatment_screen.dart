@@ -51,12 +51,18 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
   /// "Do this first" steps the farmer has ticked.
   final _done = <String>{};
 
+  /// The guide types out only the first time it shows; once it has been
+  /// shown, a language change shows the new text at once.
+  bool _shown = false;
+  bool _typeOut = true;
+
   Future<TreatmentGuide> _load() => _api.load(widget.classId, lang: _lang);
 
   void _setLang(String lang) {
     if (lang == _lang) return;
     setState(() {
       _lang = lang;
+      _typeOut = !_shown;
       _guide = _load();
     });
   }
@@ -109,11 +115,13 @@ class _TreatmentScreenState extends State<TreatmentScreen> {
                 onRetry: () => setState(() => _guide = _load()),
                 serverUrl: _api.baseUrl,
               ),
-              // A language change loads afresh, then types out like the first open.
+              // A language change loads afresh, then shows without typing.
               AsyncSnapshot(:final data?)
                   when snapshot.connectionState == ConnectionState.done =>
                 _GuideView(
                   guide: data,
+                  typeOut: _typeOut,
+                  onShown: () => _shown = true,
                   done: _done,
                   onToggle: (id) => setState(
                     () => _done.contains(id) ? _done.remove(id) : _done.add(id),
@@ -238,25 +246,27 @@ class _Reveal extends StatelessWidget {
 class _GuideView extends StatefulWidget {
   const _GuideView({
     required this.guide,
+    required this.typeOut,
+    required this.onShown,
     required this.done,
     required this.onToggle,
   });
 
   final TreatmentGuide guide;
+
+  /// Type the guide out; otherwise show it all at once.
+  final bool typeOut;
+
+  /// Called once the guide is fully on screen.
+  final VoidCallback onShown;
   final Set<String> done;
   final ValueChanged<String> onToggle;
 
   @override
   State<_GuideView> createState() => _GuideViewState();
 
-  static String _site(String url) {
-    final host = Uri.tryParse(url)?.host.replaceFirst('www.', '') ?? url;
-    return switch (host) {
-      'merckvetmanual.com' => 'Merck Veterinary Manual',
-      'woah.org' => 'WOAH',
-      _ => host,
-    };
-  }
+  /// What the guide names as its source, instead of each site.
+  static const _database = 'Veterinary database';
 }
 
 class _GuideViewState extends State<_GuideView> {
@@ -278,17 +288,23 @@ class _GuideViewState extends State<_GuideView> {
   @override
   void didUpdateWidget(_GuideView old) {
     super.didUpdateWidget(old);
-    // A new guide (another language) types out again; ticking a step does not.
-    if (!identical(old.guide, widget.guide)) {
-      _typed.value = 0;
-      _type();
-    }
+    // A new guide (another language) shows at once; ticking a step does not.
+    if (!identical(old.guide, widget.guide)) _type();
   }
 
   void _type() {
     _timer?.cancel();
+    if (!widget.typeOut) {
+      _typed.value = 1 << 30;
+      widget.onShown();
+      return;
+    }
+    _typed.value = 0;
     _timer = Timer.periodic(_typeEvery, (timer) {
-      if (_typed.value >= _total) return timer.cancel();
+      if (_typed.value >= _total) {
+        widget.onShown();
+        return timer.cancel();
+      }
       _typed.value++;
     });
   }
@@ -538,8 +554,7 @@ class _GuideViewState extends State<_GuideView> {
             child: Padding(
               padding: const EdgeInsets.only(top: 18),
               child: Text(
-                '${guide.sourcesTitle}: '
-                '${guide.sources.map(_GuideView._site).toSet().join(', ')}',
+                '${guide.sourcesTitle}: ${_GuideView._database}',
                 style: const TextStyle(color: _muted, fontSize: 11),
               ),
             ),
@@ -722,8 +737,7 @@ class _MedicineCard extends StatelessWidget {
           ),
           if (medicine.source.isNotEmpty)
             Text(
-              '${_label('source', 'Source')}: '
-              '${_GuideView._site(medicine.source)}',
+              '${_label('source', 'Source')}: ${_GuideView._database}',
               style: const TextStyle(fontSize: 11, color: _muted),
             ),
         ],
