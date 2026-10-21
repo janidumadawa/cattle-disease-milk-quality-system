@@ -2,8 +2,10 @@
 Mastitis, Ringworm), opened from "See treatment" after a photo scan.
 
 Every item is a knowledge-base entry (care_kb.py and the original KB) shown with
-its citation. Medicines come from medicines.json: names and uses from the
-Merck Veterinary Manual; dose, frequency and withdrawal only where a source gives
+its citation. Items with versions in kb_variants.json show one of them at random:
+hand-written rewordings that keep every fact, warning and medicine name of the
+entry (checked against it). Medicines come from medicines.json: names and uses from
+the Merck Veterinary Manual; dose, frequency and withdrawal only where a source gives
 them (otherwise shown as "set by your vet").
 """
 import json
@@ -14,8 +16,9 @@ import care_kb
 import friendly
 import vets
 
-MEDICINES = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                        "medicines.json"), encoding="utf-8"))
+HERE = os.path.dirname(os.path.abspath(__file__))
+MEDICINES = json.load(open(os.path.join(HERE, "medicines.json"), encoding="utf-8"))
+VARIANTS = json.load(open(os.path.join(HERE, "kb_variants.json"), encoding="utf-8"))
 
 # KB entries per section and stage. Low and High give different steps, order
 # and warnings for the same disease; sections with no entries are left out.
@@ -169,8 +172,9 @@ def topic_for(disease):
     return disease if disease in PLANS else None
 
 
-def guide(kb_by_id, disease, lang="en", stage=None):
-    """The treatment guide for a disease, or None if there is none."""
+def guide(kb_by_id, disease, lang="en", stage=None, variants=True):
+    """The treatment guide for a disease, or None if there is none. variants=False
+    keeps every item's KB text (for checking the versions against it)."""
     topic = topic_for(disease)
     if topic is None:
         return None
@@ -185,8 +189,11 @@ def guide(kb_by_id, disease, lang="en", stage=None):
         for kb_id in plan[key]:
             entry = kb_by_id[kb_id]
             used.append(entry)
+            text = entry[lang] or entry["en"]
+            if variants and kb_id in VARIANTS:
+                text = random.choice(VARIANTS[kb_id][lang])
             items.append({"id": f"{kb_id}-{'HI' if stage == 'High' else 'LM'}",
-                          "text": friendly.localize(entry[lang] or entry["en"], lang)})
+                          "text": friendly.localize(text, lang)})
         if items:
             sections.append({"key": key, "title": t[key], "items": items})
     # Entries with "stages" (e.g. fluids for severe mastitis) only show for those stages.
