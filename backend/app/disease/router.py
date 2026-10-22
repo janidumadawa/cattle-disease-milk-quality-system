@@ -83,6 +83,12 @@ def _photo_url(scan_id: int) -> str:
 # A plain def runs in FastAPI's thread pool, so inference does not block the event loop.
 @router.post("/predict", response_model=DiseasePredictResponse)
 def predict(image: UploadFile = File(description="Photo of the animal or the affected area (JPG, PNG or WebP, up to 10 MB).")):
+    """Check a photo for cattle diseases.
+
+    First checks that the photo shows cattle, then returns the top 3 disease classes
+    with a Grad-CAM heatmap. Cattle scans are saved to the history when a database is set up.
+    Returns 400 for an unreadable image, 413 for a file over 10 MB and 503 when the model is not loaded.
+    """
     if _classifier is None:
         raise HTTPException(503, f"Disease model is not available: {_load_error}")
 
@@ -120,18 +126,25 @@ def list_history(
     limit: Annotated[int, Query(ge=1, le=100)] = 20,
     offset: Annotated[int, Query(ge=0)] = 0,
 ):
+    """A page of saved scans, newest first, with each scan's top prediction."""
     total = session.scalar(select(func.count()).select_from(DiseaseScan))
     scans = session.scalars(select(DiseaseScan).order_by(DiseaseScan.id.desc()).limit(limit).offset(offset))
     return ScanHistoryResponse(
         total=total or 0,
         items=[
-            ScanSummary(id=s.id, created_at=s.created_at, top_prediction=s.predictions[0], photo_url=_photo_url(s.id))
+            ScanSummary(
+                id=s.id,
+                created_at=s.created_at,
+                top_prediction=DiseasePrediction.model_validate(s.predictions[0]),
+                photo_url=_photo_url(s.id),
+            )
             for s in scans
         ],
     )
 
 
 def _get_scan(session: Session, scan_id: int) -> DiseaseScan:
+    """Load a scan, or raise 404 if it does not exist."""
     scan = session.get(DiseaseScan, scan_id)
     if scan is None:
         raise HTTPException(404, "Scan not found.")
@@ -140,13 +153,15 @@ def _get_scan(session: Session, scan_id: int) -> DiseaseScan:
 
 @router.get("/history/{scan_id}", response_model=ScanDetail)
 def get_scan(scan_id: int, session: Annotated[Session, Depends(get_session)]):
+    """Full details of one saved scan: all 3 predictions and links to its images."""
     scan = _get_scan(session, scan_id)
+    # Check in SQL so the heatmap bytes are not loaded just to see if they exist.
     has_gradcam = session.scalar(select(DiseaseScan.gradcam_jpeg.is_not(None)).where(DiseaseScan.id == scan_id))
     return ScanDetail(
         id=scan.id,
         created_at=scan.created_at,
         cattle_score=scan.cattle_score,
-        predictions=scan.predictions,
+        predictions=[DiseasePrediction.model_validate(p) for p in scan.predictions],
         photo_url=_photo_url(scan.id),
         gradcam_url=f"{router.prefix}/history/{scan.id}/gradcam" if has_gradcam else None,
     )
@@ -158,11 +173,13 @@ _IMAGE_HEADERS = {"Cache-Control": "private, max-age=86400"}
 
 @router.get("/history/{scan_id}/photo", response_class=Response, responses={200: {"content": {"image/jpeg": {}}}})
 def get_scan_photo(scan_id: int, session: Annotated[Session, Depends(get_session)]):
+    """The photo that was scanned, as a JPEG."""
     return Response(_get_scan(session, scan_id).photo_jpeg, media_type="image/jpeg", headers=_IMAGE_HEADERS)
 
 
 @router.get("/history/{scan_id}/gradcam", response_class=Response, responses={200: {"content": {"image/jpeg": {}}}})
 def get_scan_gradcam(scan_id: int, session: Annotated[Session, Depends(get_session)]):
+    """The Grad-CAM heatmap overlay of a scan, as a JPEG. 404 if the scan has none."""
     gradcam = _get_scan(session, scan_id).gradcam_jpeg
     if gradcam is None:
         raise HTTPException(404, "This scan has no heatmap.")
@@ -171,5 +188,6 @@ def get_scan_gradcam(scan_id: int, session: Annotated[Session, Depends(get_sessi
 
 @router.delete("/history/{scan_id}", status_code=204)
 def delete_scan(scan_id: int, session: Annotated[Session, Depends(get_session)]):
+    """Delete a scan and its stored images from the history."""
     session.delete(_get_scan(session, scan_id))
     session.commit()
