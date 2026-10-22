@@ -106,8 +106,12 @@ class AnswerView extends StatelessWidget {
       children: [
         if (withCard && meta != null && meta.diseases.isNotEmpty)
           _DiseaseMatchBox(meta: meta),
-        // Warnings must not wait for a slow model answer.
-        if (withCard && isModel && meta != null && meta.urgent.isNotEmpty)
+        // Warnings must not wait for a slow model answer. Without a card (the
+        // questions about a sick cow) nothing else would show them.
+        if (withCard &&
+            (isModel || card == null) &&
+            meta != null &&
+            meta.urgent.isNotEmpty)
           _UrgentBox(title: meta.urgentTitle, rows: meta.urgent, ids: ids),
         if (reply.error != null)
           Text(reply.error!, style: TextStyle(color: theme.colorScheme.error))
@@ -150,7 +154,8 @@ class _Pending extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final seconds = DateTime.now().difference(reply.startedAt).inSeconds;
-    final label = reply.mode == AnswerMode.model
+    // Rule-based answers (with triage) are typed out like a model answer.
+    final label = reply.mode == AnswerMode.model || reply.meta?.triage != null
         ? 'AI model is reading the evidence… ${seconds}s'
         : 'Searching…';
     return Row(
@@ -382,6 +387,10 @@ class _DiseaseMatchBox extends StatelessWidget {
                   text: top.label,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
+                TextSpan(
+                  text: ' ${(top.share * 100).round()}%',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
                 TextSpan(text: ' ($confidence)', style: muted),
               ],
             ),
@@ -609,8 +618,10 @@ const _behaviourLabels = {
   'abstain': 'Not in knowledge base',
   'refuse': 'Refused (medicine/dose)',
   'chat': 'Chat',
+  'ask': 'Question',
 };
 const _sourceLabels = {
+  'rules': 'AI model',
   'kb': 'Instant · knowledge base',
   'vet': 'Vet office contacts',
   'guard': 'Instant · safety filter',

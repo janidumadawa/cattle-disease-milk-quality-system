@@ -144,6 +144,7 @@ class AskMeta {
     this.topic,
     this.sick = false,
     this.suggestions = const [],
+    this.triage,
   });
 
   factory AskMeta.fromJson(Map<String, dynamic> json) => AskMeta(
@@ -159,6 +160,7 @@ class AskMeta {
     topic: json['topic'] as String?,
     sick: json['sick'] as bool? ?? false,
     suggestions: _strings(json['suggestions']),
+    triage: json['triage'] as Map<String, dynamic>?,
   );
 
   final String lang;
@@ -180,6 +182,15 @@ class AskMeta {
 
   /// Next questions to offer as chips under the answer.
   final List<String> suggestions;
+
+  /// The server's questions about a sick cow so far (signs asked, answers),
+  /// sent back with the next question. Opaque to the app.
+  final Map<String, dynamic>? triage;
+
+  /// The answer asked the farmer a yes/no question: a sign to check, or whether
+  /// they want the next part of the disease's guide.
+  bool get asksQuestion =>
+      triage?['pending'] != null || triage?['offer'] != null;
 }
 
 /// An earlier question and the topic it was answered with, so the server can
@@ -190,6 +201,7 @@ class ChatTurn {
     this.topic,
     this.sick = false,
     this.shown = const [],
+    this.triage,
   });
 
   final String question;
@@ -199,11 +211,16 @@ class ChatTurn {
   /// KB citations that answer showed, so the server does not repeat them.
   final List<String> shown;
 
+  /// [AskMeta.triage] of that answer, so the server can read the reply to
+  /// its question.
+  final Map<String, dynamic>? triage;
+
   Map<String, Object?> toJson() => {
     'question': question,
     'topic': topic,
     'sick': sick,
     'shown': shown,
+    if (triage != null) 'triage': triage,
   };
 }
 

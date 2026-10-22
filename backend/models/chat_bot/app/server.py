@@ -13,6 +13,7 @@ import os
 import re
 import sys
 import threading
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -22,6 +23,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import care_kb
 import friendly
 import treatment
+import triage
 import vets
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -32,6 +34,9 @@ MODEL = os.environ.get("MEDFARM_MODEL", "medfarm-llama")
 PORT = int(os.environ.get("PORT", "8001"))
 # 0.0.0.0 lets a phone on the same Wi-Fi reach the server (the emulator works with 127.0.0.1).
 HOST = os.environ.get("MEDFARM_HOST", "127.0.0.1")
+# Rule-based answers (the questions about a sick cow) are typed out like a model
+# answer: a pause before the first word, then a word at a time.
+TYPE_PAUSE, TYPE_WORD = 5, 0.35
 
 # Fixed sentences the model was trained to emit (from dataset.jsonl).
 ABSTAIN = {
@@ -57,10 +62,6 @@ PROMPT_HEAD = (
 # is told, and long free text drifts (invented facts, Sinhala loops), so a detailed
 # answer asks the trained prompt once per section of the topic, in the trained
 # question wording.
-GREET_PROMPT = (
-    "A dairy farmer says to you: \"{question}\"\nYou are MedFarm, a friendly cattle-health "
-    "assistant. Reply warmly in {lang} in 1-2 sentences and invite them to ask about their "
-    "cattle.")
 SECTION_QUESTION = {"en": "What should I know about {part} in {d}?",
                     "si": "{d} වල {part} ගැන කියන්න පුළුවන්ද?"}
 SECTION_FACTS = {"en": 3, "si": 2}  # Sinhala costs ~4x the tokens per fact on CPU
@@ -516,11 +517,11 @@ def detail_parts(question, lang, stage, topic, evidence, want, urgent=(), sick=F
         return None
     n = SECTION_FACTS[lang]
     # Warning signs the farmer describes ("blood from the mouth") come first. For a
-    # sick cow the direct answer is the signs that match; for "how is it treated?"
-    # the treatment facts, not what the disease is.
+    # sick cow the direct answer is the signs that match. "How is it treated?" is
+    # answered by the treatment / prevention sections below alone: a care fact that
+    # only shares a word with it ("gloves") makes the model abstain.
     if want["treat"] or want["prevent"]:
-        kinds = ({"treatment", "care"} if want["treat"] else set()) | \
-                ({"prevention"} if want["prevent"] else set())
+        kinds = set()
     else:
         kinds = {"fact", "sign"} if sick else {"about", "fact", "sign", "care", "treatment",
                                                "prevention"}
@@ -636,6 +637,9 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_GET(self):
+        """GET endpoints: the demo page, server status, the KB and treatment guides.
+        Any other path returns 404 {"error": "not found"}."""
+        # GET / : the browser demo UI (index.html).
         if self.path in ("/", "/index.html"):
             body = open(os.path.join(HERE, "index.html"), "rb").read()
             self.send_response(200)
@@ -643,12 +647,28 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
+        # GET /api/status : whether Ollama is running and the MedFarm model is installed.
+        #   Returns {"ollama": bool, "model": bool, "name": str}. The app uses it to
+        #   decide if AI-model answers can be offered.
         elif self.path == "/api/status":
             self.send_json(status())
+        # GET /api/kb : every knowledge-base entry the chatbot retrieves from
+        #   ([{"id", "en", "si", "topic", "aspect", "kind", "sources"}, ...]).
         elif self.path == "/api/kb":
             self.send_json(KB)
+        # GET /api/treatment : treatment recommendation engine.
+        #   The guide behind "See treatment" on a disease scan result.
+        #   Query parameters:
+        #     disease  disease class or KB topic, e.g. "Mastitis_High", "LSD_Low", "Ringworm".
+        #              A "_High" class gives the severe-stage guide, anything else the early one.
+        #     lang     "en" (default) or "si".
+        #     stage    optional, "High" for the severe-stage guide when disease has no suffix.
+        #     source   optional, "kb" returns the KB text itself instead of the
+        #              reworded versions (used to check the versions against the KB).
+        #   Returns the guide (treatment.guide): sections of steps, medicines the vet may
+        #   use, vet office contacts and sources, plus "source": "kb" or "versions".
+        #   404 {"error": ...} when there is no guide for the disease (e.g. Healthy).
         elif urllib.parse.urlsplit(self.path).path == "/api/treatment":
-            # /api/treatment?disease=Mastitis_High&lang=si : the guide behind "See treatment".
             query = urllib.parse.parse_qs(urllib.parse.urlsplit(self.path).query)
             disease = (query.get("disease") or [""])[0]
             lang = "si" if (query.get("lang") or ["en"])[0] == "si" else "en"
@@ -665,6 +685,34 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json({"error": "not found"}, 404)
 
     def do_POST(self):
+        """POST /api/ask : RAG chatbot. Answers a farmer's question from the KB.
+
+        Retrieves the best-matching KB facts (BM25 + symptom dictionary), picks the
+        topic, and answers either straight from the KB or with the MedFarm model
+        (Ollama) given only those facts as evidence.
+
+        JSON body:
+            question  the farmer's question (required, English or Sinhala).
+            lang      "en" or "si"; detected from the question when missing.
+            mode      "model" for an AI-model answer; anything else answers from the KB (fast).
+            style     "friendly" (default) for topic cards, greetings and vet contacts;
+                      anything else gives the plain trained answer format.
+            stage     "HI" or "LM" (default): the evidence-id suffix used in citations.
+            k         number of facts given as evidence (1-5, default 3).
+            guard     false turns off the fixed refusal for medicine/dose questions (default true).
+            history   earlier turns of this chat, oldest first:
+                      [{"question", "topic", "sick", "shown"}, ...], used for follow-up questions.
+
+        Response: a stream of JSON lines (application/x-ndjson):
+            {"type": "meta", ...}   first: language, topic, matched diseases, warning signs,
+                                    suggested next questions and the evidence used.
+            {"type": "token", "text": ...}  the answer text, in pieces.
+            {"type": "done", ...}   last: answer source, topic card and output checks
+                                    (citations, language, no dose leak).
+            {"type": "error", "message": ...}  instead of "done" when Ollama fails.
+
+        Errors: 400 for an empty question, 404 for any other POST path.
+        """
         if self.path != "/api/ask":
             return self.send_json({"error": "not found"}, 404)
         req = json.loads(self.rfile.read(int(self.headers.get("Content-Length", 0))) or b"{}")
@@ -677,6 +725,24 @@ class Handler(BaseHTTPRequestHandler):
         use_model = req.get("mode") == "model"
         if friendly.other_animal(question):
             return self.not_cattle(lang, stage)
+        history = req.get("history") if isinstance(req.get("history"), list) else []
+        friendly_style = req.get("style", "friendly") == "friendly"
+        # A reply ("yes", "no fever") to the question the previous answer asked.
+        running = triage.pending_state(history) if friendly_style else None
+        if running:
+            state = triage.read_reply(hide_disease_names(question), running,
+                                      friendly.urgent_ids(question))
+            if state:
+                return self.triage_answer(question, lang, stage, state, history, use_model,
+                                          new_urgent=[i for i in state["urgent"]
+                                                      if i not in running["urgent"]])
+        offered = triage.offer_state(history) if friendly_style and not running else None
+        if offered and self.offer_answer(question, lang, stage, offered, history):
+            return
+        if not running and not offered and friendly_style and history \
+                and triage.bare_reply(question):
+            # "Yes" / "no" when no question is open: nothing to look up.
+            return self.noted(question, lang, stage, history)
 
         if use_model and lang == "si":
             k = min(k, 2)  # Sinhala costs ~4x the tokens per fact on CPU
@@ -702,7 +768,6 @@ class Handler(BaseHTTPRequestHandler):
         prompt = build_prompt(ask, lang, evidence, stage)
         topics = diagnose(found["scores"]) if found["confident"] else []
         topics = [d for d in topics if d["disease"] not in ("General cattle health", care_kb.EM)]
-        friendly_style = req.get("style", "friendly") == "friendly"
         # Short greetings win even if a word looks medical ("ආයුබෝවන්" contains "බෝවන").
         chat = (friendly.small_talk(question, lang)
                 if friendly_style and not follow
@@ -715,10 +780,7 @@ class Handler(BaseHTTPRequestHandler):
         urgent = (friendly.urgent_ids(ask if follow == "signs" else question)
                   if friendly_style and not chat else [])
         # Finding a vet. The town comes from this message or an earlier one in the chat.
-        history = req.get("history") if isinstance(req.get("history"), list) else []
-        here = vets.find_office(question) or next(
-            (o for h in reversed(history[-6:]) if isinstance(h, dict)
-             for o in [vets.find_office(str(h.get("question") or ""))] if o), None)
+        here = farmer_office(question, history)
         # The previous answer asked "where are you?", so this message is the reply.
         asked_where = bool(history) and isinstance(history[-1], dict) \
             and history[-1].get("topic") == vets.TOPIC
@@ -788,6 +850,13 @@ class Handler(BaseHTTPRequestHandler):
             best = max(matches, key=lambda m: m[:3], default=None)
             facts = [best[-1]] if best and best[0][2] > 0 else []
         guarded = req.get("guard", True) and bool(DOSE_Q.search(question))
+        # A sick cow: ask questions until one disease fits the answers, then its guide.
+        if (friendly_style and not chat and not vet_turn and not guarded and not owned
+                and not asks_how and follow != "topic" and not friendly.named_disease(question)):
+            state = triage.start(hide_disease_names(clean_question(ask)), urgent, sick)
+            if state:
+                return self.triage_answer(question, lang, stage, state, history, use_model,
+                                          new_urgent=urgent)
         # A named disease ("හරකාගේ ඇඟේ දද") always gets its topic guide.
         has_answer = bool((found["confident"] and (topic or facts)) or urgent or named)
 
@@ -825,19 +894,21 @@ class Handler(BaseHTTPRequestHandler):
         answered = card is not None
         # Model mode: the answer is only the model's own words, except when the farmer
         # asks for a vet: then the vet office contacts on file.
-        if use_model and not vet_turn:
+        # Greetings and thanks are fixed text in both modes (the model drifts on them).
+        if use_model and not vet_turn and not chat:
             card = None
-            if friendly_style and chat:
-                name = "Sinhala" if lang == "si" else "English"
-                parts = [(None, GREET_PROMPT.format(question=question, lang=name), [])]
-            elif friendly_style and not guarded and (found["confident"] or has_answer):
+            if friendly_style and not guarded and (found["confident"] or has_answer):
                 # The same topic and warnings as the KB answer, so the model never gets
                 # facts about a disease that merely shares a word with the question.
                 # KB entries earlier answers of this chat showed (sent back by the client).
                 seen = {str(i).rsplit("-", 1)[0] for h in history[-4:] if isinstance(h, dict)
-                        for i in (h.get("shown") if isinstance(h.get("shown"), list) else [])}
-                parts = detail_parts(ask, lang, stage, topic, found["evidence"], want, urgent,
-                                     sick, seen)
+                        for ids in [h.get("shown")] if isinstance(ids, list) for i in ids}
+                # Everything new may already be on screen (the guide after the questions
+                # shows treatment and care): then repeating beats "no answer".
+                parts = (detail_parts(ask, lang, stage, topic, found["evidence"], want, urgent,
+                                      sick, seen)
+                         or detail_parts(ask, lang, stage, topic, found["evidence"], want,
+                                         urgent, sick))
             if parts:
                 evidence = [(f, 0.0) for _, _, facts in parts for f in facts]
                 ev_ids = [f"{f['id']}-{stage}" for f, _ in evidence]
@@ -851,7 +922,7 @@ class Handler(BaseHTTPRequestHandler):
         # Model answers on a topic end with questions back to the farmer, leaving out
         # signs they already told us in this chat.
         said = " ".join([ask] + [str(h.get("question") or "") for h in history[-4:]
-                                 if isinstance(h, dict)])
+                                 if isinstance(h, dict)] + triage.answered(history))
         ask_back = (friendly.ask_back(topic, lang, said)
                     if use_model and friendly_style and parts and answered else "")
         # Next questions to tap; greetings and "I don't know" offer starter questions.
@@ -901,7 +972,7 @@ class Handler(BaseHTTPRequestHandler):
               "evidence": [ev_row(f, s) for f, s in evidence] + [ev_row(f, f["kind"]) for f in extra]})
 
         try:
-            if use_model and not vet_turn:
+            if use_model and not vet_turn and not chat:
                 if not parts:
                     return finish(friendly.abstain(lang) if friendly_style else ABSTAIN[lang],
                                   "retrieval", "abstain")
@@ -952,14 +1023,177 @@ class Handler(BaseHTTPRequestHandler):
                  {"type": "token", "text": text},
                  {"type": "done", "source": "retrieval", "card": None,
                   "checks": check_output(text, lang, [], "abstain")}]
+        self.send_lines(lines)
+
+    def send_lines(self, lines, typed=False):
+        """An answer in the same JSON-lines stream as /api/ask. typed: after a short
+        pause, the text arrives a few words at a time, like a model answer."""
         self.send_response(200)
         self.send_header("Content-Type", "application/x-ndjson; charset=utf-8")
         self.send_header("Cache-Control", "no-cache")
         self.end_headers()
         try:
-            self.wfile.write("".join(json.dumps(m, ensure_ascii=False) + "\n" for m in lines).encode())
+            if not typed:
+                self.wfile.write("".join(json.dumps(m, ensure_ascii=False) + "\n"
+                                         for m in lines).encode())
+                return
+            for m in lines:
+                if m["type"] == "token":
+                    time.sleep(TYPE_PAUSE)
+                    for piece in re.findall(r"\S+\s*|\s+", m["text"]):
+                        self.wfile.write((json.dumps({"type": "token", "text": piece},
+                                                     ensure_ascii=False) + "\n").encode())
+                        self.wfile.flush()
+                        time.sleep(TYPE_WORD)
+                else:
+                    self.wfile.write((json.dumps(m, ensure_ascii=False) + "\n").encode())
+                    self.wfile.flush()
         except (BrokenPipeError, ConnectionResetError):
             pass
+
+    def noted(self, question, lang, stage, history):
+        """A bare "yes" / "no" with no question open: thank the farmer and offer the
+        next questions on the chat's latest topic."""
+        last = previous_turn(history)
+        topic = last["topic"] if last else None
+        text = triage.TEXT[lang]["noted_reply"]
+        no_want = {"treat": False, "prevent": False, "signs": False}
+        self.send_lines([
+            {"type": "meta", "lang": lang, "stage": stage, "prompt": "", "confident": False,
+             "coverage": 0.0, "symptoms": [], "topic": topic,
+             "sick": bool(last and last.get("sick")), "followup": None,
+             "suggestions": friendly.suggestions(topic, lang, {"sections": []}, no_want, question),
+             "diseases": [], "urgent": [], "urgent_title": "", "evidence": []},
+            {"type": "token", "text": text},
+            {"type": "done", "source": "chat", "card": None,
+             "checks": check_output(text, lang, [], "chat")},
+        ], typed=True)
+
+    def triage_answer(self, question, lang, stage, state, history, use_model, new_urgent=()):
+        """The next yes/no question about a sick cow, or, once one disease fits the
+        answers, that disease's guide: matching signs, treatment by a vet, care at
+        home, prevention and the vet to call. Rule-based: KB text only, no model."""
+        t = triage.TEXT[lang]
+        here = farmer_office(question, history)
+        result = triage.verdict(state)
+        asked = triage.ask(state) if result is None else None
+        facts, card, diseases = [], None, []
+        if asked:
+            lines = [triage.ack(state, lang)] if state["asked"] else [t["start"]]
+            if state["yes"]:
+                lines.append(t["noted"].format(signs=triage.labels(state["yes"], lang)))
+            lines.append(f"**{t['question'].format(n=len(asked['asked']))}** "
+                         f"{triage.question_text(asked['pending'], lang)}")
+            text = "\n\n".join(filter(None, lines))
+            # Only the question (and any warning sign): the guide comes once the
+            # answers point to a disease, so the farmer can keep answering.
+            urgent_rows = urgent_lines(new_urgent, lang, stage)
+            state, topic, behaviour = asked, None, "ask"
+            diseases = triage.matches(state)
+            suggest = []  # the farmer types the answer
+        elif result[0]:
+            # One disease fits: name it with the signs that match, then offer its
+            # guide a part at a time (treatment first), each only if wanted.
+            disease, level = result
+            topic = disease
+            said = " ".join(triage.SIGNS[s][3] for s in state["yes"])
+            pool = [e for e in retrieve(f"{said} ({disease})", 10)["evidence"]
+                    if e[0]["topic"] == disease and e[0]["kind"] in ("fact", "sign")
+                    # not a sign the farmer said she does not have
+                    and not set(triage.mentions(e[0]["en"])[0]) & set(state["no"])]
+            facts = extractive_facts(pool) if pool else []
+            rows = "\n".join(f"• {friendly.localize(f[lang] or f['en'], lang)} [{f['id']}-{stage}]"
+                             for f in facts)
+            offer = next_offer(topic)
+            named = t[level].format(signs=triage.labels(state["yes"], lang),
+                                    d=friendly.disease_name(disease, lang),
+                                    p=triage.percent(disease, state))
+            # Ended on "no": maybe mild, maybe early signs, so the vet to see comes now.
+            early = level == "early"
+            text = "\n\n".join(filter(None, [
+                triage.ack(state, lang),
+                named if early else " ".join([named, t["confirm"]]),
+                f"**{friendly.TITLES[lang]['match']}**\n{rows}" if rows else "",
+                vet_text(here, lang) if early else "",
+                f"**{t['offer'][offer]}**" if offer else ""]))
+            urgent_rows = urgent_lines(state["urgent"], lang, stage)
+            diseases = triage.matches(state)
+            state = dict(state, done=topic, pending=None, offer=offer, vets_shown=early)
+            behaviour = "answer"
+            no_want = {"treat": False, "prevent": False, "signs": False}
+            suggest = [] if offer else \
+                friendly.suggestions(topic, lang, {"sections": []}, no_want, question)
+        else:
+            # No disease fits: general sick-cow advice and the vet to call.
+            topic = care_kb.SICK
+            no_want = {"treat": False, "prevent": False, "signs": False}
+            card, _ = friendly.card(KB, lang, stage, topic=topic, sick=True, want=no_want,
+                                    urgent=state["urgent"])
+            friendly.add_contacts(card, lang, [vets.contact(here, lang)] if here
+                                  else vets.all_contacts(lang))
+            text = friendly.card_text(card)
+            urgent_rows = card["urgent"]
+            state = dict(state, done=topic, pending=None)
+            behaviour = "answer"
+            suggest = friendly.suggestions(topic, lang, card, no_want, question)
+        cited = [f"{f['id']}-{stage}" for f in facts] + [r["id"] for r in urgent_rows]
+        if card:
+            cited += [r["id"] for r in card["urgent"] + card["answer"]
+                      + [i for s in card["sections"] for i in s["items"]]]
+        self.send_rules(lang, stage, state, topic, text, cited, card, behaviour, suggest,
+                        diseases, urgent_rows)
+
+    def offer_answer(self, question, lang, stage, state, history):
+        """The farmer's reply to "would you like to know how it is treated?": "yes"
+        gives that part of the disease's guide and offers the next one; "no" offers
+        the next one. Returns False when the message is not a yes / no reply."""
+        kind = triage.answer_kind(question)
+        if kind is None:
+            return False
+        t, topic, offered = triage.TEXT[lang], state["done"], state["offer"]
+        lines, cited = [], []
+        if kind == "yes":
+            rows = [(f"{e['id']}-{stage}", friendly.localize(e[lang] or e["en"], lang))
+                    for e in friendly.section_entries(KB, topic, offered)]
+            cited = [i for i, _ in rows]
+            lines.append(f"**{friendly.TITLES[lang][offered]}**\n"
+                         + "\n".join(f"• {text} [{i}]" for i, text in rows))
+            if offered == "treatment" and not state.get("vets_shown"):
+                lines.append(vet_text(farmer_office(question, history), lang))
+        offer = next_offer(topic, after=offered)
+        lines.append(f"**{t['offer'][offer]}**" if offer else t["noted_reply"])
+        state = dict(state, offer=offer)
+        no_want = {"treat": False, "prevent": False, "signs": False}
+        suggest = [] if offer else \
+            friendly.suggestions(topic, lang, {"sections": []}, no_want, question)
+        self.send_rules(lang, stage, state, topic, "\n\n".join(lines), cited, None,
+                        "answer" if cited else "chat", suggest)
+        return True
+
+    def send_rules(self, lang, stage, state, topic, text, cited, card, behaviour, suggest,
+                   diseases=(), urgent_rows=()):
+        """A rule-based answer (questions and the guide after them) as /api/ask lines."""
+        cited = list(dict.fromkeys(cited))
+        evidence = [{"id": c, "text": KB_BY_ID[c.rsplit("-", 1)[0]][lang]
+                     or KB_BY_ID[c.rsplit("-", 1)[0]]["en"],
+                     "topic": KB_BY_ID[c.rsplit("-", 1)[0]]["topic"],
+                     "kind": KB_BY_ID[c.rsplit("-", 1)[0]]["kind"],
+                     "sources": KB_BY_ID[c.rsplit("-", 1)[0]]["sources"], "score": "rules"}
+                    for c in cited]
+        self.send_lines([
+            {"type": "meta", "lang": lang, "stage": stage, "prompt": "", "confident": True,
+             "coverage": 1.0, "symptoms": list(state["yes"]),
+             "topic": topic, "sick": True, "followup": None, "suggestions": suggest,
+             "diseases": [dict(d, label=friendly.disease_name(d["disease"], lang)) for d in diseases],
+             "urgent": list(urgent_rows),
+             "urgent_title": friendly.TEXT[lang]["urgent_head"].rstrip(":"),
+             "evidence": evidence,
+             # Sent back with the chat history: the questions asked and the answers so far.
+             "triage": state},
+            {"type": "token", "text": text},
+            {"type": "done", "source": "rules", "card": card,
+             "checks": check_output(text, lang, cited, behaviour)},
+        ], typed=True)
 
     def stream_model(self, prompt, lang, ev_ids, emit, make_card=None):
         self.stream_parts([(None, prompt, [])], lang, ev_ids, emit, make_card)
@@ -996,6 +1230,32 @@ class Handler(BaseHTTPRequestHandler):
         card = make_card(text) if make_card and checks["behaviour"] == "answer" else None
         emit({"type": "done", "source": "model", "stats": stats, "card": card,
               "truncated": stats.get("done_reason") == "length", "checks": checks})
+
+
+def next_offer(topic, after=None):
+    """The next part of the disease's guide to offer, skipping parts with no KB entries."""
+    rest = triage.OFFERS[triage.OFFERS.index(after) + 1:] if after else triage.OFFERS
+    return next((k for k in rest if friendly.section_entries(KB, topic, k)), None)
+
+
+def vet_text(here, lang):
+    """The vet offices to call (the farmer's town, or all on file) as answer text."""
+    return f"**{triage.TEXT[lang]['vets']}**\n" + "\n".join(
+        "• " + ", ".join(filter(None, [v["office"], v.get("doctor"), v.get("address"), v["phone"]]))
+        for v in ([vets.contact(here, lang)] if here else vets.all_contacts(lang)))
+
+
+def urgent_lines(ids, lang, stage):
+    """Warning-sign rows for the urgent box."""
+    return [{"id": f"{i}-{stage}", "text": friendly.localize(
+        KB_BY_ID[i][lang] or KB_BY_ID[i]["en"], lang)} for i in ids]
+
+
+def farmer_office(question, history):
+    """The vet office for the farmer's town, named in this message or an earlier one."""
+    return vets.find_office(question) or next(
+        (o for h in reversed(history[-6:]) if isinstance(h, dict)
+         for o in [vets.find_office(str(h.get("question") or ""))] if o), None)
 
 
 def extractive_facts(evidence):

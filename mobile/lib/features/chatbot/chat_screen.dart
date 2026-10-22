@@ -200,6 +200,8 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_busy || _turns.isEmpty) return const [];
     final reply = _turns.last.reply;
     if (!reply.finished || reply.error != null) return const [];
+    // "Yes" / "No" answer each new question, even if tapped before.
+    if (reply.meta?.asksQuestion ?? false) return reply.meta!.suggestions;
     final asked = {for (final t in _turns) t.question.trim().toLowerCase()};
     return [
       for (final q in reply.meta?.suggestions ?? const <String>[])
@@ -217,6 +219,7 @@ class _ChatScreenState extends State<ChatScreen> {
           topic: meta.topic,
           sick: meta.sick,
           shown: meta.evidenceIds,
+          triage: meta.triage,
         ),
   ];
 
