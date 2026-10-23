@@ -117,8 +117,12 @@ TEXT = {
                    "Severe stage: the cow needs a vet's examination today."],
         "early": ["Early stage: start these steps now and ask your vet to check the cow.",
                   "This looks like an early stage. Begin the steps below and let your vet examine the cow."],
-        "no_medicine": "Only a vet who examines the animal can choose medicines and doses. "
-                       "Medicines given without a vet can harm the cow and leave residues in milk and meat.",
+        "no_medicine": ["Only a vet who examines the animal can choose medicines and doses. "
+                        "Medicines given without a vet can harm the cow and leave residues in milk and meat.",
+                        "Medicines and doses are chosen by a vet after examining the animal. "
+                        "Given without a vet, they can harm the cow and leave residues in milk and meat.",
+                        "Let your vet examine the cow and choose the medicines and doses. "
+                        "Medicines given without a vet can harm the cow and leave residues in milk and meat."],
         "ask": "How is {d} treated?",
         "ask_button": "Ask the assistant about this",
         "sources": "Sources",
@@ -146,8 +150,12 @@ TEXT = {
                    "උග්‍ර අවස්ථාව: ගවයා අදම පශු වෛද්‍යවරයා ලවා පරීක්ෂා කරවිය යුතුයි."],
         "early": ["මුල් අවස්ථාව: දැන්ම මේ පියවර ආරම්භ කර පශු වෛද්‍යවරයා ලවා ගවයා පරීක්ෂා කරවන්න.",
                   "මෙය මුල් අවස්ථාවක් ලෙස පෙනේ. පහත පියවර ආරම්භ කර ගවයා පශු වෛද්‍යවරයාට පෙන්වන්න."],
-        "no_medicine": "බෙහෙත් සහ මාත්‍රා තීරණය කළ හැක්කේ සතා පරීක්ෂා කරන පශු වෛද්‍යවරයාට පමණි. "
-                       "පශු වෛද්‍ය උපදෙස් නොමැතිව දෙන බෙහෙත් ගවයාට හානි කළ හැකි අතර කිරි හා මස්වල අපද්‍රව්‍ය ඉතිරි කළ හැක.",
+        "no_medicine": ["බෙහෙත් සහ මාත්‍රා තීරණය කළ හැක්කේ සතා පරීක්ෂා කරන පශු වෛද්‍යවරයාට පමණි. "
+                        "පශු වෛද්‍ය උපදෙස් නොමැතිව දෙන බෙහෙත් ගවයාට හානි කළ හැකි අතර කිරි හා මස්වල අපද්‍රව්‍ය ඉතිරි කළ හැක.",
+                        "සතා පරීක්ෂා කළ පසු බෙහෙත් සහ මාත්‍රා තෝරන්නේ පශු වෛද්‍යවරයායි. "
+                        "පශු වෛද්‍ය උපදෙස් නොමැතිව දුන්නොත් ඒවා ගවයාට හානි කළ හැකි අතර කිරි හා මස්වල අපද්‍රව්‍ය ඉතිරි කළ හැක.",
+                        "ගවයා පරීක්ෂා කර බෙහෙත් සහ මාත්‍රා තෝරන්න පශු වෛද්‍යවරයාට ඉඩ දෙන්න. "
+                        "පශු වෛද්‍ය උපදෙස් නොමැතිව දෙන බෙහෙත් ගවයාට හානි කළ හැකි අතර කිරි හා මස්වල අපද්‍රව්‍ය ඉතිරි කළ හැක."],
         "ask": "{d} වලට ප්‍රතිකාර මොනවද?",
         "ask_button": "මේ ගැන සහායකයාගෙන් අහන්න",
         "sources": "මූලාශ්‍ර",
@@ -209,7 +217,7 @@ def guide(kb_by_id, disease, lang="en", stage=None, variants=True):
         "heading": _capitalise(random.choice(t["for"]).format(d=name)),
         "severe": random.choice(t["severe"]) if level == "High" else None,
         "stage_note": random.choice(t["early"]) if level == "Low" else None,
-        "no_medicine": t["no_medicine"],
+        "no_medicine": random.choice(t["no_medicine"]) if variants else t["no_medicine"][0],
         "sections": sections,
         "medicines_title": t["medicines"],
         "medicine_labels": t["medicine_labels"],

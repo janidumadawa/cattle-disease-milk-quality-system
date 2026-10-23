@@ -1,4 +1,160 @@
 {
+ "KB-100": {
+  "en": [
+   "Ringworm-causing fungi can spread from infected animals to people through contact.",
+   "Can it pass to people? Yes - the fungi that cause ringworm can spread from infected animals to people through contact.",
+   "People: ringworm-causing fungi can spread from infected animals to people through contact.",
+   "REMEMBER: ringworm-causing fungi can spread from infected animals to people through contact.",
+   "The fungi that cause ringworm can spread from your infected animals to you and your family through contact.",
+   "Ringworm-causing fungi may be spread from infected animals to people through contact.",
+   "Spreads to people: the fungi behind ringworm can pass from infected animals to people through contact.",
+   "Ringworm fungi can pass from infected animals to people when they touch them.",
+   "Through contact, the fungi that cause ringworm can spread from infected animals to people.",
+   "Risk to people: ringworm-causing fungi can spread from infected animals to people through contact."
+  ],
+  "si": [
+   "Ringworm ඇති කරන දිලීර ආසාදිත සතුන්ගෙන් මිනිසුන්ට ස්පර්ශය හරහා බෝවිය හැක.",
+   "මිනිසුන්ට බෝවෙනවද? ඔව් - Ringworm ඇති කරන දිලීර ආසාදිත සතුන්ගෙන් මිනිසුන්ට ස්පර්ශය හරහා බෝවිය හැක.",
+   "මිනිසුන්: Ringworm ඇති කරන දිලීර ආසාදිත සතුන්ගෙන් ස්පර්ශය හරහා මිනිසුන්ට බෝවිය හැක.",
+   "මතක තබාගන්න: Ringworm ඇති කරන දිලීර ආසාදිත සතුන්ගෙන් මිනිසුන්ට ස්පර්ශය හරහා බෝවිය හැක.",
+   "Ringworm ඇති කරන දිලීර ඔබේ ආසාදිත සතුන්ගෙන් ඔබටත් ඔබේ පවුලේ අයටත් ස්පර්ශය හරහා බෝවිය හැක.",
+   "Ringworm ඇති කරන දිලීර ආසාදිත සතුන්ගෙන් මිනිසුන්ට ස්පර්ශය මගින් බෝ විය හැකි බව සැලකිය යුතුය.",
+   "මිනිසුන්ටත් බෝවේ: Ringworm ඇති කරන දිලීර ආසාදිත සතුන්ගෙන් ස්පර්ශය හරහා මිනිසුන්ට බෝවිය හැක.",
+   "Ringworm හදන දිලීර ආසාදිත සතුන්ව අල්ලනකොට මිනිස්සුන්ටත් බෝවෙන්න පුළුවන්.",
+   "ස්පර්ශය හරහා, Ringworm ඇති කරන දිලීර ආසාදිත සතුන්ගෙන් මිනිසුන්ට බෝවිය හැක.",
+   "මිනිසුන්ට අවදානම: Ringworm ඇති කරන දිලීර ආසාදිත සතුන්ගෙන් මිනිසුන්ට ස්පර්ශය හරහා බෝවිය හැක."
+  ]
+ },
+ "KB-109": {
+  "en": [
+   "Wash hands with soap and water after animal contact, cleaning stalls or handling milk.",
+   "When should I wash my hands? With soap and water after animal contact, cleaning stalls or handling milk.",
+   "Hands: wash with soap and water after animal contact, cleaning stalls or handling milk.",
+   "DO wash your hands with soap and water after animal contact, cleaning stalls or handling milk.",
+   "After you touch animals, clean the stalls or handle milk, wash your hands with soap and water.",
+   "Hands should be washed with soap and water after animal contact, cleaning stalls or handling milk.",
+   "Clean hands: use soap and water after animal contact, cleaning stalls or handling milk.",
+   "Wash your hands with soap and water after touching animals, cleaning stalls or handling milk.",
+   "Every time you finish animal contact, cleaning stalls or handling milk, wash your hands with soap and water.",
+   "Hand washing: soap and water after animal contact, cleaning stalls or handling milk."
+  ],
+  "si": [
+   "සතුන් අල්ලන පසු, ගව ශාලාව පිරිසිදු කළ පසු හෝ කිරි ස්පර්ශ කළ පසු සබන් හා ජලයෙන් අත් සෝදන්න.",
+   "අත් සෝදන්නේ කවදාද? සතුන් අල්ලන පසු, ගව ශාලාව පිරිසිදු කළ පසු හෝ කිරි ස්පර්ශ කළ පසු සබන් හා ජලයෙන්.",
+   "අත්: සතුන් අල්ලන පසු, ගව ශාලාව පිරිසිදු කළ පසු හෝ කිරි ස්පර්ශ කළ පසු සබන් හා ජලයෙන් සෝදන්න.",
+   "කරන්න: සතුන් අල්ලන පසු, ගව ශාලාව පිරිසිදු කළ පසු හෝ කිරි ස්පර්ශ කළ පසු සබන් හා ජලයෙන් අත් සෝදන්න.",
+   "ඔබ සතුන් ඇල්ලූ පසු, ගව ශාලාව පිරිසිදු කළ පසු හෝ කිරි ස්පර්ශ කළ පසු සබන් හා ජලයෙන් අත් සෝදාගන්න.",
+   "සතුන් ඇල්ලීමෙන්, ගව ශාලාව පිරිසිදු කිරීමෙන් හෝ කිරි ස්පර්ශ කිරීමෙන් පසු සබන් හා ජලයෙන් අත් සේදිය යුතුය.",
+   "පිරිසිදු අත්: සතුන් අල්ලන පසු, ගව ශාලාව පිරිසිදු කළ පසු හෝ කිරි ස්පර්ශ කළ පසු සබන් හා ජලයෙන් අත් සෝදන්න.",
+   "සතුන්ව අල්ලලා, ගව ශාලාව පිරිසිදු කරලා, නැත්නම් කිරි අල්ලලා පස්සේ සබන් වතුරෙන් අත් හෝදන්න.",
+   "සතුන් ඇල්ලීම, ගව ශාලාව පිරිසිදු කිරීම හෝ කිරි ස්පර්ශ කිරීම අවසන් වූ සෑම විටම සබන් හා ජලයෙන් අත් සෝදන්න.",
+   "අත් සේදීම: සතුන් අල්ලන පසු, ගව ශාලාව පිරිසිදු කළ පසු හෝ කිරි ස්පර්ශ කළ පසු සබන් හා ජලයෙන්."
+  ]
+ },
+ "KB-113": {
+  "en": [
+   "Regular cleaning of animal enclosures and responsible bedding waste disposal help reduce exposure to germs.",
+   "How do I cut down germs? Clean animal enclosures regularly and dispose of used bedding responsibly.",
+   "Shed: clean animal enclosures regularly. Bedding: dispose of the waste responsibly. Both reduce exposure to germs.",
+   "DO clean animal enclosures regularly and dispose of bedding waste responsibly - it reduces exposure to germs.",
+   "Clean your animal enclosures regularly and get rid of used bedding responsibly to reduce exposure to germs.",
+   "Animal enclosures should be cleaned regularly and bedding waste disposed of responsibly to reduce exposure to germs.",
+   "Fewer germs: clean animal enclosures regularly and dispose of bedding waste responsibly.",
+   "Clean the animal enclosures often and throw away used bedding properly. This means fewer germs.",
+   "To reduce exposure to germs, clean animal enclosures regularly and dispose of bedding waste responsibly.",
+   "Shed hygiene: regular cleaning of animal enclosures and responsible bedding waste disposal reduce exposure to germs."
+  ],
+  "si": [
+   "ගව ශාලා නිතර පිරිසිදු කිරීම හා අපිරිසිදු ඇඳ ඇතිරිලි නිසි ලෙස ඉවත් කිරීම රෝගකාරක ජීවීන්ට නිරාවරණය අඩු කරයි.",
+   "රෝගකාරක අඩු කරන්නේ කොහොමද? ගව ශාලා නිතර පිරිසිදු කර, අපිරිසිදු ඇඳ ඇතිරිලි නිසි ලෙස ඉවත් කරන්න.",
+   "ගව ශාලාව: නිතර පිරිසිදු කරන්න. ඇඳ ඇතිරිලි: අපිරිසිදු ඒවා නිසි ලෙස ඉවත් කරන්න. මේ දෙකම රෝගකාරක ජීවීන්ට නිරාවරණය අඩු කරයි.",
+   "කරන්න: ගව ශාලා නිතර පිරිසිදු කර අපිරිසිදු ඇඳ ඇතිරිලි නිසි ලෙස ඉවත් කරන්න - එය රෝගකාරක ජීවීන්ට නිරාවරණය අඩු කරයි.",
+   "ඔබේ ගව ශාලා නිතර පිරිසිදු කර, අපිරිසිදු ඇඳ ඇතිරිලි නිසි ලෙස ඉවත් කරන්න; එවිට රෝගකාරක ජීවීන්ට නිරාවරණය අඩු වේ.",
+   "රෝගකාරක ජීවීන්ට නිරාවරණය අඩු කිරීම සඳහා ගව ශාලා නිතර පිරිසිදු කළ යුතු අතර අපිරිසිදු ඇඳ ඇතිරිලි නිසි ලෙස ඉවත් කළ යුතුය.",
+   "රෝගකාරක අඩු කරන්න: ගව ශාලා නිතර පිරිසිදු කර අපිරිසිදු ඇඳ ඇතිරිලි නිසි ලෙස ඉවත් කරන්න.",
+   "ගව ශාලාව නිතර පිරිසිදු කරන්න, පාවිච්චි කරපු ඇඳ ඇතිරිලි හරියට ඉවත් කරන්න. එතකොට විෂබීජ අඩුයි.",
+   "රෝගකාරක ජීවීන්ට නිරාවරණය අඩු කිරීමට, ගව ශාලා නිතර පිරිසිදු කර අපිරිසිදු ඇඳ ඇතිරිලි නිසි ලෙස ඉවත් කරන්න.",
+   "ශාලා සනීපාරක්ෂාව: ගව ශාලා නිතර පිරිසිදු කිරීම හා අපිරිසිදු ඇඳ ඇතිරිලි නිසි ලෙස ඉවත් කිරීම රෝගකාරක ජීවීන්ට නිරාවරණය අඩු කරයි."
+  ]
+ },
+ "KB-114": {
+  "en": [
+   "Limiting unnecessary visitors and cleaning shared equipment are useful farm biosecurity habits.",
+   "How do I keep disease off the farm? Limit unnecessary visitors and clean shared equipment - both are useful biosecurity habits.",
+   "Biosecurity: limit unnecessary visitors; clean shared equipment.",
+   "DO limit unnecessary visitors and DO clean shared equipment - both are useful farm biosecurity habits.",
+   "Keep unnecessary visitors away from your farm and clean any equipment you share - good biosecurity habits.",
+   "Unnecessary visitors should be limited and shared equipment cleaned, as these are useful farm biosecurity habits.",
+   "Protect the farm: limit unnecessary visitors and clean shared equipment.",
+   "Let fewer people visit the farm when they don't need to, and clean equipment you share with others.",
+   "Two useful biosecurity habits: first limit unnecessary visitors, then clean shared equipment.",
+   "Farm biosecurity: limiting unnecessary visitors and cleaning shared equipment are useful habits."
+  ],
+  "si": [
+   "අනවශ්‍ය අමුත්තන් සීමා කිරීම සහ පොදු උපකරණ පිරිසිදු කිරීම ගොවිපොළ ජෛව ආරක්ෂාවට වැදගත්ය.",
+   "ගොවිපොළට රෝග එන එක වළක්වන්නේ කොහොමද? අනවශ්‍ය අමුත්තන් සීමා කර පොදු උපකරණ පිරිසිදු කරන්න - දෙකම ජෛව ආරක්ෂාවට වැදගත්ය.",
+   "ජෛව ආරක්ෂාව: අනවශ්‍ය අමුත්තන් සීමා කරන්න; පොදු උපකරණ පිරිසිදු කරන්න.",
+   "කරන්න: අනවශ්‍ය අමුත්තන් සීමා කර පොදු උපකරණ පිරිසිදු කරන්න - මේවා ගොවිපොළ ජෛව ආරක්ෂාවට වැදගත්ය.",
+   "ඔබේ ගොවිපොළට අනවශ්‍ය අමුත්තන් එන එක සීමා කර, අන් අය සමඟ බෙදාගන්නා උපකරණ පිරිසිදු කරන්න - මේවා හොඳ ජෛව ආරක්ෂක පුරුදු වේ.",
+   "ගොවිපොළ ජෛව ආරක්ෂාව සඳහා අනවශ්‍ය අමුත්තන් සීමා කළ යුතු අතර පොදු උපකරණ පිරිසිදු කළ යුතුය.",
+   "ගොවිපොළ ආරක්ෂා කරන්න: අනවශ්‍ය අමුත්තන් සීමා කර පොදු උපකරණ පිරිසිදු කරන්න.",
+   "අවශ්‍ය නැති අය ගොවිපොළට එන එක අඩු කරන්න, අනිත් අයත් එක්ක පාවිච්චි කරන උපකරණ පිරිසිදු කරන්න.",
+   "ජෛව ආරක්ෂක පුරුදු දෙකක්: පළමුව අනවශ්‍ය අමුත්තන් සීමා කරන්න, දෙවනුව පොදු උපකරණ පිරිසිදු කරන්න.",
+   "ගොවිපොළ ජෛව ආරක්ෂාව: අනවශ්‍ය අමුත්තන් සීමා කිරීම සහ පොදු උපකරණ පිරිසිදු කිරීම වැදගත් පුරුදු වේ."
+  ]
+ },
+ "KB-200": {
+  "en": [
+   "FMD does not infect people (it is not a zoonosis), but people can carry the virus to other farms on their clothes and skin, so wash and change clothes after handling sick animals.",
+   "Can I catch FMD? No, FMD does not infect people, but you can carry the virus to other farms on your clothes and skin - wash and change clothes after handling sick animals.",
+   "People: FMD does not infect people, but it can be carried to other farms on clothes and skin. After handling sick animals: wash and change clothes.",
+   "DO wash and change clothes after handling sick animals. FMD does not infect people, but people can carry the virus to other farms on their clothes and skin.",
+   "FMD won't make you sick, but you can carry the virus to other farms on your clothes and skin, so wash and change your clothes after handling sick animals.",
+   "FMD is not a zoonosis and does not infect people; however, the virus can be carried to other farms on clothes and skin, so washing and changing clothes after handling sick animals is needed.",
+   "Not a human disease, still a carrier risk: FMD does not infect people, but people can carry the virus to other farms on clothes and skin - wash and change clothes after handling sick animals.",
+   "People don't get FMD. But the virus can stick to your clothes and skin and go to other farms, so wash and change your clothes after touching sick animals.",
+   "After handling sick animals, wash and change clothes: FMD does not infect people, but people can carry the virus to other farms on their clothes and skin.",
+   "FMD and people: it does not infect people, but people can carry the virus to other farms on clothes and skin, so wash and change clothes after handling sick animals."
+  ],
+  "si": [
+   "FMD මිනිසුන්ට බෝවන රෝගයක් නොවේ, නමුත් මිනිසුන්ගේ ඇඳුම් හා සම මගින් වෛරසය වෙනත් ගොවිපොළවලට ගෙන යා හැකි බැවින් රෝගී සතුන් අල්ලූ පසු සෝදා ඇඳුම් මාරු කරන්න.",
+   "මට FMD බෝවෙනවද? නැත, FMD මිනිසුන්ට බෝ නොවේ; නමුත් ඔබේ ඇඳුම් හා සම මගින් වෛරසය වෙනත් ගොවිපොළවලට ගෙන යා හැක - රෝගී සතුන් අල්ලූ පසු සෝදා ඇඳුම් මාරු කරන්න.",
+   "මිනිසුන්: FMD මිනිසුන්ට බෝ නොවේ, නමුත් ඇඳුම් හා සම මගින් වෛරසය වෙනත් ගොවිපොළවලට ගෙන යා හැක. රෝගී සතුන් අල්ලූ පසු: සෝදා ඇඳුම් මාරු කරන්න.",
+   "කරන්න: රෝගී සතුන් අල්ලූ පසු සෝදා ඇඳුම් මාරු කරන්න. FMD මිනිසුන්ට බෝ නොවුණත්, මිනිසුන්ගේ ඇඳුම් හා සම මගින් වෛරසය වෙනත් ගොවිපොළවලට ගෙන යා හැක.",
+   "FMD ඔබට බෝ නොවේ, නමුත් ඔබේ ඇඳුම් හා සම මගින් වෛරසය වෙනත් ගොවිපොළවලට ගෙන යා හැකි නිසා රෝගී සතුන් අල්ලූ පසු සෝදා ඇඳුම් මාරු කරගන්න.",
+   "FMD මිනිසුන්ට බෝවන රෝගයක් නොවුවද, මිනිසුන්ගේ ඇඳුම් හා සම මගින් වෛරසය වෙනත් ගොවිපොළවලට ගෙන යා හැකි බැවින් රෝගී සතුන් ඇල්ලීමෙන් පසු සෝදා ඇඳුම් මාරු කළ යුතුය.",
+   "මිනිසුන්ට බෝ නොවේ, නමුත් ගෙන යා හැක: FMD මිනිසුන්ට බෝ නොවන නමුත් ඇඳුම් හා සම මගින් වෛරසය වෙනත් ගොවිපොළවලට ගෙන යා හැක - රෝගී සතුන් අල්ලූ පසු සෝදා ඇඳුම් මාරු කරන්න.",
+   "FMD මිනිස්සුන්ට හැදෙන්නේ නැහැ. ඒත් වෛරසය ඇඳුම්වල, සමේ ඇලිලා වෙන ගොවිපොළවලට යන්න පුළුවන්. ඒ නිසා ලෙඩ සතුන්ව අල්ලලා පස්සේ හෝදලා ඇඳුම් මාරු කරන්න.",
+   "රෝගී සතුන් අල්ලූ පසු සෝදා ඇඳුම් මාරු කරන්න: FMD මිනිසුන්ට බෝ නොවුණත්, මිනිසුන්ගේ ඇඳුම් හා සම මගින් වෛරසය වෙනත් ගොවිපොළවලට ගෙන යා හැක.",
+   "FMD සහ මිනිසුන්: මිනිසුන්ට බෝ නොවේ, නමුත් ඇඳුම් හා සම මගින් වෛරසය වෙනත් ගොවිපොළවලට ගෙන යා හැකි නිසා රෝගී සතුන් අල්ලූ පසු සෝදා ඇඳුම් මාරු කරන්න."
+  ]
+ },
+ "KB-204": {
+  "en": [
+   "Young calves can sometimes die suddenly from FMD because the virus damages the heart.",
+   "Are calves at risk? Yes - young calves can sometimes die suddenly from FMD, because the virus damages the heart.",
+   "Young calves: can sometimes die suddenly from FMD - the virus damages the heart.",
+   "WATCH young calves closely: they can sometimes die suddenly from FMD because the virus damages the heart.",
+   "Watch your young calves: FMD can sometimes kill them suddenly, because the virus damages the heart.",
+   "Sudden death of young calves from FMD can sometimes occur, as the virus damages the heart.",
+   "Danger for calves: young calves can sometimes die suddenly from FMD because the virus damages the heart.",
+   "FMD can hurt the heart of young calves, so sometimes they die suddenly.",
+   "Because the FMD virus damages the heart, young calves can sometimes die suddenly.",
+   "Calves and FMD: young calves can sometimes die suddenly because the virus damages the heart."
+  ],
+  "si": [
+   "FMD වෛරසය හෘදයට හානි කරන නිසා කුඩා වසු පැටවුන් සමහරවිට හදිසියේ මිය යා හැක.",
+   "වසු පැටවුන්ට අවදානමක් තිබේද? ඔව් - FMD වෛරසය හෘදයට හානි කරන නිසා කුඩා වසු පැටවුන් සමහරවිට හදිසියේ මිය යා හැක.",
+   "කුඩා වසු පැටවුන්: FMD නිසා සමහරවිට හදිසියේ මිය යා හැක - වෛරසය හෘදයට හානි කරයි.",
+   "කුඩා වසු පැටවුන් හොඳින් බලාගන්න: FMD වෛරසය හෘදයට හානි කරන නිසා ඔවුන් සමහරවිට හදිසියේ මිය යා හැක.",
+   "ඔබේ කුඩා වසු පැටවුන් ගැන සැලකිලිමත් වන්න: FMD වෛරසය හෘදයට හානි කරන නිසා ඔවුන් සමහරවිට හදිසියේ මිය යා හැක.",
+   "FMD වෛරසය හෘදයට හානි කරන බැවින් කුඩා වසු පැටවුන් සමහරවිට හදිසියේ මිය යාමට ඉඩ ඇත.",
+   "වසු පැටවුන්ට අනතුර: FMD වෛරසය හෘදයට හානි කරන නිසා කුඩා වසු පැටවුන් සමහරවිට හදිසියේ මිය යා හැක.",
+   "FMD වෛරසය පොඩි වසු පැටවුන්ගේ හදවතට හානි කරනවා. ඒ නිසා සමහර වෙලාවට ඔවුන් හදිසියේම මැරෙන්න පුළුවන්.",
+   "වෛරසය හෘදයට හානි කරන නිසා, FMD වැළඳුණු කුඩා වසු පැටවුන් සමහරවිට හදිසියේ මිය යා හැක.",
+   "වසු පැටවුන් සහ FMD: වෛරසය හෘදයට හානි කරන නිසා කුඩා වසු පැටවුන් සමහරවිට හදිසියේ මිය යා හැක."
+  ]
+ },
  "KB-205": {
   "en": [
    "There is no medicine that kills the FMD virus. Instead, the vet gives supportive care: reducing pain and fever and stopping the sores from getting infected.",
@@ -77,6 +233,32 @@
    "වෙන් කිරීම සහ ගෙනයාම: රෝගී සතුන් රංචුවෙන් වෙන් කර තබන්න; රෝගය පැතිරෙන කාලයේ සතුන් ගෙන යාම හෝ විකිණීම නොකරන්න."
   ]
  },
+ "KB-208": {
+  "en": [
+   "FMD vaccines protect for only about 4–6 months against matching virus types, so keep up with the government vaccination programme.",
+   "How long does the FMD vaccine last? Only about 4–6 months against matching virus types, so keep up with the government vaccination programme.",
+   "Vaccine: protects for only about 4–6 months against matching virus types. Keep up with the government vaccination programme.",
+   "DO keep up with the government vaccination programme - FMD vaccines protect for only about 4–6 months against matching virus types.",
+   "Keep your cattle in the government vaccination programme: FMD vaccines protect for only about 4–6 months against matching virus types.",
+   "As FMD vaccines protect for only about 4–6 months against matching virus types, the government vaccination programme should be kept up.",
+   "Vaccinate on time: FMD vaccines protect for only about 4–6 months against matching virus types, so keep up with the government vaccination programme.",
+   "The FMD vaccine only protects for about 4–6 months against matching virus types. So don't miss the government vaccination programme.",
+   "Because FMD vaccines protect for only about 4–6 months against matching virus types, keep up with the government vaccination programme.",
+   "Vaccination: FMD vaccines protect for only about 4–6 months against matching virus types; keep up with the government vaccination programme."
+  ],
+  "si": [
+   "FMD එන්නත් ආරක්ෂාව ලබා දෙන්නේ මාස 4–6ක් පමණ කාලයකට පමණක් බැවින් රජයේ එන්නත් වැඩසටහන නොකඩවා අනුගමනය කරන්න.",
+   "FMD එන්නත කොපමණ කල් ආරක්ෂාව දෙයිද? මාස 4–6ක් පමණ කාලයකට පමණි; ඒ නිසා රජයේ එන්නත් වැඩසටහන නොකඩවා අනුගමනය කරන්න.",
+   "එන්නත: ආරක්ෂාව මාස 4–6ක් පමණ කාලයකට පමණි. රජයේ එන්නත් වැඩසටහන නොකඩවා අනුගමනය කරන්න.",
+   "කරන්න: රජයේ එන්නත් වැඩසටහන නොකඩවා අනුගමනය කරන්න - FMD එන්නත් ආරක්ෂාව ලබා දෙන්නේ මාස 4–6ක් පමණ කාලයකට පමණි.",
+   "ඔබේ ගවයන්ට රජයේ එන්නත් වැඩසටහන නොකඩවා ලබා දෙන්න: FMD එන්නත් ආරක්ෂාව ලබා දෙන්නේ මාස 4–6ක් පමණ කාලයකට පමණි.",
+   "FMD එන්නත් මගින් ආරක්ෂාව ලැබෙන්නේ මාස 4–6ක් පමණ කාලයකට පමණක් බැවින් රජයේ එන්නත් වැඩසටහන නොකඩවා අනුගමනය කළ යුතුය.",
+   "නියමිත වේලාවට එන්නත් කරන්න: FMD එන්නත් ආරක්ෂාව ලබා දෙන්නේ මාස 4–6ක් පමණ කාලයකට පමණි, ඒ නිසා රජයේ එන්නත් වැඩසටහන නොකඩවා අනුගමනය කරන්න.",
+   "FMD එන්නත ආරක්ෂාව දෙන්නේ මාස 4–6ක් විතර විතරයි. ඒ නිසා රජයේ එන්නත් වැඩසටහන මඟහරින්න එපා.",
+   "FMD එන්නත් ආරක්ෂාව මාස 4–6ක් පමණ කාලයකට පමණක් සීමා වන නිසා, රජයේ එන්නත් වැඩසටහන නොකඩවා අනුගමනය කරන්න.",
+   "එන්නත් කිරීම: FMD එන්නත් ආරක්ෂාව ලබා දෙන්නේ මාස 4–6ක් පමණ කාලයකට පමණි; රජයේ එන්නත් වැඩසටහන නොකඩවා අනුගමනය කරන්න."
+  ]
+ },
  "KB-209": {
   "en": [
    "If you suspect FMD, report it quickly to the government veterinary surgeon - fast reporting is the key to stopping an outbreak.",
@@ -127,6 +309,32 @@
    "FMD වෛරසය කිරි හරහත් පැතිරෙන්න පුළුවන්. ඒ නිසා රෝගය පැතිරෙන කාලයේ කිරි පාවිච්චි කරන එක, විකුණන එක, ගෙන යන එක ගැන රජයේ පශු වෛද්‍යවරයාගේ නීති අනුගමනය කරන්න.",
    "කිරි හරහාද FMD වෛරසය පැතිරිය හැක. රෝගය පැතිරෙන කාලයේ කිරි භාවිත කිරීම, විකිණීම හෝ ප්‍රවාහනය ගැන රජයේ පශු වෛද්‍යවරයාගේ නීති අනුගමනය කරන්න.",
    "කිරි: FMD වෛරසය කිරි හරහාද පැතිරිය හැක; රෝගය පැතිරෙන කාලයේ කිරි භාවිත කිරීම, විකිණීම හෝ ප්‍රවාහනය ගැන රජයේ පශු වෛද්‍යවරයාගේ නීති අනුගමනය කරන්න."
+  ]
+ },
+ "KB-213": {
+  "en": [
+   "LSD spreads mainly through biting flies, mosquitoes and ticks, and also through contaminated equipment and moving animals.",
+   "How does LSD spread? Mainly through biting flies, mosquitoes and ticks, and also through contaminated equipment and moving animals.",
+   "Spread: mainly biting flies, mosquitoes and ticks; also contaminated equipment and moving animals.",
+   "REMEMBER: LSD spreads mainly through biting flies, mosquitoes and ticks, and also through contaminated equipment and moving animals.",
+   "LSD reaches your cattle mainly through biting flies, mosquitoes and ticks, and also through contaminated equipment and moving animals.",
+   "LSD is spread mainly by biting flies, mosquitoes and ticks, and also by contaminated equipment and the moving of animals.",
+   "How it spreads: LSD travels mainly through biting flies, mosquitoes and ticks, and also through contaminated equipment and moving animals.",
+   "LSD mostly spreads through biting flies, mosquitoes and ticks. Dirty equipment and moving animals can spread it too.",
+   "Mainly biting flies, mosquitoes and ticks spread LSD; contaminated equipment and moving animals spread it as well.",
+   "Ways LSD spreads: mainly biting flies, mosquitoes and ticks, and also contaminated equipment and moving animals."
+  ],
+  "si": [
+   "LSD ප්‍රධාන වශයෙන් පැතිරෙන්නේ ලේ උරා බොන මැස්සන්, මදුරුවන් සහ කිනිතුල්ලන් මගිනි; අපිරිසිදු උපකරණ හා සතුන් ගෙනයාම මගින්ද පැතිරේ.",
+   "LSD පැතිරෙන්නේ කොහොමද? ප්‍රධාන වශයෙන් ලේ උරා බොන මැස්සන්, මදුරුවන් සහ කිනිතුල්ලන් මගින්; අපිරිසිදු උපකරණ හා සතුන් ගෙනයාම මගින්ද පැතිරේ.",
+   "පැතිරීම: ප්‍රධාන වශයෙන් ලේ උරා බොන මැස්සන්, මදුරුවන් සහ කිනිතුල්ලන්; අපිරිසිදු උපකරණ හා සතුන් ගෙනයාමද.",
+   "මතක තබාගන්න: LSD ප්‍රධාන වශයෙන් ලේ උරා බොන මැස්සන්, මදුරුවන් සහ කිනිතුල්ලන් මගින් පැතිරේ; අපිරිසිදු උපකරණ හා සතුන් ගෙනයාම මගින්ද පැතිරේ.",
+   "LSD ඔබේ ගවයන්ට එන්නේ ප්‍රධාන වශයෙන් ලේ උරා බොන මැස්සන්, මදුරුවන් සහ කිනිතුල්ලන් මගිනි; අපිරිසිදු උපකරණ හා සතුන් ගෙනයාම මගින්ද පැතිරේ.",
+   "LSD ප්‍රධාන වශයෙන් ලේ උරා බොන මැස්සන්, මදුරුවන් සහ කිනිතුල්ලන් මගින් ද, අපිරිසිදු උපකරණ හා සතුන් ගෙනයාම මගින් ද පැතිරෙනු ලැබේ.",
+   "පැතිරෙන ආකාරය: LSD ප්‍රධාන වශයෙන් ලේ උරා බොන මැස්සන්, මදුරුවන් සහ කිනිතුල්ලන් මගින් ද, අපිරිසිදු උපකරණ හා සතුන් ගෙනයාම මගින් ද පැතිරේ.",
+   "LSD වැඩිපුරම පැතිරෙන්නේ ලේ බොන මැස්සන්, මදුරුවන්, කිනිතුල්ලන් නිසා. අපිරිසිදු උපකරණ සහ සතුන් ගෙන යන එකෙනුත් පැතිරෙනවා.",
+   "ප්‍රධාන වශයෙන් ලේ උරා බොන මැස්සන්, මදුරුවන් සහ කිනිතුල්ලන් LSD පතුරුවයි; අපිරිසිදු උපකරණ හා සතුන් ගෙනයාමද එය පතුරුවයි.",
+   "LSD පැතිරෙන මාර්ග: ප්‍රධාන වශයෙන් ලේ උරා බොන මැස්සන්, මදුරුවන් සහ කිනිතුල්ලන්, සහ අපිරිසිදු උපකරණ හා සතුන් ගෙනයාම."
   ]
  },
  "KB-214": {
@@ -181,6 +389,32 @@
    "වෙන් කිරීම සහ සත්කාර: රෝගී ගවයා රංචුවෙන් වෙන් කර තබන්න, ආහාර සහ පිරිසිදු වතුර දෙන්න, විවෘත තුවාල පිරිසිදුව තබා මැස්සන්ගෙන් ආරක්ෂා කරන්න."
   ]
  },
+ "KB-216": {
+  "en": [
+   "Vaccination is one of the most effective ways to control LSD; ask your government vet about the LSD vaccine.",
+   "What protects cattle best? Vaccination is one of the most effective ways to control LSD - ask your government vet about the LSD vaccine.",
+   "Vaccine: one of the most effective ways to control LSD. Ask your government vet about the LSD vaccine.",
+   "DO ask your government vet about the LSD vaccine - vaccination is one of the most effective ways to control LSD.",
+   "Ask your government vet about the LSD vaccine for your cattle; vaccination is one of the most effective ways to control LSD.",
+   "Vaccination is one of the most effective ways of controlling LSD, and the government vet should be asked about the LSD vaccine.",
+   "Vaccinate: vaccination is one of the most effective ways to control LSD, so ask your government vet about the LSD vaccine.",
+   "Vaccinating cattle is one of the best ways to control LSD. Ask your government vet about the LSD vaccine.",
+   "To control LSD, vaccination is one of the most effective ways - ask your government vet about the LSD vaccine.",
+   "Vaccination: one of the most effective ways to control LSD; ask your government vet about the LSD vaccine."
+  ],
+  "si": [
+   "LSD පාලනයට වඩාත්ම ඵලදායී ක්‍රමයක් එන්නත් කිරීමයි; LSD එන්නත ගැන රජයේ පශු වෛද්‍යවරයාගෙන් විමසන්න.",
+   "ගවයන් ආරක්ෂා කරන හොඳම දේ කුමක්ද? එන්නත් කිරීම LSD පාලනයට වඩාත්ම ඵලදායී ක්‍රමයකි - LSD එන්නත ගැන රජයේ පශු වෛද්‍යවරයාගෙන් විමසන්න.",
+   "එන්නත: LSD පාලනයට වඩාත්ම ඵලදායී ක්‍රමයකි. LSD එන්නත ගැන රජයේ පශු වෛද්‍යවරයාගෙන් විමසන්න.",
+   "කරන්න: LSD එන්නත ගැන රජයේ පශු වෛද්‍යවරයාගෙන් විමසන්න - එන්නත් කිරීම LSD පාලනයට වඩාත්ම ඵලදායී ක්‍රමයකි.",
+   "ඔබේ ගවයන් සඳහා LSD එන්නත ගැන රජයේ පශු වෛද්‍යවරයාගෙන් විමසන්න; එන්නත් කිරීම LSD පාලනයට වඩාත්ම ඵලදායී ක්‍රමයකි.",
+   "එන්නත් කිරීම LSD පාලනය සඳහා වඩාත්ම ඵලදායී ක්‍රමයක් වන අතර, LSD එන්නත ගැන රජයේ පශු වෛද්‍යවරයාගෙන් විමසිය යුතුය.",
+   "එන්නත් කරන්න: එන්නත් කිරීම LSD පාලනයට වඩාත්ම ඵලදායී ක්‍රමයක් නිසා LSD එන්නත ගැන රජයේ පශු වෛද්‍යවරයාගෙන් විමසන්න.",
+   "ගවයන්ට එන්නත් කරන එක LSD පාලනය කරන්න තියෙන හොඳම ක්‍රමයක්. LSD එන්නත ගැන රජයේ පශු වෛද්‍යවරයාගෙන් අහන්න.",
+   "LSD පාලනය කිරීමට, එන්නත් කිරීම වඩාත්ම ඵලදායී ක්‍රමයකි - LSD එන්නත ගැන රජයේ පශු වෛද්‍යවරයාගෙන් විමසන්න.",
+   "එන්නත් කිරීම: LSD පාලනයට වඩාත්ම ඵලදායී ක්‍රමයකි; LSD එන්නත ගැන රජයේ පශු වෛද්‍යවරයාගෙන් විමසන්න."
+  ]
+ },
  "KB-217": {
   "en": [
    "Cut down flies, mosquitoes and ticks around your cattle, and never bring in animals from affected areas.",
@@ -231,6 +465,32 @@
    "LSD කියලා සැක නම් රජයේ පශු වෛද්‍ය කාර්යාලයට කියන්න. ඉක්මනින් හොයාගන්න එකයි, සතුන් ගෙන යන එක පාලනය කරන එකයි තමයි ලෙඩේ නවත්වන්න ප්‍රධානම දේවල්.",
    "LSD යැයි සැක නම් රජයේ පශු වෛද්‍ය කාර්යාලයට දන්වන්න. ඉක්මනින් හඳුනාගැනීම සහ සතුන් ගෙනයාම පාලනය රෝගය නැවැත්වීමට ප්‍රධාන දේවල්ය.",
    "දැනුම් දීම: LSD යැයි සැක නම් රජයේ පශු වෛද්‍ය කාර්යාලයට දන්වන්න; ඉක්මනින් හඳුනාගැනීම සහ සතුන් ගෙනයාම පාලනය රෝගය නැවැත්වීමට ප්‍රධාන දේවල්ය."
+  ]
+ },
+ "KB-219": {
+  "en": [
+   "LSD lowers milk yield, and badly affected cattle can become very thin; the skin sores often become infected.",
+   "What does LSD do to the cow? It lowers milk yield, badly affected cattle can become very thin, and the skin sores often become infected.",
+   "Effects: lower milk yield; very thin cattle when badly affected; skin sores often infected.",
+   "EXPECT lower milk yield with LSD; badly affected cattle can become very thin, and the skin sores often become infected.",
+   "LSD will lower your cow's milk yield, badly affected cattle can become very thin, and the skin sores often become infected.",
+   "Milk yield is lowered by LSD, and badly affected cattle can become very thin; the skin sores often become infected.",
+   "What to expect: LSD lowers milk yield, badly affected cattle can become very thin, and the skin sores often become infected.",
+   "With LSD the cow gives less milk. Badly sick cattle can get very thin, and the skin sores often get infected.",
+   "First the milk yield drops with LSD; badly affected cattle can then become very thin, and the skin sores often become infected.",
+   "Effects of LSD: lower milk yield, very thin cattle when badly affected, and skin sores that often become infected."
+  ],
+  "si": [
+   "LSD නිසා කිරි ප්‍රමාණය අඩු වන අතර දැඩි ලෙස රෝගී වූ ගවයන් ඉතා කෙට්ටු විය හැක; සමේ තුවාල බොහෝවිට ආසාදනය වේ.",
+   "LSD ගවයාට කරන්නේ මොනවද? කිරි ප්‍රමාණය අඩු කරයි, දැඩි ලෙස රෝගී වූ ගවයන් ඉතා කෙට්ටු විය හැක, සමේ තුවාල බොහෝවිට ආසාදනය වේ.",
+   "බලපෑම: කිරි ප්‍රමාණය අඩු වේ; දැඩි ලෙස රෝගී වූ ගවයන් ඉතා කෙට්ටු විය හැක; සමේ තුවාල බොහෝවිට ආසාදනය වේ.",
+   "බලාපොරොත්තු වන්න: LSD නිසා කිරි ප්‍රමාණය අඩු වේ; දැඩි ලෙස රෝගී වූ ගවයන් ඉතා කෙට්ටු විය හැකි අතර සමේ තුවාල බොහෝවිට ආසාදනය වේ.",
+   "LSD නිසා ඔබේ ගවයාගේ කිරි ප්‍රමාණය අඩු වේ; දැඩි ලෙස රෝගී වූ ගවයන් ඉතා කෙට්ටු විය හැකි අතර සමේ තුවාල බොහෝවිට ආසාදනය වේ.",
+   "LSD මගින් කිරි ප්‍රමාණය අඩු කරනු ලබන අතර දැඩි ලෙස රෝගී වූ ගවයන් ඉතා කෙට්ටු විය හැක; සමේ තුවාල බොහෝවිට ආසාදනය වේ.",
+   "අපේක්ෂා කළ යුතු දේ: LSD නිසා කිරි ප්‍රමාණය අඩු වේ, දැඩි ලෙස රෝගී වූ ගවයන් ඉතා කෙට්ටු විය හැක, සමේ තුවාල බොහෝවිට ආසාදනය වේ.",
+   "LSD හැදුණාම ගවයා කිරි අඩුවෙන් දෙනවා. ගොඩක් ලෙඩ වෙච්ච ගවයන් හුඟක් කෙට්ටු වෙන්න පුළුවන්, සමේ තුවාලත් ගොඩක් වෙලාවට ආසාදනය වෙනවා.",
+   "LSD නිසා මුලින්ම කිරි ප්‍රමාණය අඩු වේ; දැඩි ලෙස රෝගී වූ ගවයන් පසුව ඉතා කෙට්ටු විය හැකි අතර සමේ තුවාල බොහෝවිට ආසාදනය වේ.",
+   "LSD හි බලපෑම: කිරි ප්‍රමාණය අඩු වීම, දැඩි ලෙස රෝගී වූ ගවයන් ඉතා කෙට්ටු වීම, සහ සමේ තුවාල බොහෝවිට ආසාදනය වීම."
   ]
  },
  "KB-222": {
@@ -311,6 +571,84 @@
    "හදිසි අවස්ථා: උණ, ආහාර නොගැනීම හෝ දුර්වලතාවය ඇත්නම් වහාම පශු වෛද්‍යවරයා අමතන්න. දියර ලබා දීම වැනි සහාය ප්‍රතිකාර බොහෝවිට වැදගත්ම කොටසයි."
   ]
  },
+ "KB-225": {
+  "en": [
+   "Dipping the teats in a germicide after every milking is the most important way to stop mastitis spreading between cows.",
+   "What stops mastitis spreading? Dipping the teats in a germicide after every milking - the most important way to stop it spreading between cows.",
+   "Teat dip: dip the teats in a germicide after every milking - the most important way to stop mastitis spreading between cows.",
+   "DO dip the teats in a germicide after every milking - it is the most important way to stop mastitis spreading between cows.",
+   "Dip your cows' teats in a germicide after every milking; it is the most important way to stop mastitis spreading between cows.",
+   "Teats should be dipped in a germicide after every milking, as this is the most important way to stop mastitis spreading between cows.",
+   "Most important step: dip the teats in a germicide after every milking to stop mastitis spreading between cows.",
+   "After every milking, put the teats in a germicide dip. This is the most important way to stop mastitis passing from cow to cow.",
+   "After every milking, dip the teats in a germicide - the most important way to stop mastitis spreading between cows.",
+   "Teat dipping: dipping the teats in a germicide after every milking is the most important way to stop mastitis spreading between cows."
+  ],
+  "si": [
+   "සෑම කිරි දෙවීමකටම පසු තන පුඩු විෂබීජනාශක දියරයක ගිල්වීම ගවයන් අතර Mastitis පැතිරීම නැවැත්වීමට වැදගත්ම ක්‍රමයයි.",
+   "Mastitis පැතිරීම නවත්වන්නේ කොහොමද? සෑම කිරි දෙවීමකටම පසු තන පුඩු විෂබීජනාශක දියරයක ගිල්වීම - ගවයන් අතර පැතිරීම නැවැත්වීමට වැදගත්ම ක්‍රමයයි.",
+   "තන පුඩු ගිල්වීම: සෑම කිරි දෙවීමකටම පසු තන පුඩු විෂබීජනාශක දියරයක ගිල්වන්න - ගවයන් අතර Mastitis පැතිරීම නැවැත්වීමට වැදගත්ම ක්‍රමයයි.",
+   "කරන්න: සෑම කිරි දෙවීමකටම පසු තන පුඩු විෂබීජනාශක දියරයක ගිල්වන්න - එය ගවයන් අතර Mastitis පැතිරීම නැවැත්වීමට වැදගත්ම ක්‍රමයයි.",
+   "සෑම කිරි දෙවීමකටම පසු ඔබේ ගවයන්ගේ තන පුඩු විෂබීජනාශක දියරයක ගිල්වන්න; එය ගවයන් අතර Mastitis පැතිරීම නැවැත්වීමට වැදගත්ම ක්‍රමයයි.",
+   "ගවයන් අතර Mastitis පැතිරීම නැවැත්වීමට වැදගත්ම ක්‍රමය වන බැවින් සෑම කිරි දෙවීමකටම පසු තන පුඩු විෂබීජනාශක දියරයක ගිල්විය යුතුය.",
+   "වැදගත්ම පියවර: ගවයන් අතර Mastitis පැතිරීම නැවැත්වීමට සෑම කිරි දෙවීමකටම පසු තන පුඩු විෂබීජනාශක දියරයක ගිල්වන්න.",
+   "හැම කිරි දෙවීමකටම පස්සේ තන පුඩු විෂබීජනාශක දියරයක ගිල්වන්න. Mastitis ගවයාගෙන් ගවයාට යන එක නවත්වන්න තියෙන වැදගත්ම දේ ඒකයි.",
+   "සෑම කිරි දෙවීමකටම පසුව, තන පුඩු විෂබීජනාශක දියරයක ගිල්වන්න - ගවයන් අතර Mastitis පැතිරීම නැවැත්වීමට වැදගත්ම ක්‍රමය එයයි.",
+   "තන පුඩු ගිල්වීම: සෑම කිරි දෙවීමකටම පසු තන පුඩු විෂබීජනාශක දියරයක ගිල්වීම ගවයන් අතර Mastitis පැතිරීම නැවැත්වීමට වැදගත්ම ක්‍රමයයි."
+  ]
+ },
+ "KB-226": {
+  "en": [
+   "Use a separate clean towel for each cow, clean the milking equipment after milking an infected cow, and give cows clean, dry bedding.",
+   "How do I keep milking clean? Use a separate clean towel for each cow, clean the milking equipment after an infected cow, and give cows clean, dry bedding.",
+   "Towels: a separate clean one for each cow. Equipment: clean it after milking an infected cow. Bedding: clean and dry.",
+   "DO use a separate clean towel for each cow, DO clean the milking equipment after milking an infected cow, and DO give cows clean, dry bedding.",
+   "Give each of your cows its own clean towel, clean the milking equipment after milking an infected cow, and keep their bedding clean and dry.",
+   "A separate clean towel should be used for each cow, the milking equipment cleaned after milking an infected cow, and clean, dry bedding given to cows.",
+   "Clean milking: a separate clean towel for each cow, clean milking equipment after an infected cow, and clean, dry bedding.",
+   "Use a different clean towel for every cow. Clean the milking equipment after milking a sick cow. Give the cows clean, dry bedding.",
+   "Use a separate clean towel for each cow; after milking an infected cow, clean the milking equipment; and give cows clean, dry bedding.",
+   "Milking hygiene: a separate clean towel for each cow, cleaning the milking equipment after an infected cow, and clean, dry bedding for cows."
+  ],
+  "si": [
+   "එක් එක් ගවයාට වෙනම පිරිසිදු තුවායක් භාවිත කරන්න, ආසාදිත ගවයෙකුට පසු කිරි දොවන උපකරණ පිරිසිදු කරන්න, සහ ගවයන්ට පිරිසිදු වියළි ඇතිරිලි දෙන්න.",
+   "කිරි දෙවීම පිරිසිදුව කරන්නේ කොහොමද? එක් එක් ගවයාට වෙනම පිරිසිදු තුවායක් භාවිත කරන්න, ආසාදිත ගවයෙකුට පසු කිරි දොවන උපකරණ පිරිසිදු කරන්න, ගවයන්ට පිරිසිදු වියළි ඇතිරිලි දෙන්න.",
+   "තුවා: එක් එක් ගවයාට වෙනම පිරිසිදු එකක්. උපකරණ: ආසාදිත ගවයෙකුට පසු පිරිසිදු කරන්න. ඇතිරිලි: පිරිසිදු හා වියළි.",
+   "කරන්න: එක් එක් ගවයාට වෙනම පිරිසිදු තුවායක් භාවිත කරන්න, ආසාදිත ගවයෙකුට පසු කිරි දොවන උපකරණ පිරිසිදු කරන්න, ගවයන්ට පිරිසිදු වියළි ඇතිරිලි දෙන්න.",
+   "ඔබේ සෑම ගවයෙකුටම වෙනම පිරිසිදු තුවායක් භාවිත කරන්න, ආසාදිත ගවයෙකු දෙවූ පසු කිරි දොවන උපකරණ පිරිසිදු කරන්න, ඔවුන්ගේ ඇතිරිලි පිරිසිදුව හා වියළිව තබන්න.",
+   "එක් එක් ගවයා සඳහා වෙනම පිරිසිදු තුවායක් භාවිත කළ යුතු අතර, ආසාදිත ගවයෙකුට පසු කිරි දොවන උපකරණ පිරිසිදු කර, ගවයන්ට පිරිසිදු වියළි ඇතිරිලි ලබා දිය යුතුය.",
+   "පිරිසිදු කිරි දෙවීම: එක් එක් ගවයාට වෙනම පිරිසිදු තුවායක්, ආසාදිත ගවයෙකුට පසු පිරිසිදු කළ කිරි දොවන උපකරණ, සහ පිරිසිදු වියළි ඇතිරිලි.",
+   "හැම ගවයෙකුටම වෙන වෙනම පිරිසිදු තුවායක් පාවිච්චි කරන්න. ලෙඩ ගවයෙක්ව දෙව්වට පස්සේ කිරි දොවන උපකරණ පිරිසිදු කරන්න. ගවයන්ට පිරිසිදු වියළි ඇතිරිලි දෙන්න.",
+   "එක් එක් ගවයාට වෙනම පිරිසිදු තුවායක් භාවිත කරන්න; ආසාදිත ගවයෙකු දෙවූ පසු කිරි දොවන උපකරණ පිරිසිදු කරන්න; ඉන්පසු ගවයන්ට පිරිසිදු වියළි ඇතිරිලි දෙන්න.",
+   "කිරි දෙවීමේ සනීපාරක්ෂාව: එක් එක් ගවයාට වෙනම පිරිසිදු තුවායක්, ආසාදිත ගවයෙකුට පසු කිරි දොවන උපකරණ පිරිසිදු කිරීම, සහ ගවයන්ට පිරිසිදු වියළි ඇතිරිලි."
+  ]
+ },
+ "KB-227": {
+  "en": [
+   "Ask your vet about dry cow therapy at the end of lactation; a quarter that keeps getting mastitis may need to be dried off.",
+   "What if mastitis keeps coming back? Ask your vet about dry cow therapy at the end of lactation; a quarter that keeps getting mastitis may need to be dried off.",
+   "End of lactation: ask your vet about dry cow therapy. Repeat mastitis in one quarter: it may need to be dried off.",
+   "DO ask your vet about dry cow therapy at the end of lactation; a quarter that keeps getting mastitis may need to be dried off.",
+   "At the end of your cow's lactation, ask your vet about dry cow therapy; a quarter that keeps getting mastitis may need to be dried off.",
+   "The vet should be asked about dry cow therapy at the end of lactation, and a quarter that keeps getting mastitis may need to be dried off.",
+   "Plan ahead: ask your vet about dry cow therapy at the end of lactation; a quarter that keeps getting mastitis may need to be dried off.",
+   "When the cow stops giving milk for the season, ask your vet about dry cow therapy. A quarter that gets mastitis again and again may need to be dried off.",
+   "At the end of lactation, ask your vet about dry cow therapy; if a quarter keeps getting mastitis, it may need to be dried off.",
+   "Dry cow therapy: ask your vet about it at the end of lactation; a quarter that keeps getting mastitis may need to be dried off."
+  ],
+  "si": [
+   "කිරි දෙන කාලය අවසානයේ dry cow therapy ගැන පශු වෛද්‍යවරයාගෙන් විමසන්න; නැවත නැවත Mastitis ඇතිවන බුරුල්ලේ කොටසක් වියළීමට සිදු විය හැක.",
+   "Mastitis නැවත නැවත ඇතිවේ නම්? කිරි දෙන කාලය අවසානයේ dry cow therapy ගැන පශු වෛද්‍යවරයාගෙන් විමසන්න; නැවත නැවත Mastitis ඇතිවන බුරුල්ලේ කොටසක් වියළීමට සිදු විය හැක.",
+   "කිරි දෙන කාලය අවසානයේ: dry cow therapy ගැන පශු වෛද්‍යවරයාගෙන් විමසන්න. එකම කොටසේ නැවත නැවත Mastitis: එම කොටස වියළීමට සිදු විය හැක.",
+   "කරන්න: කිරි දෙන කාලය අවසානයේ dry cow therapy ගැන පශු වෛද්‍යවරයාගෙන් විමසන්න; නැවත නැවත Mastitis ඇතිවන බුරුල්ලේ කොටසක් වියළීමට සිදු විය හැක.",
+   "ඔබේ ගවයාගේ කිරි දෙන කාලය අවසානයේ dry cow therapy ගැන පශු වෛද්‍යවරයාගෙන් විමසන්න; නැවත නැවත Mastitis ඇතිවන බුරුල්ලේ කොටසක් වියළීමට සිදු විය හැක.",
+   "කිරි දෙන කාලය අවසානයේ dry cow therapy ගැන පශු වෛද්‍යවරයාගෙන් විමසිය යුතු අතර, නැවත නැවත Mastitis ඇතිවන බුරුල්ලේ කොටසක් වියළීමට සිදු විය හැක.",
+   "කලින් සැලසුම් කරන්න: කිරි දෙන කාලය අවසානයේ dry cow therapy ගැන පශු වෛද්‍යවරයාගෙන් විමසන්න; නැවත නැවත Mastitis ඇතිවන බුරුල්ලේ කොටසක් වියළීමට සිදු විය හැක.",
+   "ගවයා කිරි දෙන කාලය ඉවර වෙනකොට dry cow therapy ගැන පශු වෛද්‍යවරයාගෙන් අහන්න. බුරුල්ලේ එකම කොටසට ආයේ ආයේ Mastitis හැදෙනවා නම් ඒ කොටස වියළන්න වෙන්න පුළුවන්.",
+   "කිරි දෙන කාලය අවසානයේ, dry cow therapy ගැන පශු වෛද්‍යවරයාගෙන් විමසන්න; බුරුල්ලේ කොටසකට නැවත නැවත Mastitis ඇතිවේ නම්, එය වියළීමට සිදු විය හැක.",
+   "Dry cow therapy: කිරි දෙන කාලය අවසානයේ ඒ ගැන පශු වෛද්‍යවරයාගෙන් විමසන්න; නැවත නැවත Mastitis ඇතිවන බුරුල්ලේ කොටසක් වියළීමට සිදු විය හැක."
+  ]
+ },
  "KB-229": {
   "en": [
    "Never sell or drink abnormal milk from a cow with mastitis - milk with clots, flakes, blood or a watery look. Milk it out and throw it away safely.",
@@ -335,6 +673,32 @@
    "Mastitis තියෙන ගවයාගේ කැටි, පතුරු, ලේ තියෙන හෝ වතුර වගේ කිරි විකුණන්නත් එපා, බොන්නත් එපා. ඒ කිරි දොවලා ආරක්ෂිතව ඉවත දාන්න.",
    "Mastitis ඇති ගවයාගේ අසාමාන්‍ය කිරි - කැටි, පතුරු, ලේ සහිත හෝ වතුර වැනි පෙනුමක් ඇති කිරි - විකුණන්න හෝ බොන්න එපා. එම කිරි දොවා ආරක්ෂිතව ඉවත දමන්න.",
    "අසාමාන්‍ය කිරි: Mastitis ඇති ගවයාගේ කැටි, පතුරු, ලේ සහිත හෝ වතුර වැනි කිරි විකුණන්න හෝ බොන්න එපා. ඒවා දොවා ආරක්ෂිතව ඉවත දමන්න."
+  ]
+ },
+ "KB-231": {
+  "en": [
+   "In cows ringworm usually appears on the chest and legs, and in bulls on the dewlap; patches can become thick and crusted.",
+   "Where does ringworm show? In cows usually on the chest and legs, and in bulls on the dewlap; patches can become thick and crusted.",
+   "Cows: chest and legs. Bulls: the dewlap. Patches: can become thick and crusted.",
+   "LOOK for ringworm on the chest and legs in cows and on the dewlap in bulls; patches can become thick and crusted.",
+   "On your cows, look for ringworm on the chest and legs, and on bulls on the dewlap; the patches can become thick and crusted.",
+   "Ringworm usually appears on the chest and legs of cows and on the dewlap of bulls, and patches can become thick and crusted.",
+   "Where to look: ringworm usually appears on the chest and legs in cows and on the dewlap in bulls; patches can become thick and crusted.",
+   "In cows ringworm is mostly on the chest and legs. In bulls it is on the dewlap. The patches can get thick and crusty.",
+   "Ringworm usually shows first on the chest and legs in cows, and on the dewlap in bulls; the patches can then become thick and crusted.",
+   "Where it appears: in cows usually the chest and legs, in bulls the dewlap; patches can become thick and crusted."
+  ],
+  "si": [
+   "එළදෙනුන්ට Ringworm බොහෝවිට පපුවේ සහ කකුල්වල ද, ගොනුන්ට ගෙල යට සමේ ද ඇතිවේ; පැල්ලම් ඝන පොතු බවට පත් විය හැක.",
+   "Ringworm පෙනෙන්නේ කොහේද? එළදෙනුන්ට බොහෝවිට පපුවේ සහ කකුල්වල, ගොනුන්ට ගෙල යට සමේ; පැල්ලම් ඝන පොතු බවට පත් විය හැක.",
+   "එළදෙනුන්: පපුව සහ කකුල්. ගොනුන්: ගෙල යට සම. පැල්ලම්: ඝන පොතු බවට පත් විය හැක.",
+   "බලන්න: එළදෙනුන්ගේ පපුවේ සහ කකුල්වල, ගොනුන්ගේ ගෙල යට සමේ Ringworm ඇතිවේ; පැල්ලම් ඝන පොතු බවට පත් විය හැක.",
+   "ඔබේ එළදෙනුන්ගේ පපුවේ සහ කකුල්වල ද, ගොනුන්ගේ ගෙල යට සමේ ද Ringworm බලන්න; පැල්ලම් ඝන පොතු බවට පත් විය හැක.",
+   "Ringworm බොහෝවිට එළදෙනුන්ගේ පපුවේ සහ කකුල්වල ද, ගොනුන්ගේ ගෙල යට සමේ ද දක්නට ලැබෙන අතර, පැල්ලම් ඝන පොතු බවට පත් විය හැක.",
+   "බැලිය යුතු තැන්: එළදෙනුන්ට Ringworm බොහෝවිට පපුවේ සහ කකුල්වල, ගොනුන්ට ගෙල යට සමේ ඇතිවේ; පැල්ලම් ඝන පොතු බවට පත් විය හැක.",
+   "එළදෙනුන්ට Ringworm වැඩිපුර එන්නේ පපුවේ සහ කකුල්වල. ගොනුන්ට ගෙල යට සමේ. පැල්ලම් ඝන පොතු වෙන්න පුළුවන්.",
+   "Ringworm මුලින්ම බොහෝවිට එළදෙනුන්ගේ පපුවේ සහ කකුල්වල, ගොනුන්ගේ ගෙල යට සමේ පෙනේ; පසුව පැල්ලම් ඝන පොතු බවට පත් විය හැක.",
+   "ඇතිවන තැන්: එළදෙනුන්ට බොහෝවිට පපුව සහ කකුල්, ගොනුන්ට ගෙල යට සම; පැල්ලම් ඝන පොතු බවට පත් විය හැක."
   ]
  },
  "KB-232": {
@@ -439,6 +803,58 @@
    "Ringworm මිනිස්සුන්ටත් හැදෙන්න පුළුවන්. ආසාදිත සතුන්ව අල්ලනකොට අත්වැසුම් දාගන්න, පස්සේ අත් සෝදන්න.",
    "ආසාදිත සතුන් අල්ලන්න පෙර අත්වැසුම් පළඳින්න, පසුව අත් සෝදන්න - Ringworm මිනිසුන්ටත් බෝවිය හැක.",
    "මිනිසුන් ආරක්ෂා කිරීම: ආසාදිත සතුන් අල්ලන විට අත්වැසුම් පළඳින්න, පසුව අත් සෝදන්න, මන්ද Ringworm මිනිසුන්ටත් බෝවිය හැක."
+  ]
+ },
+ "KB-243": {
+  "en": [
+   "A cow that cannot stand, is struggling to breathe, is trembling or collapses needs a vet immediately.",
+   "When is it an emergency? When a cow cannot stand, is struggling to breathe, is trembling or collapses - it needs a vet immediately.",
+   "Emergency signs: cannot stand, struggling to breathe, trembling, collapse. Action: a vet immediately.",
+   "DON'T wait if a cow cannot stand, is struggling to breathe, is trembling or collapses - it needs a vet immediately.",
+   "If your cow cannot stand, is struggling to breathe, is trembling or collapses, get a vet immediately.",
+   "A vet is needed immediately for a cow that cannot stand, is struggling to breathe, is trembling or collapses.",
+   "Get help now: a cow that cannot stand, is struggling to breathe, is trembling or collapses needs a vet immediately.",
+   "If the cow can't stand up, can't breathe well, is shaking or falls down, call a vet right now.",
+   "Cannot stand, struggling to breathe, trembling or collapsing - a cow with any of these needs a vet immediately.",
+   "Emergency: a cow that cannot stand, is struggling to breathe, is trembling or collapses needs a vet immediately."
+  ],
+  "si": [
+   "නැගිටින්න බැරි, හුස්ම ගැනීමට අපහසු, වෙව්ලන හෝ ඇද වැටෙන ගවයෙකුට වහාම පශු වෛද්‍ය ප්‍රතිකාර අවශ්‍යයි.",
+   "හදිසි අවස්ථාවක් වන්නේ කවදාද? ගවයාට නැගිටින්න බැරි නම්, හුස්ම ගැනීමට අපහසු නම්, වෙව්ලනවා නම් හෝ ඇද වැටෙනවා නම් - වහාම පශු වෛද්‍ය ප්‍රතිකාර අවශ්‍යයි.",
+   "හදිසි ලක්ෂණ: නැගිටින්න බැරි වීම, හුස්ම ගැනීමට අපහසුව, වෙව්ලීම, ඇද වැටීම. කළ යුත්ත: වහාම පශු වෛද්‍ය ප්‍රතිකාර.",
+   "එපා: ගවයාට නැගිටින්න බැරි නම්, හුස්ම ගැනීමට අපහසු නම්, වෙව්ලනවා නම් හෝ ඇද වැටෙනවා නම් බලා සිටින්න එපා - වහාම පශු වෛද්‍ය ප්‍රතිකාර අවශ්‍යයි.",
+   "ඔබේ ගවයාට නැගිටින්න බැරි නම්, හුස්ම ගැනීමට අපහසු නම්, වෙව්ලනවා නම් හෝ ඇද වැටෙනවා නම්, වහාම පශු වෛද්‍ය ප්‍රතිකාර ලබා ගන්න.",
+   "නැගිටීමට නොහැකි, හුස්ම ගැනීමට අපහසු, වෙව්ලන හෝ ඇද වැටෙන ගවයෙකුට වහාම පශු වෛද්‍ය ප්‍රතිකාර ලබා දිය යුතුය.",
+   "දැන්ම උදව් ගන්න: නැගිටින්න බැරි, හුස්ම ගැනීමට අපහසු, වෙව්ලන හෝ ඇද වැටෙන ගවයෙකුට වහාම පශු වෛද්‍ය ප්‍රතිකාර අවශ්‍යයි.",
+   "ගවයාට නැගිටින්න බැරි නම්, හුස්ම ගන්න අමාරු නම්, වෙව්ලනවා නම් හෝ ඇද වැටෙනවා නම්, දැන්ම පශු වෛද්‍යවරයාට කතා කරන්න.",
+   "නැගිටින්න බැරි වීම, හුස්ම ගැනීමට අපහසුව, වෙව්ලීම හෝ ඇද වැටීම - මින් එකක් හෝ ඇති ගවයෙකුට වහාම පශු වෛද්‍ය ප්‍රතිකාර අවශ්‍යයි.",
+   "හදිසි: නැගිටින්න බැරි, හුස්ම ගැනීමට අපහසු, වෙව්ලන හෝ ඇද වැටෙන ගවයෙකුට වහාම පශු වෛද්‍ය ප්‍රතිකාර අවශ්‍යයි."
+  ]
+ },
+ "KB-394": {
+  "en": [
+   "Do not give leftover or human medicines without a vet's advice; they can harm the cow and leave residues in milk and meat.",
+   "Can I use medicines I have at home? Not without a vet's advice - leftover or human medicines can harm the cow and leave residues in milk and meat.",
+   "Leftover or human medicines: not without a vet's advice. Risk: harm to the cow and residues in milk and meat.",
+   "DON'T give leftover or human medicines without a vet's advice; they can harm the cow and leave residues in milk and meat.",
+   "Please don't give your cow leftover or human medicines without a vet's advice - they can harm her and leave residues in milk and meat.",
+   "Leftover or human medicines should not be given without a vet's advice, as they can harm the cow and leave residues in milk and meat.",
+   "No home medicines: without a vet's advice, leftover or human medicines can harm the cow and leave residues in milk and meat.",
+   "Don't give the cow old medicines or medicines for people unless a vet says so. They can hurt the cow and leave residues in milk and meat.",
+   "Without a vet's advice, never give leftover or human medicines - they can harm the cow and leave residues in milk and meat.",
+   "Medicine safety: do not give leftover or human medicines without a vet's advice; they can harm the cow and leave residues in milk and meat."
+  ],
+  "si": [
+   "පශු වෛද්‍ය උපදෙස් නොමැතිව ඉතිරි වූ බෙහෙත් හෝ මිනිසුන්ගේ බෙහෙත් ගවයාට දෙන්න එපා; ඒවා ගවයාට හානි කළ හැකි අතර කිරි හා මස්වල අපද්‍රව්‍ය ඉතිරි කළ හැක.",
+   "ගෙදර තියෙන බෙහෙත් දෙන්න පුළුවන්ද? පශු වෛද්‍ය උපදෙස් නොමැතිව බැහැ - ඉතිරි වූ බෙහෙත් හෝ මිනිසුන්ගේ බෙහෙත් ගවයාට හානි කළ හැකි අතර කිරි හා මස්වල අපද්‍රව්‍ය ඉතිරි කළ හැක.",
+   "ඉතිරි වූ හෝ මිනිසුන්ගේ බෙහෙත්: පශු වෛද්‍ය උපදෙස් නොමැතිව එපා. අවදානම: ගවයාට හානි සහ කිරි හා මස්වල අපද්‍රව්‍ය.",
+   "එපා: පශු වෛද්‍ය උපදෙස් නොමැතිව ඉතිරි වූ බෙහෙත් හෝ මිනිසුන්ගේ බෙහෙත් ගවයාට දෙන්න එපා; ඒවා ගවයාට හානි කළ හැකි අතර කිරි හා මස්වල අපද්‍රව්‍ය ඉතිරි කළ හැක.",
+   "කරුණාකර පශු වෛද්‍ය උපදෙස් නොමැතිව ඔබේ ගවයාට ඉතිරි වූ බෙහෙත් හෝ මිනිසුන්ගේ බෙහෙත් දෙන්න එපා - ඒවා ගවයාට හානි කළ හැකි අතර කිරි හා මස්වල අපද්‍රව්‍ය ඉතිරි කළ හැක.",
+   "ඉතිරි වූ බෙහෙත් හෝ මිනිසුන්ගේ බෙහෙත් ගවයාට හානි කළ හැකි අතර කිරි හා මස්වල අපද්‍රව්‍ය ඉතිරි කළ හැකි බැවින් පශු වෛද්‍ය උපදෙස් නොමැතිව ඒවා ලබා නොදිය යුතුය.",
+   "ගෙදර බෙහෙත් එපා: පශු වෛද්‍ය උපදෙස් නොමැතිව දෙන ඉතිරි වූ බෙහෙත් හෝ මිනිසුන්ගේ බෙහෙත් ගවයාට හානි කළ හැකි අතර කිරි හා මස්වල අපද්‍රව්‍ය ඉතිරි කළ හැක.",
+   "පශු වෛද්‍යවරයා කියන්නේ නැතුව ඉතුරු වෙච්ච බෙහෙත් හෝ මිනිස්සුන්ගේ බෙහෙත් ගවයාට දෙන්න එපා. ඒවායින් ගවයාට හානි වෙන්න පුළුවන්, කිරි හා මස්වල අපද්‍රව්‍ය ඉතුරු වෙන්නත් පුළුවන්.",
+   "පශු වෛද්‍ය උපදෙස් නොමැතිව කිසිවිටෙක ඉතිරි වූ බෙහෙත් හෝ මිනිසුන්ගේ බෙහෙත් දෙන්න එපා - ඒවා ගවයාට හානි කළ හැකි අතර කිරි හා මස්වල අපද්‍රව්‍ය ඉතිරි කළ හැක.",
+   "ඖෂධ ආරක්ෂාව: පශු වෛද්‍ය උපදෙස් නොමැතිව ඉතිරි වූ බෙහෙත් හෝ මිනිසුන්ගේ බෙහෙත් ගවයාට දෙන්න එපා; ඒවා ගවයාට හානි කළ හැකි අතර කිරි හා මස්වල අපද්‍රව්‍ය ඉතිරි කළ හැක."
   ]
  }
 }
