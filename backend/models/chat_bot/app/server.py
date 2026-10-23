@@ -736,9 +736,14 @@ class Handler(BaseHTTPRequestHandler):
                 return self.triage_answer(question, lang, stage, state, history, use_model,
                                           new_urgent=[i for i in state["urgent"]
                                                       if i not in running["urgent"]])
+            if not friendly.QUESTION.search(question):
+                # Not a yes / no and not a new question: ask the same question again.
+                return self.reask(lang, stage, running)
         offered = triage.offer_state(history) if friendly_style and not running else None
         if offered and self.offer_answer(question, lang, stage, offered, history):
             return
+        if offered and not friendly.QUESTION.search(question):
+            return self.reask(lang, stage, offered)
         if not running and not offered and friendly_style and history \
                 and triage.bare_reply(question):
             # "Yes" / "no" when no question is open: nothing to look up.
@@ -1169,6 +1174,17 @@ class Handler(BaseHTTPRequestHandler):
         self.send_rules(lang, stage, state, topic, "\n\n".join(lines), cited, None,
                         "answer" if cited else "chat", suggest)
         return True
+
+    def reask(self, lang, stage, state):
+        """The reply was not a yes / no: say so and ask the open question again."""
+        t = triage.TEXT[lang]
+        if state.get("offer"):
+            question, topic = f"**{t['offer'][state['offer']]}**", state["done"]
+        else:
+            question, topic = (f"**{t['question'].format(n=len(state['asked']))}** "
+                               f"{triage.question_text(state['pending'], lang)}"), None
+        self.send_rules(lang, stage, state, topic, "\n\n".join([t["reask"], question]), [], None,
+                        "ask", [], [] if state.get("offer") else triage.matches(state))
 
     def send_rules(self, lang, stage, state, topic, text, cited, card, behaviour, suggest,
                    diseases=(), urgent_rows=()):

@@ -591,25 +591,25 @@ def suggestions(topic, lang, card, want, question, limit=3):
 # (words that mean the farmer already said it, English, Sinhala)
 ASK_BACK = {
     care_kb.FMD: [
-        (r"blister|mouth|කට|බිබිලි", "Does she have blisters in the mouth or drool a lot?",
+        (r"blister|mouth|කට|බිබිලි", "Do your cattle have blisters in the mouth or drool a lot?",
          "ගවයාගේ කටේ බිබිලි හෝ කෙළ ගැලීමක් තියෙනවද?"),
-        (r"lame|hoof|feet|foot|කකුල|කුර|කොර", "Is she limping, or are there sores between the hooves?",
+        (r"lame|hoof|feet|foot|කකුල|කුර|කොර", "Are your cattle limping, or are there sores between the hooves?",
          "ගවයා කොර ගහනවද, නැත්නම් කුර අතර තුවාල තියෙනවද?"),
         (r"other|herd|රංචු|අනිත්", "Do other cattle in the herd have the same signs?",
          "රංචුවේ අනිත් ගවයන්ටත් මේ ලක්ෂණ තියෙනවද?")],
     care_kb.LSD: [
         (r"lump|nodule|ගැටිති|ගෙඩි", "Are there round lumps on the skin? How many?",
          "සමේ රවුම් ගැටිති තියෙනවද? කීයක් විතර තියෙනවද?"),
-        (r"fever|hot|උණ|රස්නෙ", "Does she have a fever or eat less than usual?",
+        (r"fever|hot|උණ|රස්නෙ", "Do your cattle have a fever or eat less than usual?",
          "ගවයාට උණ හෝ කෑම අඩුවීමක් තියෙනවද?"),
         (r"fly|mosquito|මැස්ස|මදුරු", "Are there many flies or mosquitoes around the shed?",
          "ගාල වටේ මැස්සන් හෝ මදුරුවන් ගොඩක් ඉන්නවද?")],
     care_kb.MAS: [
-        (r"milk|clot|කිරි|කැටි", "Has her milk changed: clots, watery milk or blood?",
+        (r"milk|clot|කිරි|කැටි", "Has your cattle's milk changed: clots, watery milk or blood?",
          "ගවයාගේ කිරිවල කැටි, වතුර වගේ වීම හෝ ලේ වගේ වෙනසක් තියෙනවද?"),
         (r"udder|teat|swell|hot|තන|බුරුල්|ඉදිම", "Is one quarter of the udder swollen, hot or painful?",
          "බුරුල්ලේ එක කොටසක් ඉදිමිලා, රස්නෙයි හෝ රිදෙනවද?"),
-        (r"fever|eat|උණ|කන්නේ|කෑම", "Does she have a fever or eat less than usual?",
+        (r"fever|eat|උණ|කන්නේ|කෑම", "Do your cattle have a fever or eat less than usual?",
          "ගවයාට උණ හෝ කෑම අඩුවීමක් තියෙනවද?")],
     care_kb.RW: [
         (r"patch|hair|ලප|රෝම|කැළැල", "Are there round, grey, hairless patches? Where on the body?",
@@ -623,36 +623,36 @@ ASK_BACK = {
         (r"day|දවස", "How many days has the diarrhoea lasted?", "බඩ යන්න පටන් ගත්තේ දවස් කීයකට කලින්ද?")],
     care_kb.BLO: [
         (r"left|වම", "Is the left side of the belly blown up?", "බඩේ වම් පැත්ත පිම්බිලාද?"),
-        (r"breath|හුස්ම", "Is she struggling to breathe?", "ගවයාට හුස්ම ගන්න අමාරුද?"),
-        (r"feed|grass|ate|කෑම|තණකොළ", "Did she eat a lot of fresh green grass or legumes?",
+        (r"breath|හුස්ම", "Are your cattle struggling to breathe?", "ගවයාට හුස්ම ගන්න අමාරුද?"),
+        (r"feed|grass|ate|කෑම|තණකොළ", "Did your cattle eat a lot of fresh green grass or legumes?",
          "ගවයා අලුත් තණකොළ හෝ රනිල ශාක ගොඩක් කෑවද?")],
     care_kb.PNE: [
-        (r"cough|කැස්ස|කහින", "Is she coughing?", "ගවයා කහිනවද?"),
+        (r"cough|කැස්ස|කහින", "Are your cattle coughing?", "ගවයා කහිනවද?"),
         (r"nose|nasal|නාස|සෙම", "Is there discharge from the nose?", "නාසයෙන් සෙම ගලනවද?"),
-        (r"fever|උණ|රස්නෙ", "Does she have a fever?", "ගවයාට උණ තියෙනවද?")],
+        (r"fever|උණ|රස්නෙ", "Do your cattle have a fever?", "ගවයාට උණ තියෙනවද?")],
     care_kb.TICK: [
-        (r"tick|කිනිතුල්", "Do you see many ticks on her?", "ගවයාගේ ඇඟේ කිනිතුල්ලන් ගොඩක් ඉන්නවද?"),
-        (r"urine|red|මුත්‍ර|රතු", "Is her urine red or dark?", "මුත්‍රා රතු හෝ තද පාටද?"),
-        (r"fever|උණ", "Does she have a high fever?", "ගවයාට උණ වැඩිද?")],
+        (r"tick|කිනිතුල්", "Do you see many ticks on your cattle?", "ගවයාගේ ඇඟේ කිනිතුල්ලන් ගොඩක් ඉන්නවද?"),
+        (r"urine|red|මුත්‍ර|රතු", "Is your cattle's urine red or dark?", "මුත්‍රා රතු හෝ තද පාටද?"),
+        (r"fever|උණ", "Do your cattle have a high fever?", "ගවයාට උණ වැඩිද?")],
     care_kb.WORM: [
-        (r"thin|weight|කෙට්ටු|බර", "Is she getting thinner even though she eats?",
+        (r"thin|weight|කෙට්ටු|බර", "Are your cattle getting thinner even though they eat?",
          "කෑවත් ගවයා කෙට්ටු වෙනවද?"),
-        (r"deworm|පණු", "When was she last dewormed?", "අන්තිමට පණු බෙහෙත් දුන්නේ කවදද?")],
+        (r"deworm|පණු", "When were your cattle last dewormed?", "අන්තිමට පණු බෙහෙත් දුන්නේ කවදද?")],
     care_kb.EYE: [
-        (r"tear|කඳුළු", "Are her eyes watering?", "ඇස්වලින් කඳුළු ගලනවද?"),
+        (r"tear|කඳුළු", "Are your cattle's eyes watering?", "ඇස්වලින් කඳුළු ගලනවද?"),
         (r"cloud|white|සුදු|බොඳ", "Is the eye cloudy or white?", "ඇස සුදු පාට හෝ බොඳ වෙලාද?")],
     care_kb.FOOT: [
         (r"smell|ගඳ", "Is there a bad smell from between the hooves?", "කුර අතරින් නරක ගඳක් එනවද?"),
         (r"swell|ඉදිම", "Is the foot swollen above the hoof?", "කුරට උඩින් කකුල ඉදිමිලාද?")],
     care_kb.MF: [
-        (r"calv|පැටව", "When did she calve?", "ගවයා පැටවා දැම්මේ කවදද?"),
-        (r"ear|cold|කන්|සීතල", "Are her ears and legs cold?", "ගවයාගේ කන් හා කකුල් සීතලද?")],
+        (r"calv|පැටව", "When did your cattle calve?", "ගවයා පැටවා දැම්මේ කවදද?"),
+        (r"ear|cold|කන්|සීතල", "Are your cattle's ears and legs cold?", "ගවයාගේ කන් හා කකුල් සීතලද?")],
     care_kb.SICK: [
         (r"udder|milk|තන|කිරි", "Is there any change in the udder or milk?",
          "බුරුල්ලේ හෝ කිරිවල වෙනසක් තියෙනවද?"),
         (r"mouth|feet|කට|කකුල|කුර", "Any blisters in the mouth or sores on the feet?",
          "කටේ බිබිලි හෝ කකුල්වල තුවාල තියෙනවද?"),
-        (r"dung|breath|cough|ගොම|හුස්ම|කහින", "Is the dung loose, or is she coughing or breathing fast?",
+        (r"dung|breath|cough|ගොම|හුස්ම|කහින", "Is the dung loose, or are your cattle coughing or breathing fast?",
          "ගොම දියරද, නැත්නම් කහිනවද හෝ ඉක්මනින් හුස්ම ගන්නවද?")],
 }
 ASK_HEAD = {"en": "To help more, tell me:", "si": "තව උදව් කරන්න, මට කියන්න:"}
