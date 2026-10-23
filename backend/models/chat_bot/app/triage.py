@@ -31,9 +31,10 @@ SIGNS = {
         "කටින් කෙළ ගොඩක් ගලනවද?",
         "drooling", "කෙළ ගැලීම"),
     "feet": (
-        r"(hoof|hooves|claws?|feet|foot|toes?).{0,25}(sore|wound|blister|ulcer|lesion)|"
-        r"(sore|wound|ulcer|lesion).{0,25}(hoof|hooves|claws?|feet|foot)|between the (claws|toes|hooves)|"
-        r"(කුර|කකුල|පාද).{0,15}(තුවාල|වණ|බිබිලි)|කුර අතර",
+        r"(hoof|hooves|claws?|feet|foot|toes?).{0,25}(sore|wound|blister|ulcer|lesion|bleed|blood)|"
+        r"(sore|wound|ulcer|lesion|bleed\w*|blood).{0,25}(hoof|hooves|claws?|feet|foot)|"
+        r"between the (claws|toes|hooves)|"
+        r"(කුර|කකුල|පාද).{0,15}(තුවාල|වණ|බිබිලි|ලේ)|කුර අතර",
         "Are there sores or blisters on your cattle's feet or between the hooves?",
         "කකුල්වල හෝ කුර අතර තුවාල හෝ බිබිලි තියෙනවද?",
         "sores on the feet", "කකුල්වල තුවාල"),
@@ -53,6 +54,13 @@ SIGNS = {
         "Are there round, firm lumps on your cattle's skin?",
         "සමේ රවුම් තද ගැටිති තියෙනවද?",
         "lumps on the skin", "සමේ ගැටිති"),
+    "skin_sores": (  # LSD lumps break open into sores
+        r"(skin|body|hide).{0,20}(sore|wound|ulcer|lesion|scab)|"
+        r"(open |deep )?(sores?|wounds?|ulcers?|lesions?) (on|all over|over) (the |her |his |its )?"
+        r"(skin|body)|(සමේ|හමේ|ඇඟේ|ඇඟ පුරා|සම මත|හම මත).{0,15}(තුවාල|වණ)",
+        "Are there open sores on your cattle's skin?",
+        "සමේ විවෘත තුවාල තියෙනවද?",
+        "sores on the skin", "සමේ තුවාල"),
     "patches": (
         r"hair loss|bald|hairless|crust|scab|\bring|round patch|" + NOT_SI_BEFORE + r"ලප|පැල්ලම|"
         r"(රෝම|ලොම්).{0,15}(ගැලව|නැති|යන)|මුඩු|පොතු|රවුම්",
@@ -215,7 +223,8 @@ SIGN_RE = {s: re.compile(v[0], re.I) for s, v in SIGNS.items()}
 WEIGHTS = {
     care_kb.FMD: {"mouth": 3.5, "feet": 3, "drool": 2, "lame": 1.5, "herd": 1.5, "fever": 1,
                   "milk_drop": 0.5, "appetite": 0.5},
-    care_kb.LSD: {"lumps": 4, "fever": 1.5, "nasal": 1, "eye_water": 1, "flies": 1,
+    care_kb.LSD: {"lumps": 4, "skin_sores": 1.5, "fever": 1.5, "nasal": 1, "eye_water": 1,
+                  "flies": 1,
                   "milk_drop": 0.5, "appetite": 0.5, "herd": 0.5},
     care_kb.MAS: {"udder": 3.5, "milk_change": 3.5, "milk_drop": 1, "fever": 0.5,
                   "appetite": 0.5},
@@ -292,6 +301,9 @@ TEXT = {
             "care": "Would you like to know how to care for your cattle at home?",
             "prevention": "Would you like to know how to stop it spreading or coming back?",
         },
+        "lead": "The signs so far point most to {d} ({p}% match), but this is not confirmed "
+                "yet. Here is what applies to {d}:",
+        "back": "To be surer which disease this is, please answer:",
         "vets": "Vet offices you can call:",
         "noted_reply": "Thank you. If you notice any other signs, tell me and I'll check again. "
                        "You can also ask about treatment, prevention or the nearest vet.",
@@ -318,6 +330,9 @@ TEXT = {
             "care": "ගෙදරදී ගවයාව බලාගන්න හැටි දැනගන්න ඕනද?",
             "prevention": "මෙය පැතිරීම හෝ නැවත ඒම වළක්වන හැටි දැනගන්න ඕනද?",
         },
+        "lead": "මෙතෙක් කී ලක්ෂණ වැඩිපුරම ගැළපෙන්නේ {d} වලටයි ({p}% ගැළපීම), නමුත් මෙය තවම "
+                "තහවුරු නැහැ. {d} සඳහා අදාළ දේ මෙන්න:",
+        "back": "මෙය කුමන රෝගයදැයි වඩා හොඳින් දැනගන්න, කරුණාකර උත්තර දෙන්න:",
         "vets": "කතා කළ හැකි පශු වෛද්‍ය කාර්යාල:",
         "noted_reply": "ස්තූතියි. වෙනත් ලක්ෂණ දුටුවොත් මට කියන්න, මම ආයෙත් බලන්නම්. ප්‍රතිකාර, "
                        "වැළැක්වීම හෝ ළඟම පශු වෛද්‍යවරයා ගැනත් අහන්න පුළුවන්.",
@@ -330,10 +345,28 @@ def new_state():
             "done": None, "offer": None}
 
 
+# Turns that step aside from the questions without ending them: finding a vet,
+# greetings, "I don't know that" (no topic).
+SIDE_TOPICS = {None, "Vet contact"}
+
+
+def latest_state(history, back=4):
+    """The questions' state from the latest turn that has one, looking past side
+    turns ("I need a vet" between two answers), so the farmer can come back to
+    the cow. A turn on a topic of its own ends the questions."""
+    for turn in reversed((history if isinstance(history, list) else [])[-back:]):
+        if not isinstance(turn, dict):
+            return None
+        if isinstance(turn.get("triage"), dict):
+            return turn["triage"]
+        if turn.get("topic") not in SIDE_TOPICS:
+            return None
+    return None
+
+
 def pending_state(history):
     """The questions still running in this chat: the latest turn asked one."""
-    last = history[-1] if isinstance(history, list) and history else None
-    state = last.get("triage") if isinstance(last, dict) else None
+    state = latest_state(history)
     if not isinstance(state, dict) or not state.get("pending") or state.get("done"):
         return None
     state = dict(new_state(), **state)
@@ -348,8 +381,7 @@ OFFERS = ["treatment", "care", "prevention"]
 def offer_state(history):
     """The disease named in this chat, when the latest turn offered the next part of
     its guide ("would you like to know how it is treated?")."""
-    last = history[-1] if isinstance(history, list) and history else None
-    state = last.get("triage") if isinstance(last, dict) else None
+    state = latest_state(history)
     if not isinstance(state, dict) or state.get("offer") not in OFFERS or not state.get("done"):
         return None
     return state

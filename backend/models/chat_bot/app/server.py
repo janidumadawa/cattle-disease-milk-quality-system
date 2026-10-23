@@ -461,6 +461,17 @@ def previous_turn(history):
     return None
 
 
+def own_request(question, lang):
+    """A message that is not a yes / no reply but asks for something of its own: a
+    question, a vet ("මට දොස්තර කෙනෙක් ඕනෙ"), a town, a disease, a warning sign,
+    a greeting or a clear KB topic. It gets its own answer instead of the open
+    question asked again."""
+    return bool(friendly.QUESTION.search(question) or vets.wants_vet(question)
+                or vets.only_place(question) or friendly.named_disease(question)
+                or friendly.urgent_ids(question) or friendly.small_talk(question, lang)
+                or has_own_topic(retrieve(question, 3)))
+
+
 def has_own_topic(found):
     """Whether the question alone gets an answer: general hygiene, or a clear topic."""
     if not found["confident"]:
@@ -736,13 +747,15 @@ class Handler(BaseHTTPRequestHandler):
                 return self.triage_answer(question, lang, stage, state, history, use_model,
                                           new_urgent=[i for i in state["urgent"]
                                                       if i not in running["urgent"]])
-            if not friendly.QUESTION.search(question):
-                # Not a yes / no and not a new question: ask the same question again.
+            if self.lead_answer(question, lang, stage, running, history):
+                return
+            if not own_request(question, lang):
+                # Not a yes / no and nothing else asked: ask the same question again.
                 return self.reask(lang, stage, running)
         offered = triage.offer_state(history) if friendly_style and not running else None
         if offered and self.offer_answer(question, lang, stage, offered, history):
             return
-        if offered and not friendly.QUESTION.search(question):
+        if offered and not own_request(question, lang):
             return self.reask(lang, stage, offered)
         if not running and not offered and friendly_style and history \
                 and triage.bare_reply(question):
@@ -985,6 +998,11 @@ class Handler(BaseHTTPRequestHandler):
                 # model, which was trained to refuse and abstain itself.
                 return self.stream_parts(parts, lang, ev_ids, emit, closing=ask_back)
             if vet_turn:
+                if use_model:
+                    # The app shows a model answer's text and its card both: the
+                    # words go in the text, the card keeps only the contacts.
+                    text = "\n\n".join(p for p in (card["intro"], card["closing"]) if p)
+                    return finish(text, "vet", "answer", dict(card, intro="", closing=""))
                 return finish(friendly.card_text(card), "vet", "answer", card)
             # Hard guard: dose/medicine questions get the fixed refusal.
             if guarded:
@@ -1173,6 +1191,37 @@ class Handler(BaseHTTPRequestHandler):
             friendly.suggestions(topic, lang, {"sections": []}, no_want, question)
         self.send_rules(lang, stage, state, topic, "\n\n".join(lines), cited, None,
                         "answer" if cited else "chat", suggest)
+        return True
+
+    def lead_answer(self, question, lang, stage, state, history):
+        """"How is this treated?" in the middle of the questions, naming no disease:
+        that part of the guide for the disease the answers fit best so far (with its
+        %, not confirmed), then the open question again. Returns False when the
+        message does not ask for treatment, prevention or signs."""
+        if friendly.named_disease(question) or vets.wants_vet(question):
+            return False
+        want = friendly.intents(question)
+        key = ("treatment" if want["treat"] else "prevention" if want["prevent"]
+               else "signs" if want["signs"] else None)
+        lead = triage.matches(state)
+        if key is None or not lead:
+            return False
+        t, topic = triage.TEXT[lang], lead[0]["disease"]
+        rows = [(f"{e['id']}-{stage}", friendly.localize(e[lang] or e["en"], lang))
+                for e in friendly.section_entries(KB, topic, key)]
+        if not rows:
+            return False
+        lines = [t["lead"].format(d=friendly.disease_name(topic, lang),
+                                  p=triage.percent(topic, state)),
+                 f"**{friendly.TITLES[lang][key]}**\n"
+                 + "\n".join(f"• {text} [{i}]" for i, text in rows)]
+        if key == "treatment":
+            lines.append(vet_text(farmer_office(question, history), lang))
+        lines.append(f"{t['back']}\n**{t['question'].format(n=len(state['asked']))}** "
+                     f"{triage.question_text(state['pending'], lang)}")
+        # Topic None and the state unchanged: the next "yes" answers the open question.
+        self.send_rules(lang, stage, state, None, "\n\n".join(lines), [i for i, _ in rows],
+                        None, "answer", [], triage.matches(state))
         return True
 
     def reask(self, lang, stage, state):
